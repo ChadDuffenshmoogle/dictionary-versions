@@ -1,0 +1,582 @@
+NIU Unicyclist Dictionary v.1.1.6 - December 2024
+
+Corpus by first attested: forbonk, embig, debig, ensmall, desmall, dort, rous, snork, garignak, to whom of which of that, filiupper, snix, bunderstand, blasket, oniuary, tweff, trice, quice, saise, stice, eice, neice, deice, d'deice, chimkin buoygee, derpatronic, p'pmpic, canoem, shma, Gilbertian, embritched, penpinappapppen, kaboompa, make a penappapen out of a kaboompah, kaboompa space, drizzito, rizzito, flabbergoosted, goosh, babingo, shlurp, pershlaps, spoot, yee-hawfficer, squididdle, forkton, kreeb, birbed wire, bugglegum, anoline, yerm, seil, gada, snodem, polyjamorous, stchewstund, chat, seece, ekstatization, ayje, lim, thum, gubble, crum, bani==bingo, wuantum, bean, dort, snork, snix, blasket, spoot, Forkton, bugglegum, göse, tsscfila, nausce, ercapote, lilypoid, fdak..., ong, caboosification, Chereesh, smessagespi, Tsauditu!, smessagespified, casseroke, Bep!, nerbous, choodel, McSlog, shlumbis, slarf, surger, bufoof, foonfub, mebander, Noopton, Forktonite, spose, shmapcorn, forcine, Nahll, Patterzone, cymaffle, froop juice, Schrute juice, hoosted, juicebox, copiously hoosted, smoo, addictionary, appict, thneedy, alcolade, aerostatic, degoombafy, boochie, zonetime, chiplets, v'you, enknivened, good beevening, COreo, Mozartrella, Beeftoven, Vivaldessert, starkitch, Starkitch, McJagger, spoocy, -ilk, buddito, hot cilk, golpear el heno, baconeggandachee'e, D.P'Doughba, 'san, Portillionaire, 'zza, crangent, loqucurr, colade, grossitude, shift-planking, the buoyg, hummucide, squarehouse, scadover, mathical, de, conward, doversquiver, perslappage. Wajaw 36B, kitchenista, snijkers, twarr, twell, banazana, Paroosan Caroost of Noop juice, peanoot, tombplace, exaxely, garf, inchrishting, biceased, K. K. Psider, legable, laptoff, I will die on that train, kwikwi, stick-bouncing, forgort, feese, pershleased, perschbeased, post-perschlortem, perschlostumous, pershlaponymous, Cyreal, Cyrealism, Zonja, marlize, acaseine, jablesque, goofy goobretheren, gooberisms, pedester, polief occifer, render twixt, olimario, spepper, sarm hametizer, wallify, endormify, chog, FAMO, pringling, polyplug, tupp, Naptune, Nooptoner, snarody, ptint, Porta-Pianto, skunge-level, churoffee, cubices, sue, cinnamunch-wrap supreme, didia, bruncher, bunch'din, diabeatle, OB/CD, gansö center, comparing apples to candypumpkincorn, Apples to Candypumpkincorn, cyberg, itect, aic, aeologist, ipelago, hass, Cyrilendrical, honkrs, bordovering
+
+Corpus alphabetic: acaseine, addictionary, aeologist, aerostatic, aic, alcolade, anoline, appict, Apples to Candypumpkincorn, ayje, babingo, baconeggandachee'e, banazana, bani==bingo, bean, Beeftoven, Bep!, biceased, birbed wire, blasket, boochie, bruncher, buddito, bufoof, bugglegum, bunch'din, bunderstand, buoyg, caboosification, canoem, casseroke, chat, Chereesh, chimkin buoygee, chog, choodel, churoffee, cinnamunch-wrap supreme, colade, comparing apples to candypumpkincorn, conward, copiously hoosted, COreo, crangent, crum, cubices, cyberg, cymaffle, Cyreal, Cyrealism, de, debig, degoombafy, deice, derpatronic, desmall, diabeatle, didia, dort, doversquiver, drizzito, d'deice, D. P'Doughba, eice, ekstatization, embig, embritched, endormify, enknivened, ensmall, ercapote, exaxely, FAMO, fdak..., feese, filiupper, flabbergoosted, foonfub, forbonk, forcine, forgort, Forkton, Forktonite, froop juice, gada, gansö center, garf, garignak, Gilbertian, golpear el heno, gooberism, good beevening, goofy goobrother, goosh, göse, grossitude, gubble, hass, hoosted, hot cilk, hummucide, -ilk, inchrishting, ipelago, itect, I will die on that train, jablesque, juicebox, kaboompa, kaboompa space, kitchenista, kreeb, kwikwi, K. K. Psider, laptoff, legable, lilypoid, lim, loqucurr, make a penappapen out of a kaboompah, marlize, mathical, McJagger, McSlog, mebander, Mozartrella, Nahll, nausce, neice, nerbous, Noopton, OB/CD, olimario, ong, Oniuary, Paroosan Caroost of Noop juice, Patterzone, peanoot, pedester, penpinappapppen, perschbeased, perschlostumous, pershlaps, pershlaponymous, pershleased, perslappage, polief occifer, polyjamorous, polyplug, Portillionaire, post-perschlortem, p'pmpic, pringling, quice, render twixt, rizzito, ROUS, saise, 'san, sarm hametizer, Schrute juice, seece, seil, shift-planking, shlumbis, shlurp, shma, shmapcorn, skadover, slarf, smessagespi, smessagespified, smoo, snijkers, snix, snodem, snork, spepper, spoocy, spoot, spose, squididdle, squarehouse, starkitch, Starkitch, stchewstund, stice, stick-bouncing, sue, surger, thneedy, thum, tombplace, to whom of which of that, trice, Tsauditu!, tsscfila, twarr, tweff, twell, Vivaldessert, v'you, Wajaw 36B, wallify, wuantum, yee-hawfficer, yerm, 'zza, zonetime, Zonja
+
+-----DICTIONARY PROPER-----
+
+acaseine (adj.) /ɐ'keisain/ - marked by an absence of cheese, or of dairy more generally 
+
+addictionary (n.) - a list of definitions of all addictions
+
+aeologist (n.) - a person who studies aic things by excavating and analyzing objects buried in the recent past
+
+aerostatic (adj.) - not aerodynamic
+
+aic (adj.) - contemporary or not very old
+
+alcolade (adj.) - fond of spirits, crapulous
+
+---------------------------------------------
+Etymology: from an- + Latin 'olus', itself from Latin 'holus' ("vegetable, greens"), + -ine
+
+anoline (adj.) /ænɐlȧɪn/
+- empty
+  - (by extension, of containers) open, not fully enclosed, characterized by the absence of a traditional enclosed space.
+- barren; waste (esp. of locations)
+---------------------------------------------
+
+appict (n.) - one who is addicted to Pictionary
+
+Apples to Candypumpkincorn (n.) - a fun party game in which cards are used to make comparisons that do not make sense at all. It is a crossover between Mattel and Brach's. 
+
+ayje (interjection) /aiʝᵊ/ - used to expressed displeasure, disapproval, or dissapointment 
+
+---------------------------------------------
+babingo (inter.) - an enthusiastic exclamatory interjection
+- Derived Terms: bani==bingo
+---------------------------------------------
+
+baconeggandachee'e (n.) - genecized term for breakfast sandwich
+
+banazana (n.) - banana pizza
+
+bani==bingo - a false equivalence, a logically unsound proposition
+
+bean (n.) - one of Cyril's little guys
+
+Beeftoven (n.) - musical variety of meat
+
+Bep! (n.) - a popular soda brand that is pure carbonation, just CO2
+
+biceased (adj.) - having died twice
+
+birbed wire (n.) - a wire perched on by many birb
+
+blasket (n.) - A picnic basket that explodes upon emptying 
+
+boochie (adj.) - mimicking something of high value, while being made of inferior materials or craftsmanship
+
+bordovering (v.) - travelling internationally
+
+bruncher / brucher - a person who habitually eats only one meal a day, or the one meal they eat
+
+buddito (n.) - a small companion
+
+bufoof (n.) - a water/flying type cloud pokemon that doesn't know what's going on
+
+bugglegum (n.) - chewing gum for bugs 
+
+bunch'din (adj.) - equivalent of "locked in" but specfically referring to commitment to consuming only one meal in a day
+
+bunderstand (v.) - failing to grasp or comprehend something despite their efforts
+
+---------------------------------------------
+buoyg (n.) - (slang) a chimkin bouygee
+	*I got* **the buoyg** *right here!*
+---------------------------------------------
+
+caboosification (n.) - the process by which one tethers their car to the rear of a moving train in order to save gas
+
+canoem (n.) - *emphatic case* of canoe 
+
+casseroke (v.) - to use intensive cooking as an excuse to avoid social activities, or (n.) - an instance thereof
+
+chat (pron.) - fourth-person plural pronoun 
+
+---------------------------------------------
+Etymology: From Yurok "chergeesh" ("small woodpecker"), usage likely shaped by analogy with "cherish"
+
+Chereesh (n.) /tʃɚ'ɹiʃ/ - a feminine given name
+---------------------------------------------
+---------------------------------------------
+Etymology: from a regional dialectal variation of "chicken burger", from chicken + burger.
+
+chimkin buoygee (n.) - A chicken sandwich, esp. of the variety served at Newhall Dining
+--------------------------------------------- 
+
+chiplets (n.) - the small colorful chocolate sprinkle things on top of Cosmic Brownies or the dining hall cookies
+
+--------------------------------------------- 
+chog 
+(n.)
+- a cold, moist glizzy straight out of the package smothered with off brand cheez whiz
+(v.)
+- to send a thirst trap video of someone consuming a chog
+	Ex: "You just got chogged!"
+--------------------------------------------- 
+
+choodel (n.) - a pastry that has much more icing or filling than actual dough
+
+churoffee (n.) - coffee with bits of churro, coffee sweetened by dipping a churro in it
+
+cinnamunch-wrap supreme (n.) - you can probably guess what this is. It's a crunch wrap supreme where it is not coated in cinnamon, but filled with cinnamon, as the main ingredient. There is more cinnamon than tortilla. 
+
+colade (adj.) /coʊ'leɪdʰ/ - relaxed, carefree, as one who has just taken a sip of a delicious beverage or is breathing in warm spring air. 
+
+comparing apples to candypumpkincorn (n.) - an unbalanced comparison 
+
+conward (adv.) - in a direction toward the NIU Convocation Center. In other words, east.
+
+copiously hoosted (adj.) - absolutely caked in viscous sugar 
+
+COreo (k-or-E-O) (n.) - a combination of crushed Coca-Cola Oreos put into the Oreo flavored Coca-Cola
+
+---------------------------------------------
+crangent (n.)
+- a wandering of topics to the point of cranberry discussion
+- a chivalrous man who harvests cranberries in full suit and tie
+---------------------------------------------
+
+crum (n.) /krəm/ - 'etymologically correct' spelling of "crumb." 
+
+cubices (n.) - arms and/or hands
+
+cyberg (n.) - Half machine half iceberg
+
+cymaffle (n.) - a cinnamon flavoured waffle
+
+---------------------------------------------
+Cyreal - a mannerism that is like Cyril
+	“that word usage was very Cyreal”
+---------------------------------------------
+---------------------------------------------
+Cyrealism /sərijəlɪsm/ - avant-garde movement of Cyrilesque mannerisms (not to be confused with Cyrilism, a Cyril synonym)    
+	e.g.: the griddy while fencing
+---------------------------------------------
+
+Cyrilindrical (n.) - Cryil if he were to transform into a can
+
+---------------------------------------------
+de (v.) - to perform two complementary actions on an object that are both prefixed with 'de-'. 
+    *I accidentally just* **deed** *the light, when I only meant to debig it.*
+---------------------------------------------
+---------------------------------------------
+debig (v.) - (transitive) to turn off the primary light source of one's domicile.
+	Antonyms: embig
+---------------------------------------------
+
+degoombafy (v.) - to remove unruly fungi
+
+deice (adv.) /dais:/ - ten times
+
+---------------------------------------------
+derpatronic (n.) - Cyril staring at you in the VR headset
+	(adj.) - someone resembling likewise
+---------------------------------------------
+---------------------------------------------
+desmall (v.) - (transitive) to turn off a sceondary light source of one's domicile.
+	Antonyms: ensmall
+---------------------------------------------
+
+diabeatle (n.) - a beatle’s fan with diabetes
+
+didia / diaduo / dudia / diaretes (n.) - the condition of having both diabetes and diarrhea, such as after consuming a cinnamunch-wrap supreme
+
+dort (v.) - to sort something in descending order
+
+doversquiver (v.) - to bond with others by reading inside-joke material, such as the Unicyclist Dictionary, or a quote book.
+
+drizzito (n.) /ɹɪ'zitoʊ/ - a type of protracted low-impact rain characteristic of the American Grain Plains 
+
+d'deice (adv.) - twelve times  
+
+D. P'Doughba (n.) - a Mexican-Italian restaurant franchise, home of the BurritoZone 
+
+eice (adv.) /əɪs:/ - eight times 
+
+ekstatization (n.) - the process by which a second-person pronoun can be transformed into a fourth-person pronoun through disassociation with a material referent.
+
+---------------------------------------------
+embig (v.) - (transitive) to turn on the primary light source of one's domicile.
+	Antonyms: debig
+---------------------------------------------
+---------------------------------------------
+Etymology: from the English expression "too big for one's britches."
+
+embritched (adj.) - carelessly ambitious, ambitious beyond one's means
+---------------------------------------------
+
+endormify (v.) - to return to one's domicile or chambers 
+
+enknivened (adj.) - equiped with knives
+
+---------------------------------------------
+ensmall (v.) - (transitive) to turn on a secondary light source of one's domicile.
+	Antonyms: desmall
+---------------------------------------------
+---------------------------------------------
+Etymology: From Middle English "eyrcapote", from dialectal Middle English "eigre" ("egg") + Latin "capus" ("head") + "-ote" (demonym suffix)
+
+ercapote (alt. ecapote) (n.) /'ɛɚkɐpoːtʼ/ - a fool, a person of low intelligence
+---------------------------------------------
+
+exaxely (adv.) - (Wisconsinism, Zinnianism) alt. of 'exactly' 
+
+FAMO - fear about missing out
+
+---------------------------------------------
+Etymology: Originally a keyboard mashing created by J. C. at 09:09am on 2022-5-14 during a quiz bowl game
+
+fdakjhfjdkashfkjdahfjkahfjakhfkjadhfjkafhjkdahfjkahfkjdhfkjdhfjkdfhkjdhfjdkhfkjdhsajfkahjkfdhajkfhdjakhfjdkahfjdkahfjkdfhjkahjkhjkhjkhjkhjhjkhkjhjkhjkhjkhjkhjkhkjhjkhkjhjkhjkhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh (abbreviated fdak...) (inter.) - an exclamation of extreme surprise
+---------------------------------------------
+
+feese (v.) - to give something a preliminary attempt 
+
+filiupper (n.) the process of consuming large amounts of food through holding up long lines at buffets as well as other delaying tactics to ensure the annoyance of all restaurant employees.
+
+flabbergoosted - when a goose realizes a sudden earth-shattering truth
+
+foonfub (n.) - the evolution of bufoof
+
+forbonk (v.) - to lightly hit someone on the head with a forklift
+
+forcine (adj.) - resembling a fork
+
+forgort (v.) - past participle of 'forgor'
+
+Forkton (n.) - a town in northern South Carolina known for its spoon manufacturers
+
+Forktonite (n.) - Stainless steel
+
+--------------------------------------------- 
+froop juice (n.) - the milk left behind after consuming froot loops 
+
+Related to coop juice, froosted froop juice, trux/truce juice, choos juice, ricky tricky juice, cius/soos juice, froosted moosty juice, loof juice, roucy poofy juice, hoosted boonches of oost juice, and so on.  
+--------------------------------------------- 
+
+gada (mass n.) /gädə/ - dead fish
+
+the gansö center (n.) - the Convo Center when the roof has bein claimed by the geese
+
+garf (n.) - lasagna puke
+
+garignak (v.) - an utterance of ambiguity used to break the silence.
+
+Gilbertian (alt. Gilbertian) (adj.) - of Gilbert
+
+golpear el heno - to go to bed
+
+gooberism - the goober version of a mannerism, to have manners in the ways of shenanigans
+
+good beevening - greeting for the time after noon but before evening
+
+goofy goobrother (pl. googy goobrethren) (n.) - kin of shenanigans
+
+goosh (n.) /guʃ/ - a term of endearment 
+
+--------------------------------------------- 
+Etymology: from goose, influenced onomatopoeically
+
+göse /'gœzɐ/
+Noun
+- nominative/emphatic singular of goose.
+
+Interjection
+- an exclamation uttered upon seeing a goose.
+- a cry believed to ward off geese or to deter anserine aggression.
+  - Synonym: hjonk
+---------------------------------------------
+---------------------------------------------
+Etymology: from Latin 'grossitudo' ("thickness, density")
+grossitude (n.) - thickness, density; (affectedly, of a person) largeness
+
+gubble (n.) - goop mixed with rocks
+
+hass (n.) - a public or semi-public building with an applicable utilitarian function (e.g. 'dining hass') 
+
+honkrs - being in honors, but actually being dumb (like me)
+
+---------------------------------------------
+hoosted (adj.) - coated or dipped in honey
+
+Derived Terms - copiously hoosted
+---------------------------------------------
+
+hot cilk /kilk/ (n.) - hot chocolate mixed with milk in equal proportion.
+
+hummucide (n.) - death by ground chickpeas
+
+---------------------------------------------
+-ilk - a suffix added after the first letter or syllable of the last word of the name of a beverage, to indicated that said beverage has been mixed with milk. 
+
+Examples: Gilk, Mountain Dilk, Dr. Pilk, Capri Silk, Orange Jilk
+---------------------------------------------
+
+inchrishting - alt. of interesting said in the Stitch voice
+
+ipelago (n.) - an island in isolation
+
+itect (n.) - any of the numerous architects, draughtsmen, or artisans involved in the design and certification of a structure 
+
+---------------------------------------------
+I will die on that train - alt. of 'I will die on that hill'
+
+	*I will die on that train 'til I die*
+---------------------------------------------
+
+jablesque (adj.) - similar in nature to Jack Black
+
+juicebox (n.) - a fan or connoisseur of juices
+
+kaboompa (alt. kaboompah) (n.) - something trivial, a small deal
+
+kaboompa space (n.)
+- a period of mundane time, when nothing extraordinary seems to occur. can have a positive or negative correlation.
+  - a person's day to day life, what one considers usual.
+
+kitchenista (n.) - someone who is a star in the kitchen, someone who excels at cooking
+
+kreeb (v.) (cyrilism) - to first crush crackers before consumption
+
+kwikwi (inter.) - onomatopoeia of something moving briskly
+
+K. K. Psider (n.) - an Animal Crossing character who meets with his acoustic frat on Saturday nights
+
+laptoff (n.) - a laptop when you don't know where it is
+
+legable (adj.) - capable of being affixed to Legos or of having Legos affixed to itself.
+
+lilypoid (n.) - a stylized depiction of a lilypad, especially in two dimensions.
+
+lim (n.) /lɪm/ - 'etymologically correct' spelling of "limb." 
+
+loqucurr (v.) - having a conversation with someone while running (typically through a cell phone or mobile device)
+
+make a penappapen out of a kaboompah - to make a big deal out of something trivial, to make a mountain out of a molehill
+
+marlize (v.) - to miss call time 
+
+---------------------------------------------
+From the LaTeX '\mathcal' function, itself from a combination of "math" and "calligraphic," since the function produces letters in the calligraphic font used for mathematics.
+
+mathical (adj.) - describing fonts or typefaces used for distinguishing variables within equations (e.g. blackboard bold)
+---------------------------------------------
+
+McJagger (n.) - new McDonald's burger made with rock candy
+
+McSlog (n.) - new McDonald's burger made of coagulated grill residue 
+
+mebander (v.) - to casually walk while playing an instrument
+
+Motzartrella (n.) - a musical variety of cheese
+
+Nahll (n.) - newhall
+
+Naptune (n.) - where Nooptoners go to sleep
+
+---------------------------------------------
+Etymology: Learned borrowing from Latin nausco
+
+nausce (v.) /naʊs/ - to prepare a bean for cooking or serving by splitting it lengthwise.
+---------------------------------------------
+
+neice (adv.) /nəis:/ - nine times 
+
+Noopton (n.) - Neptune Hall or Neptune Dining
+
+Nooptoner (n.) - an inhabitant of Noopton
+
+OB/CD (n.) - An AC/DC fan who is rather large
+
+---------------------------------------------
+olimario (n.) 
+- a hybrid depiction of Mario Mario and Captain Olimar
+- (by extension) a cursed image in general
+---------------------------------------------
+
+ong (inter.) - an exclamation used for inclement weather
+
+Oniuary (n.) /'ənjuweɹ̠i/ - the month in which Onions are traditionally hunted, lying between April and May. 
+
+Paroosan Caroost of Noop juice (n.) - milk left behind after consuming a bowl of Parisian carrots from Neptune
+
+Patterzone (n.) - Patterson Hall/dining
+
+peanoot (n.) - a symphony of gags from a victim of allergic reaction due to consumption of Arachis hypogaea 
+
+pedester (v.) - to be a pedestrian, to act as a pedestrian
+
+---------------------------------------------
+penpinappapppen (n.) 
+- shortening of Pen, Pineapple, Apple, Pen, a composite of those four objects, as dictated by Pikotaro
+- a mashup of any 4 unrelated objects
+---------------------------------------------
+
+perschbeased - possibly having died twice
+
+perschlostumous - possible having occurred after one's death
+
+pershlaponymous - having identical meaning to "pershlaps"
+
+pershlaps (cyrilism, adv.) - a humorous version made to be an alternative to the current word "perhaps", still used to show uncertainty but funny
+
+pershleased - pershlaps deceased
+
+perslappage (n.) - a bombardment of Cyrilisms, collective noun for Cyrilisms
+
+polief occifer (n.) - a member of the NIU campus police
+
+polyjamorous (adj.) - a person or persons who have likings for multiple genres of music
+
+polyplug (n.) - a power strip
+
+Porta-Pianto (n.) - a porta-potty with a piano inside it 
+
+Portillionaire (n.) - one who spends at least 80% of their income on Portillos
+
+post-perschlortem - after death of pershlaps
+
+---------------------------------------------
+p'pmpic (adj.) 
+- (of water) having a high concentration of particulates
+- (of water) enriched with additional electrolytes or analogous compounds
+- excited, moderately ecstatic
+- (interjection) an exclamation of wonder, joy, or surprise
+---------------------------------------------
+
+pringling - act of sticking your hand into the pringles can at risk of getting your hand stuck
+
+ptint (v.) - to tint something in a particular way, comparable to "print"
+
+quice (adv.) - five times 
+
+render twixt (alt. render twyxt) - (euphemistic) to kill
+
+rizzito (n.) /ɹ̠ɪ'zitoʊ/ - a quantum of charisma 
+
+ROUS (v.) - Rodents of unusual size. (I dont think they exist)
+
+saise (adv.) - six times
+
+'san (n.) /dʒaːn/ - nickname for parmesan, often in the phrase "the 'san"
+
+sarm hametizer (Zinnianism, n.) - alt. of hand sanatizer 
+
+Schrute juice (Cyrilism, n.) - fruit equivalent of shmeat juice
+
+seece (adj.) /si:s/ - dexterous, skilled with one's hands 
+
+---------------------------------------------
+seil (alt. seyl) (inter.)
+- an exclamation of triumph
+- (by extension) expressing joy, celebration, glee, etc.
+---------------------------------------------
+
+shift-planking (v.) - a part-time employee (when clocked in late) will stay longer than usual so that a full hour is recorded for a shift, typically endured with struggle
+
+shlumbis - an alternative third-person pronoun, similar to 'one', but with more negative connotation
+
+shlurp (Cyrilism, v.) - an exaggerated slurp meant to garner the attention of nearby dining hall patron
+
+shma (n.) - pl. of smores
+
+shmapcorn (n.) - smore-flavoured popcorn
+
+skadover (v.) to quickly shift to the side while sitting down
+
+skunge-level (adj.) - awesome and extreme
+
+slarf (n.) - a sock filled with Elmer's glue made for swinging at opponents
+
+smessagespi (v.) - the act of licking one's hand and wiping it on a friend's neck
+
+smessagespified (adj.) - the state of being after being smessagespi'd
+
+smoo (n.) - smoothie
+
+snarody - (n.) a parody of a song replacing the first syllables of words with "sn"
+
+snijkers (n.) /'snikɹ̠z/ - shoes made out of Snickers (TM)
+
+snix (n.) - generecized trademark of pretzel/chocolate trail mix
+
+snodem (n) /'snoʊdəm/ - breathlessness (the state of being out of breath)
+
+snork (v.) - snicker + snort + chortle
+
+spepper (v.) - to salt and pepper something
+
+spoocy (adj.) - both spooky and saucy or spicy 
+
+spoot (v.) - to spit with a vocalized "too" sound
+
+spose (or s'pose) - abbreviation of suppose
+
+squididdle
+
+squarehouse (n.) - an area that matches a person's  lack of expertise.
+
+Squididdle
+
+starkitch (n.) - a cooking room used on a space ship or station (my Dad made this one lol)
+
+Starkitch (n.) - a knock-off brand of Sunkist
+
+stchewstund (n.) /'stʃustʊnd/ - an institutional manifesto, a published policy plan for an organization
+
+stice (adv.) - seven times 
+
+stick-bouncing (n.) - a movement technique involving throwing a stick, then jumping off of it. This is useful for crossing large gaps or gaining extra height.
+
+---------------------------------------------
+Etymology: clipping of the expression 'sue for peace'
+
+sue (v.) - surrender
+---------------------------------------------
+
+surger (v.) /'sɹ̠d̠ʒɹ̠/ - to operate upon surgically
+
+thneedy (adj.) - soft, stretchy, and useful
+
+thum (n.) /thəm/ - 'etymologically correct' spelling of "thumb." 
+
+tombplace (n.) - synonym for cemetery or graveyard
+
+---------------------------------------------
+to whom of which of that (*informal, chiefly Band Kid*)
+- a denunciation of the absurd nature of the english language
+- (derogatory) a statement implying the listener has a poor grasp of the english language
+  - a statement decrying a percieved lack of intelligence, education, or erudition in the listener
+---------------------------------------------
+---------------------------------------------
+trice (n.) - four times
+- "Trice four is sixteen, trice five is fifteen."
+- "If I had a tweff for every time that happened, I'd have four nickels, which isn't a lot, but it's wierd that it happened trice."
+---------------------------------------------
+
+Tsauditu! (Int.) - a greeting in an unknown language, it always is followed by the exclamation point
+
+tsscfila (n.) - a very exotic pasta served at fancy restaurants
+
+tupp (v.) - to store in Tupperware 
+
+twarr (n.) - clockwise bus at NIU
+
+---------------------------------------------
+tweff (n.) - a coin forming one-twentieth the value of a primary unit of currency.
+- Synonyms: nickel
+---------------------------------------------
+
+twell (n.) - counterclockwise bus at NIU
+
+Vivaldessert (n.) - a musical variety of cake
+
+v'you - contraction of "have you"
+
+Wajaw 36B (n.) a planet of unicyclists
+
+wallify (v.) - to pin, tape, or otherwise affix something to the wall 
+
+wuantum (adv.) - at one's own convenience.
+
+yee-hawfficer (n.) - A law enforcement officer in the American Old West, especially one perceived to be particularly amicable. 
+
+yerm (alt. yearm) (n.) - the sensation of another's absence, either for an instant in time or a prolonged period. 
+
+'zza - alt. of za or 'za
+
+zonetime (n.) - the time when one consumes calzones
+
+Zonja/Zonia/Зонйа (p.n.) - a feminine given bname

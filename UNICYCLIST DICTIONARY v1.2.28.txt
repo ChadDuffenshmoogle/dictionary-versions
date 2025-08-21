@@ -429,7 +429,7 @@ eggchecrois (n.) - a breakfast sandwich consisting of an egg and a chee on a cro
 
 eggchemuff (n.) - a breakfast sandwich consisting of an egg and a chee on an english muffin
 
-egnuol renroc (n.) - the corner lounge on the odds side of the 4th floor of Gilbert
+egnuol renroc / scorner scrounge (n.) - the corner lounge on the odds side of the 4th floor of Gilbert
 
 eice (adv.) /əɪs:/ - eight times 
 
@@ -1392,3 +1392,4 @@ Zonja/Zonia/Зонйа (p.n.) - a feminine given bname
 zoog (n.) - a word with no definition
 
 'zza - alt. of za or 'za
+

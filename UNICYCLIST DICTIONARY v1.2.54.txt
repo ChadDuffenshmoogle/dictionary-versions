@@ -3,7 +3,7 @@ UNICYCLIST DICTIONARY v1.2.54 - September 24, 2025 08:59 PM CDT
 -----CORPUS-----
 A: A'Dobo, Abnormal Road, acarrangement, acaseine, action-figuring, addictionary, aeologist, aerostatic, aforemost, aic, ain't know way, alcolade, all-dayer, altimissitude, ambient grill, analactic, anoline, antalarm, anti-ironing board, anywhoozles, apastalypse, appict, applau, Apples to Candypumpkincorn, aquavache, arm-to-bed-microwave-distance ratio, avachement, ayje
 B: babingo, baceggchebag, baceggchecrois, baceggchemuff, baconeggandachee'e, bacturqchikchecrois, Badoompts!, banazana, bani==bingo, barbosity, bean, Beeftoven, beevening, Bep!, biceased, birbed wire, blasket, BMT, boochie, Boomba, Borax, bordovering, born Pacific, breaking and delivering, broful, bruncher, buddito, bufoof, bugglegum, bunch'din, bunderstand, buoyg, burgequere, bythe
-C: C. D. Pough, C.Y.O.S., caboosification, cachew, caic, calander, canoem, carnamcrois, carzone, caseine, casseroke, CFA, chairaoke, challobon, chat, chee, cheeburg, cheeburgmaterpicktchupstardnyunbun, chemiclore  kemiklor, Chereesh, ches, chicken twinkie, chimkin buoygee, chiron, chog, choodel, Christmas Beve, Chrizardo, churoffee, chyeah!, cinnamunch-wrap supreme, Circusized, closetest, coach, colade, colific, comparing apples to candypumpkincorn, concrastinator, connissience, Connor Lamborg, conscending, conward, copiously hoosted, COreo, corns-on-the-core, cpyryil, cracked on the lanes, crangent, crastinator, cretible, cretid, cretific, crum, crustable, crustard, cryotizer, Crystian Borgabeheres, cubices, cunicular, the Cunicularies, cuniculary, cunicule, cuniculous, cyberg, Cybril, cyclexicalize, Cyclexicon, cymaffle, Cyrborg, Cyreal, Cyrealism, Cyrilindrical, Cyrorg
+C: C. D. Pough, C.Y.O.S., caboosification, cachew, caic, calander, canoem, carnamcrois, carzone, caseine, casseroke, CFA, chairaoke, challobon, chat, chee, cheeburg, cheeburgmaterpicktchupstardnyunbun, chemiclore/chemiklor/kemiklor, Chereesh, ches, chicken twinkie, chimkin buoygee, chiron, chog, choodel, Christmas Beve, Chrizardo, churoffee, chyeah!, cinnamunch-wrap supreme, Circusized, closetest, coach, colade, colific, comparing apples to candypumpkincorn, concrastinator, connissience, Connor Lamborg, conscending, conward, copiously hoosted, COreo, corns-on-the-core, cpyryil, cracked on the lanes, crangent, crastinator, cretible, cretid, cretific, crum, crustable, crustard, cryotizer, Crystian Borgabeheres, cubices, cunicular, the Cunicularies, cuniculary, cunicule, cuniculous, cyberg, Cybril, cyclexicalize, Cyclexicon, cymaffle, Cyrborg, Cyreal, Cyrealism, Cyrilindrical, Cyrorg
 D: d'deice, D. P'Doughba, de, debear, debig, degoombafy, deice, DeKalbitated, derpatronic, desmall, despepperizer, desultor, diabeatle, didia, digital parsimony, disgustard, dispose-it-tion, 'Dobagate, -dog, doringles, dort, doversquiver, drizzito, dumbgry, dumbmentia, dying of laughter at a funeral
 E: East Skistands, eggchebag, eggchecrois, eggchemuff, egnuol renroc, eice, ekstatization, elevated, eleventative, Elphafied, embig, embritched, empossin, endeed, endormify, enirambus, enknivened, ensmall, eolion, er wer, ercapote, ergy, est, exaxely, exply
 F: FahThursday, faker's dozen, falacrous, FAMO, fangorious, fdak..., feese, fictionalism, fifth-round McDonald's interview, filiupper, flabbergoosted, flabkre, fleshie, FML, food-looking, foomba, foonfub, forbonk, forcine, forgort, Forkton, Forktonite, freemen from freeman, froop juice, frumbalicious, fuzzah
@@ -217,7 +217,7 @@ cheeburg/cheeburber/burgcheebun (n.) - a cheeseburger
 
 cheeburgmaterpicktchupstardnyunbun (n.) - Whopper
 
-chemiclore  kemiklor / chemiclor / (n.) - knowledge of chemistry or chemical properties, especially obscure minutia of individual chemicals or materials
+chemiclore/chemiclor/kemiklor (n.) - knowledge of chemistry or chemical properties, especially obscure minutia of individual chemicals or materials
 
 ---------------------------------------------
 Etymology: From Yurok "chergeesh" ("small woodpecker"), usage likely shaped by analogy with "cherish"
@@ -1463,6 +1463,7 @@ Zonja/Zonia/Зонйа (p.n.) - a feminine given bname
 zoog (n.) - a word with no definition
 
 'zza - alt. of za or 'za
+
 
 
 

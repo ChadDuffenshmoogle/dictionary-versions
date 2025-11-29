@@ -4,7 +4,7 @@ UNICYCLIST DICTIONARY v1.2.117 - November 27, 2025 08:11 PM CDT
 A: A'Dobo, abgde, Abnormal Road, acarrangement, acaseine, action-figuring, addictionary, aeologist, aerostatic, aforemost, aic, ain't know way, alcolade, all-dayer, altimissitude, ambient grill, amputorse, analactic, anoline, antalarm, anti beard knife, anti-ironing board, anywhoozles, apastalypse, appict, applau, Apples to Candypumpkincorn, aquavache, arm-to-bed-microwave-distance ratio, avachement, ayje
 B: babingo, baceggchebag, baceggchecrois, baceggchemuff, baconeggandachee'e, bacrois  bucwa / bucwah, bacturqchikchecrois, Badoompts!, banazana, bani==bingo, barbosity, bayoeignet, bean, Beeftoven, beevening, befunge, beigneyonet, Bep!, Bethsque, biceased, birbed wire, blasket, BMT, boochie, Boomba, Borax, bordovering, born Pacific, breaking and delivering, breal, broful, bruncher, buddito, bufoof, bugglegum, bunch'din, bunderstand, buoyg, burgequere, bythe
 C: C. D. Pough, C.Y.O.S., caboosification, cachew, caic, calander, canoem, carkhasia, carnamcrois, carzone, caseine, casseroke, CFA, chairaoke, challobon, chat, chee, cheeburg, cheeburgmaterpicktchupstardnyunbun, chemiclore/chemiklor/kemiklor, Chereesh, ches, chicken twinkie, chimkin buoygee, chiron, chog, choodel, Christmas Beve, Chrizardo, churoffee, chyeah!, cinnamunch-wrap supreme, Circusized, clam, claudemaxxing, closetest, coach, cobblerstone, colade, colific, comparing apples to candypumpkincorn, concrastinator, connissience, Connor Lamborg, conscending, contraindict, conward, copiously hoosted, COreo, corns-on-the-core, cousousin, cousousousin, cpyryil, cracked on the lanes, crangent, crastinator, cretible, cretid, cretific, crisbordovering, crum, crustable, crustard, cryotizer, Crystian Borgabeheres, cubices, cullinow cawyatt, cunicular, the Cunicularies, cuniculary, cunicule, cuniculous, cyberg, Cyborge, Cybril, cyclexicalize, Cyclexicon, cymaffle, Cyrborg, Cyreal, Cyrealism, Cyrilindrical, Cyrorg
-D: d'deice, D. P'Doughba, de, debear, debig, degoombafy, deice, DeKalbitated, demi, derpatronic, desmall, despepperizer, desultor, diabeatle, didia, digital parsimony, disgustard, disphoria, dispose-it-tion, 'Dobagate, -dog, don't break a leg, doob, doringles, dort, doversquiver, drizzito, dumbgry, dumbmentia, duximate, dying of laughter at a funeral, dys track
+D: d'deice, D. P'Doughba, de, debear, debig, degoombafy, deice, DeKalbitated, demi, derpatronic, desmall, despepperizer, desultor, diabeatle, didia, digital parsimony, disgustard, disphoria, dispose-it-tion, 'Dobagate, -dog, don't break a leg / keep a leg, doob, doringles, dort, doversquiver, drizzito, dumbgry, dumbmentia, duximate, dying of laughter at a funeral, dys track
 E: East Skistands, edophypad kid, eggchebag, eggchecrois, eggchemuff, egnuol renroc, eice, ekstatization, elevated, eleventative, Elphafied, embig, embritched, empossin, endeed, endormify, enirambus, enknivened, ensmall, eolion, er wer, ercapote, ergy, est, exaxely, exply
 F: FahThursday, faker's dozen, falacrous, FAMO, fangorious, fdak..., feese, fictionalism, fifth-round McDonald's interview, filiupper, flabbergoosted, flabkre, fleshie, FML, food-looking, foomba, foonfub, forbonk, forcine, forgort, Forkton, Forktonite, forthdoors / forth-of-doors, freemen from freeman, friends with detriments, froop juice, frumbalicious, fuzzah
 G: gada, gansö center, garf, garignak, gaven, gawgeous, gawgometry, Genievivieve, Ghidibranti, gibbler, Gilbertian, glama, glane, golpear el heno, goo-gads, gooberism, good beevening, goofy goobrother, GooSable, goosh, Goosq, gorgy, grandcycle, greecoy / greekoy, grossitude, grosvenor, guavwa, gubble, Gwad, göse
@@ -478,7 +478,7 @@ Example: Finneas -> Finn-dog
                    Connor -> Conn-dog
 ---------------------------------------------
 
-don't break a leg (expr.) - phrase for wishing bad luck
+don't break a leg / keep a leg (expr.) - phrase for wishing bad luck
 
 doob (n.) - synonym for 7
 
@@ -1603,6 +1603,7 @@ Zonja/Zonia/Зонйа (p.n.) - a feminine given bname
 zoog (n.) - a word with no definition
 
 'zza - alt. of za or 'za
+
 
 
 

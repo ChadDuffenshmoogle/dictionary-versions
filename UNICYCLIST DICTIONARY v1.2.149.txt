@@ -143,7 +143,7 @@ bani==bingo - a false equivalence, a logically unsound proposition
 
 barbosity (n.) - the degree to which a mustache or beard can be twirled
 
-barlineus (n.) - along the line which passes through both Barsema Hall and Barsema Alumni and Visitors Center
+barlineus (adj.) - along the line which passes through both Barsema Hall and Barsema Alumni and Visitors Center
 
 bayoeignet /bay-yo-nyay/ (n.) - A bayonet with a beignet kebab'd onto it
 
@@ -1693,3 +1693,4 @@ zoogliography (n.) - any such collection of zoogs
 zooglopedia (n.) - a book of terms without any definitions or explanations whatsoever
 
 zoogpile (v.) - to collect zoogs
+

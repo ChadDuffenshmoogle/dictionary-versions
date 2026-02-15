@@ -16,7 +16,7 @@ L: L + golden ratio, laptoff, Ldoba, legable, Let's pop the stack on that one, l
 M: ma, madefact, maekluzaphed, make a penappapen out of a kaboompah, mander, manely, manubriate, manuflect, many graditudinal appreciations, marlize, masterize, mathical, mayhEmVihicle, McJagger, McKnuckleSandwich, McSlog, Meathook, meatloflaf, mebander, Median Joe, meh-crowave, mentally decapitate, mentally pencil in, Microsophft, mid-crowave, mid-gerator, minimun, Mozartrella, Mulanea
 N: Nahll, nathered, nausce, nectarmoon, neice, nerbous, neur, ngaji, nindarpal cunnel, nones of nones, nones of ones, nonestic, Noopton, Norahmbus Qualldrilateral, Norg, nost, numerity
 O: OB/CD, odenocomize, Oh geese, olimario, ones of ones, ones of ones of ones, ong, Oniuary, orgberg, orgborg, overcover undercover civcopcivcop, overgize, Owen Bots
-P: p'pmpic, Paroosan Caroost of Noop juice, Patter'zza, Patterzone, peanoot, pedester, pencil graffiti, penpinappapppen, perschbeased, perschleased, perschlostumous, pershlaponymous, pershlaps, perslappage, pertangle, phoot, pistashing, Pistushio, plast, pogocycle, polief occifer, polyjamorous, polyplug, Portillionaire, post-perschlortem, posttoled / postwarned, poving off, pringling, proconcrastinator, procrast-inator, prone-accident-prone, pussyfooted
+P: p'pmpic, Paroosan Caroost of Noop juice, Patter'zza, Patterzone, peanoot, pedester, pencil graffiti, penpinappapppen, perschbeased, perschleased, perschlostumous, pershlaponymous, pershlaps, perslappage, pertangle, phoot, pistashing, Pistushio, plast, pogocycle, polief occifer, polyjamorous, polyplug, Portillionaire, post-perschlortem, posttoled / postwarned, povving off, pringling, proconcrastinator, procrast-inator, prone-accident-prone, pussyfooted
 Q: Q'dobn't, q-d up, qi-ter, quadricate, queue-doba, quice, Quis, quop, quopped, qõ
 R: Radical Joe, rancharade, Renaissance pizza, render twixt, rizzito, ROFL, rorcadian rhythm, rorcadian rythm, ROUS, the royal Wii, ruckmaking, ryxis
 S: saise, 'san, sarm hametizer, sauseggchebag, sauseggchecrois, sauseggchemuff, Scaracus gilbertia, Schrute juice, scorg, scravenger, 'scush, 'scussin', secondary alcoholism, sedenter, seece, seil, seriohs, sesettaphiliac, sesquipedantic, sesquipedeale, shift-planking, shlumbis, shlurp, shlyrk, shma, shmapcorn, Shneckedeutsch, shoo-out, shoob, shoobarodoob, shoobie doobie, shoreside, shout-down, Siborg, single entendre, Sis, sjort, skadover, skedale, skibi, skullborg, slarf, sleighballing, smessagespi, smessagespified, smoo, sneech, snijkers, snix, snodem, snork, sobrescalientes, somatosomatic, soul butter / baceggchesoul, spaghettiquette, spepper, speppered cheeburgmaterpicktchupstardnyunbun, Spherical Cylindario, spilk, spleen-rot, spleering, spoocy, spoocy spooge n' smoo spoot's a kaboompa. / unlike a goosh kaspoomph on hoosted boomba, spooge, Spoonmancer, spoot, spose, sproing, spurello, squarehouse, squesch, squididdle, squirk, squonch, stach'o'clock, stack-doba, Standard Deviation Joe, starkitch, Starkitch, stchewstund, STFU, stice, stick-bouncing, Sticky Wicket, stupible, stupific, subcycle, sue, supercycle, supmeanik, supraessential, surger, sven worde!, sxc
@@ -1172,7 +1172,9 @@ Porta-Pianto (n.) - a porta-potty with a piano inside it
 
 Portillionaire (n.) - one who spends at least 80% of their income on Portillos
 
-post-perschlortem - after death of pershlaps
+post-perschlortem (adj.) - after death of pershlaps
+
+povving off (v.) - losing money rapidly
 
 ---------------------------------------------
 p'pmpic (adj.) 
@@ -1728,4 +1730,5 @@ zoogliography (n.) - any such collection of zoogs
 zooglopedia (n.) - a book of terms without any definitions or explanations whatsoever
 
 zoogpile (v.) - to collect zoogs
+
 

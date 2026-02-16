@@ -3,7 +3,7 @@ UNICYCLIST DICTIONARY v1.2.179 - February 16, 2026 12:13 AM CDT
 -----CORPUS-----
 A: A'Dobo, abgde, Abnormal Road, acarrangement, acaseine, action-figuring, addictionary, aeologist, aerostatic, aforemost, aic, ain't know way, alcolade, all-dayer, altimissitude, ambient grill, amputorse, an eye for a tooth, analactic, and a tooth for an eye, anienie, anoline, antalarm, anti beard knife, anti-ironing board, anywhoozles, apastalypse, appict, applau, Apples to Candypumpkincorn, aquavache, arm-to-bed-microwave-distance ratio, avachement, avat, ayje, Ayn Ham
 B: babingo, baceggchebag, baceggchecrois, baceggchemuff, bacheggle, baconeggandachee'e, bacrois  bucwa / bucwah, bacturqchikchecrois, Badoompts!, banazana, bang, bani==bingo, barbosity, barlineus, bayoeignet, bean, Beeftoven, beevening, befunge, beigneyonet, Bep!, Bethsque, biceased, birbed wire, blasket, BMT, bonch, boochie, Boomba, Borax, bordovering, born Pacific, breaking and delivering, breal, brexology, broful, bruncher, buddito, bufoof, bugglegum, bunch'din, bunderstand, buoyg, burgequere, bythe
-C: C. D. Pough, C.Y.O.S., caboosification, cachew, caic, calander, canoem, carkhasia, carnamcrois, carzone, caseine, casseroke, CFA, chairaoke, challobon, chat, chee, cheeburg, cheeburgmaterpicktchupstardnyunbun, chemiclore/chemiklor/kemiklor, Chereesh, ches, chicken twinkie, Chilean fries, Chilipius, chimkin buoygee, chipical, chiron, chog, choodel, choperating, Christmas Beve, Chrizardo, churoffee, chyeah!, cinnamunch-wrap supreme, Circusized, clam, claudemaxxing, closetest, coach, cobblerstone, colade, colific, comparing apples to candypumpkincorn, concrastinator, connissience, Connor Lamborg, conscending, contraindict, conward, copiously hoosted, copralic, copypasta, COreo, corns-on-the-core, cousousin, cousousousin, cpyryil, cracked on the lanes, crangent, crastinator, cretible, cretid, cretific, crisbordovering, crum, crustable, crustard, cryotizer, Crystian Borgabeheres, cubices, cullinow cawyatt, cunicular, the Cunicularies, cuniculary, cunicule, cuniculous, cyberg, Cyborge, Cybril, cyclexicalize, Cyclexicon, cycsmith, cymaffle, Cyrborg, Cyreal, Cyrealism, Cyrilindrical, Cyrorg
+C: C. D. Pough, C.Y.O.S., caboosification, cachew, caic, calander, canoem, carkhasia, carnamcrois, carzone, caseine, casseroke, CFA, chairaoke, challobon, chat, chee, cheeburg, cheeburgmaterpicktchupstardnyunbun, chemiclore/chemiklor/kemiklor, Chereesh, ches, chicken twinkie, Chilean fries, Chilipius, chimkin buoygee, chipical, chiron, chog, choodel, choperating, Christmas Beve, Chrizardo, churoffee, chyeah!, cinnamunch-wrap supreme, Circusized, clam, claudemaxxing, closetest, coach, cobblerstone, colade, colific, comparing apples to candypumpkincorn, concrastinator, connissience, Connor Lamborg, conscending, contraindict, conward, copiously hoosted, copralic, copypasta, COreo, corns-on-the-core, cousousin, cousousousin, cpyryil, cracked on the lanes, crangent, crastinator, cretible, cretid, cretific, crisbordovering, crum, crustable, crustard, cryotizer, Crystian Borgabeheres, cubices, cullinow cawyatt, cunicular, the Cunicularies, cuniculary, cunicule, cuniculous, cyberg, Cyborge, Cybril, cyclexicalize, Cyclexicon, cycsmith / unicyclinguist, cymaffle, Cyrborg, Cyreal, Cyrealism, Cyrilindrical, Cyrorg
 D: d'deice, D. P'Doughba, de, de-zoog, debear, debig, degoombafy, deice, DeKalbitated, demi, derpatronic, desmall, despepperizer, desultor, diabeatle, didia, digital parsimony, disgustard, disphoria, dispose-it-tion, 'Dobagate, -dog, don't break a leg / keep a leg, doob, doringles, dort, doversquiver, drizzito, dumbgry, dumbmentia, the DuS', duximate, dying of laughter at a funeral, dys track
 E: East Skistands, eau de Farade, edophypad kid, eggchebag, eggchecrois, eggchemuff, egnuol renroc, eice, ekstatization, elevated, eleventative, Elphafied, embig, embritched, empossin, endeed, endormify, engiqueer, enirambus, enknivened, ensmall, eolion, er wer, ercapote, ergy, est, eucry, exaxely, exply
 F: FahThursday, faker's dozen, falacrous, FAMO, fangorious, fdak..., feese, fictionalism, fifth-round McDonald's interview, filiupper, flabbergoosted, flabkre, fleshie, FML, food-looking, foomba, foonfub, foosdogger, forbonk, forcine, forgort, Forkton, Forktonite, forthdoors / forth-of-doors, freemen from freeman, friends with detriments, froop juice, frumbalicious, fuzzah
@@ -436,7 +436,7 @@ cyclexicalize (v.) - to add a word to the ⁠UNICYCLIST DICTIONARY
 
 Cyclexicon (n.) - alternate name for the Unicyclist Dictionary
 
-cycsmith (n.) - a coiner of new cyclexiclisms
+cycsmith / unicyclinguist (n.) - a coiner of new cyclexiclisms
 
 cymaffle (n.) - a cinnamon flavoured waffle
 
@@ -545,7 +545,7 @@ dys track (n.) - an innovative new strategy for rap beefs where you write bad mu
 
 East Skistands (n.) - the places where Desk Attendants place their skis on campus (they can be rearranged if they get scrambled)
 
-eau de Farade (n.) - J.C. ism for the distinctive scent of the Faraday basement
+eau de Farade (n.) - J. C. ism for the distinctive scent of the Faraday basement
 
 ---------------------------------------------
 edophypad kid (n.) - someone who is habitually on a portable computing device during marching band rehearsal
@@ -888,7 +888,7 @@ jablesque (adj.) - similar in nature to Jack Black
 
 jaduteo (n.) - a word or concept that cannot adequately be translated between two languages
 
-J. C. La Borgbera (n.) - Robo J.C (The C is short for Cy) 
+J. C. La Borgbera (n.) - Robo J. C. (The C is short for Cy) 
 
 jep (inter.) - alt. of "yep"
 
@@ -1759,5 +1759,6 @@ zoogliography (n.) - any such collection of zoogs
 zooglopedia (n.) - a book of terms without any definitions or explanations whatsoever
 
 zoogpile (v.) - to collect zoogs
+
 
 

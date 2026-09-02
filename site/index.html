@@ -115,14 +115,29 @@ async function main() {
   document.getElementById('totalEntries').textContent = stats.total_entries;
   document.getElementById('latestVersion').textContent = stats.latest_version.replace('UNICYCLIST DICTIONARY ', '').replace('.txt', '');
 
-  // Additions over time
+  // Additions over time -- fill in zero-count days so gaps are visible
+  // instead of the chart silently skipping days with no additions.
+  function fillDateGaps(series) {
+    if (series.length === 0) return series;
+    const byDate = new Map(series.map(p => [p.date, p.count]));
+    const start = new Date(series[0].date + 'T00:00:00Z');
+    const end = new Date(series[series.length - 1].date + 'T00:00:00Z');
+    const filled = [];
+    for (let d = new Date(start); d <= end; d.setUTCDate(d.getUTCDate() + 1)) {
+      const key = d.toISOString().slice(0, 10);
+      filled.push({ date: key, count: byDate.get(key) || 0 });
+    }
+    return filled;
+  }
+  const additionsFilled = fillDateGaps(stats.additions_series);
+
   new Chart(document.getElementById('additionsChart'), {
     type: 'bar',
     data: {
-      labels: stats.additions_series.map(p => p.date),
+      labels: additionsFilled.map(p => p.date),
       datasets: [{
         label: 'New words added',
-        data: stats.additions_series.map(p => p.count),
+        data: additionsFilled.map(p => p.count),
         backgroundColor: '#6ee7b7',
       }],
     },

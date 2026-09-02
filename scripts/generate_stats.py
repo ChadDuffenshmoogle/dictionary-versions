@@ -29,6 +29,11 @@ FILE_PREFIX = "UNICYCLIST DICTIONARY"
 FILE_EXTENSION = ".txt"
 ENTRY_PATTERN = r'^(.+?) \((.+?)\) - (.+)$'
 
+# Dates to exclude from the "new words added" chart -- these were bulk
+# backfill/import commits (legacy versions uploaded all at once), not
+# organic day-by-day additions.
+EXCLUDED_DATES = {"2025-08-08"}
+
 API_ROOT = f"https://api.github.com/repos/{GITHUB_OWNER}/{GITHUB_REPO}"
 RAW_ROOT = f"https://raw.githubusercontent.com/{GITHUB_OWNER}/{GITHUB_REPO}/{GITHUB_BRANCH}"
 
@@ -166,7 +171,7 @@ def main():
         msg = c["commit"]["message"]
         date = c["commit"]["author"]["date"][:10]  # YYYY-MM-DD
         m = add_re.search(msg)
-        if m:
+        if m and date not in EXCLUDED_DATES:
             additions_by_day[date] += 1
             added_terms_timeline.append({"date": date, "term": m.group(1)})
 

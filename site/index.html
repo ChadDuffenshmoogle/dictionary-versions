@@ -75,23 +75,30 @@
       <canvas id="letterChart"></canvas>
     </div>
 
+    <div class="card wide" style="display:flex; align-items:center; gap:10px;">
+      <h2 style="margin:0;">Show top</h2>
+      <input type="number" id="topN" value="5" min="1" max="50" step="1"
+        style="width:70px; padding:6px; border-radius:6px; border:1px solid #262a33; background:#0f1115; color:#e8e8ec;">
+      <span style="color:var(--muted);">shortest/longest words & definitions</span>
+    </div>
+
     <div class="card">
-      <h2>Top 5 Shortest Words</h2>
+      <h2 id="shortestWordsTitle">Shortest Words</h2>
       <ol id="shortestWords"></ol>
     </div>
 
     <div class="card">
-      <h2>Top 5 Longest Words</h2>
+      <h2 id="longestWordsTitle">Longest Words</h2>
       <ol id="longestWords"></ol>
     </div>
 
     <div class="card wide">
-      <h2>5 Shortest Definitions</h2>
+      <h2 id="shortestDefsTitle">Shortest Definitions</h2>
       <ol id="shortestDefs"></ol>
     </div>
 
     <div class="card wide">
-      <h2>5 Longest Definitions</h2>
+      <h2 id="longestDefsTitle">Longest Definitions</h2>
       <ol id="longestDefs"></ol>
     </div>
   </div>
@@ -263,12 +270,35 @@ async function main() {
     el.innerHTML = items.map(i => `<li>${render(i)}</li>`).join('');
   };
 
-  fillList('shortestWords', stats.shortest_words, w => `<span class="def-term">${w}</span>`);
-  fillList('longestWords', stats.longest_words, w => `<span class="def-term">${w}</span>`);
-  fillList('shortestDefs', stats.shortest_definitions,
-    d => `<span class="def-term">${d.term}</span> — <span class="def-text">${d.definition}</span>`);
-  fillList('longestDefs', stats.longest_definitions,
-    d => `<span class="def-term">${d.term}</span> — <span class="def-text">${d.definition}</span>`);
+  function renderExtremes(n) {
+    n = Math.max(1, Math.min(50, n));
+
+    const words = stats.words_by_length_asc;
+    const shortestWords = words.slice(0, n);
+    const longestWords = words.slice(-n).reverse();
+
+    const defs = stats.definitions_by_length_asc;
+    const shortestDefs = defs.slice(0, n);
+    const longestDefs = defs.slice(-n).reverse();
+
+    document.getElementById('shortestWordsTitle').textContent = `Shortest ${n} Word${n === 1 ? '' : 's'}`;
+    document.getElementById('longestWordsTitle').textContent = `Longest ${n} Word${n === 1 ? '' : 's'}`;
+    document.getElementById('shortestDefsTitle').textContent = `Shortest ${n} Definition${n === 1 ? '' : 's'}`;
+    document.getElementById('longestDefsTitle').textContent = `Longest ${n} Definition${n === 1 ? '' : 's'}`;
+
+    fillList('shortestWords', shortestWords, w => `<span class="def-term">${w}</span>`);
+    fillList('longestWords', longestWords, w => `<span class="def-term">${w}</span>`);
+    fillList('shortestDefs', shortestDefs,
+      d => `<span class="def-term">${d.term}</span> — <span class="def-text">${d.definition}</span>`);
+    fillList('longestDefs', longestDefs,
+      d => `<span class="def-term">${d.term}</span> — <span class="def-text">${d.definition}</span>`);
+  }
+
+  const topNInput = document.getElementById('topN');
+  renderExtremes(parseInt(topNInput.value, 10) || 5);
+  topNInput.addEventListener('input', () => {
+    renderExtremes(parseInt(topNInput.value, 10) || 5);
+  });
 }
 
 main();

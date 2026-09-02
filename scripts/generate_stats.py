@@ -19,8 +19,20 @@ import os
 import re
 import sys
 from collections import defaultdict, Counter
+from datetime import datetime
+from zoneinfo import ZoneInfo
 
 import requests
+
+CENTRAL = ZoneInfo("America/Chicago")
+
+
+def to_central_date(iso_timestamp):
+    """GitHub commit timestamps come back in UTC (Z-suffixed). Convert to
+    Central time before taking the calendar date, otherwise a commit made
+    in the evening Central time lands on the wrong (next) UTC day."""
+    dt = datetime.fromisoformat(iso_timestamp.replace("Z", "+00:00"))
+    return dt.astimezone(CENTRAL).strftime("%Y-%m-%d")
 
 GITHUB_OWNER = "ChadDuffenshmoogle"
 GITHUB_REPO = "dictionary-versions"
@@ -177,7 +189,7 @@ def main():
     add_re = re.compile(r"with new term '(.+?)'")
     for c in commits:
         msg = c["commit"]["message"]
-        date = c["commit"]["author"]["date"][:10]  # YYYY-MM-DD
+        date = to_central_date(c["commit"]["author"]["date"])
         m = add_re.search(msg)
         if m:
             additions_by_day_all[date] += 1

@@ -127,6 +127,26 @@
   <div id="errorBox" class="error" style="display:none;"></div>
 
 <script>
+// Thin vertical line at the hovered x-position, on every chart.
+Chart.register({
+  id: 'crosshair',
+  afterDraw(chart) {
+    const active = chart.tooltip && chart.tooltip._active;
+    if (!active || !active.length) return;
+    const x = active[0].element.x;
+    const { top, bottom } = chart.chartArea;
+    const ctx = chart.ctx;
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(x, top);
+    ctx.lineTo(x, bottom);
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = 'rgba(232, 232, 236, 0.35)';
+    ctx.stroke();
+    ctx.restore();
+  },
+});
+
 async function main() {
   let stats;
   try {
@@ -171,10 +191,11 @@ async function main() {
 
     const lastPoint = points[points.length - 1];
     const projectionDays = Math.round(projectionMonths * 30.4);
-    const projected = [
-      { x: lastPoint.x, y: lastPoint.y }, // connect projection to the real last point
-      { x: lastPoint.x + projectionDays, y: a + b * (lastPoint.x + projectionDays) },
-    ];
+    const projected = [];
+    for (let d = 0; d <= projectionDays; d++) {
+      const x = lastPoint.x + d;
+      projected.push({ x, y: a + b * x });
+    }
 
     const dateLabel = (x) => {
       const d = new Date(firstDate.getTime() + x * dayMs);
@@ -209,7 +230,7 @@ async function main() {
       options: {
         responsive: true,
         parsing: false,
-        interaction: { mode: 'index', axis: 'x', intersect: false },
+        interaction: { mode: 'x', intersect: false },
         scales: {
           x: {
             type: 'linear',
@@ -226,6 +247,7 @@ async function main() {
           tooltip: {
             callbacks: {
               title: (items) => dateLabel(items[0].parsed.x),
+              label: (item) => `${item.dataset.label}: ${Math.round(item.parsed.y)}`,
             },
           },
         },
@@ -273,7 +295,7 @@ async function main() {
     },
     options: {
       responsive: true,
-      interaction: { mode: 'index', axis: 'x', intersect: false },
+      interaction: { mode: 'x', intersect: false },
       scales: {
         x: { ticks: { color: '#9a9fab', maxTicksLimit: 12 }, grid: { color: '#262a33' } },
         y: { ticks: { color: '#9a9fab', precision: 0 }, grid: { color: '#262a33' } },
@@ -296,7 +318,7 @@ async function main() {
     },
     options: {
       responsive: true,
-      interaction: { mode: 'index', axis: 'x', intersect: false },
+      interaction: { mode: 'x', intersect: false },
       scales: {
         x: { ticks: { color: '#9a9fab' }, grid: { display: false } },
         y: { ticks: { color: '#9a9fab', precision: 0 }, grid: { color: '#262a33' } },

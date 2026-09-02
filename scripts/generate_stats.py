@@ -42,9 +42,12 @@ FILE_EXTENSION = ".txt"
 ENTRY_PATTERN = r'^(.+?) \((.+?)\) - (.+)$'
 
 # Dates to exclude from the "new words added" chart -- these were bulk
-# backfill/import commits (legacy versions uploaded all at once), not
-# organic day-by-day additions.
-EXCLUDED_DATES = {"2025-08-08"}
+# backfill/import commits and early test/delete/reset noise, not organic
+# day-by-day additions (confirmed against the actual commit history).
+EXCLUDED_DATES = {
+    "2025-08-08", "2025-08-09", "2025-08-10",
+    "2025-08-11", "2025-08-12", "2025-08-13",
+}
 
 # Known baseline: the dictionary already had this many words as of this
 # date (confirmed by the maintainer). Everything added strictly after
@@ -207,7 +210,7 @@ def main():
     running_total = BASELINE_COUNT
     cumulative_series = [{"date": BASELINE_DATE, "total": BASELINE_COUNT}]
     for d, n in sorted(additions_by_day_all.items()):
-        if d <= BASELINE_DATE:
+        if d <= BASELINE_DATE or d in EXCLUDED_DATES:
             continue
         running_total += n
         cumulative_series.append({"date": d, "total": running_total})

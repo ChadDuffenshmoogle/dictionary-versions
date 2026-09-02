@@ -41,19 +41,11 @@ FILE_PREFIX = "UNICYCLIST DICTIONARY"
 FILE_EXTENSION = ".txt"
 ENTRY_PATTERN = r'^(.+?) \((.+?)\) - (.+)$'
 
-# Dates to exclude from the "new words added" chart -- these were bulk
-# backfill/import commits and early test/delete/reset noise, not organic
-# day-by-day additions (confirmed against the actual commit history).
-EXCLUDED_DATES = {
-    "2025-08-08", "2025-08-09", "2025-08-10",
-    "2025-08-11", "2025-08-12", "2025-08-13",
-}
-
-# Known baseline: the dictionary already had this many words as of this
-# date (confirmed by the maintainer). Everything added strictly after
-# this date is counted on top of it. Site/tooling commits never match
-# add_re (they don't say "with new term"), so they're excluded naturally.
-BASELINE_DATE = "2025-08-08"
+# Everything up through this date is noise (bulk backfill + a week of
+# test/delete/reset churn) and gets excluded from both charts entirely.
+# Only commits strictly after this date represent real new words. The
+# dictionary already had BASELINE_COUNT words as of this date.
+BASELINE_DATE = "2025-08-13"
 BASELINE_COUNT = 280
 
 API_ROOT = f"https://api.github.com/repos/{GITHUB_OWNER}/{GITHUB_REPO}"
@@ -196,7 +188,7 @@ def main():
         m = add_re.search(msg)
         if m:
             additions_by_day_all[date] += 1
-            if date not in EXCLUDED_DATES:
+            if date > BASELINE_DATE:
                 additions_by_day[date] += 1
                 added_terms_timeline.append({"date": date, "term": m.group(1)})
 
@@ -204,13 +196,14 @@ def main():
         {"date": d, "count": n} for d, n in sorted(additions_by_day.items())
     ]
 
-    # --- Seed cumulative total with the known 8/8/25 baseline, then add
-    # only commits strictly after that date (the 8/8/25 commits are
-    # already baked into the baseline count). ---
+    # --- Seed cumulative total with the known baseline, then add only
+    # commits strictly after that date (everything up to and including
+    # the baseline date is bulk backfill / test noise, already baked
+    # into BASELINE_COUNT). ---
     running_total = BASELINE_COUNT
     cumulative_series = [{"date": BASELINE_DATE, "total": BASELINE_COUNT}]
     for d, n in sorted(additions_by_day_all.items()):
-        if d <= BASELINE_DATE or d in EXCLUDED_DATES:
+        if d <= BASELINE_DATE:
             continue
         running_total += n
         cumulative_series.append({"date": d, "total": running_total})

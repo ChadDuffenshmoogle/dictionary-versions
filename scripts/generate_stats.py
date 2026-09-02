@@ -203,12 +203,13 @@ def main():
     def word_len(t):
         return len(sort_key_ignore_punct(t).replace(", the", ""))
 
-    shortest_words = sorted(all_terms, key=word_len)[:5]
-    longest_words = sorted(all_terms, key=word_len, reverse=True)[:5]
+    words_by_length_asc = sorted(all_terms, key=word_len)
 
     definitions = extract_definitions(content)
-    shortest_defs = sorted(definitions, key=lambda td: len(td[1]))[:5]
-    longest_defs = sorted(definitions, key=lambda td: len(td[1]), reverse=True)[:5]
+    definitions_by_length_asc = sorted(
+        [{"term": t, "definition": d} for t, d in definitions],
+        key=lambda td: len(td["definition"]),
+    )
 
     stats = {
         "latest_version": latest_name,
@@ -217,14 +218,8 @@ def main():
         "additions_series": additions_series,
         "cumulative_series": cumulative_series,
         "added_terms_timeline": added_terms_timeline,
-        "shortest_words": shortest_words,
-        "longest_words": longest_words,
-        "shortest_definitions": [
-            {"term": t, "definition": d} for t, d in shortest_defs
-        ],
-        "longest_definitions": [
-            {"term": t, "definition": d} for t, d in longest_defs
-        ],
+        "words_by_length_asc": words_by_length_asc,
+        "definitions_by_length_asc": definitions_by_length_asc,
     }
 
     out_path = os.path.join(os.path.dirname(__file__), "..", "site", "stats.json")

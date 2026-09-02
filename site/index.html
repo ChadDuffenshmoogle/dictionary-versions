@@ -61,6 +61,11 @@
     </div>
 
     <div class="card wide">
+      <h2>Total Word Count Over Time (+ 1-Year Projection)</h2>
+      <canvas id="growthChart"></canvas>
+    </div>
+
+    <div class="card wide">
       <h2>New Words Added Over Time</h2>
       <canvas id="additionsChart"></canvas>
     </div>
@@ -114,6 +119,86 @@ async function main() {
 
   document.getElementById('totalEntries').textContent = stats.total_entries;
   document.getElementById('latestVersion').textContent = stats.latest_version.replace('UNICYCLIST DICTIONARY ', '').replace('.txt', '');
+
+  // Total word count over time, with a 1-year linear projection
+  function buildGrowthChart(cumulative) {
+    if (!cumulative || cumulative.length < 2) return;
+
+    const dayMs = 86400000;
+    const firstDate = new Date(cumulative[0].date + 'T00:00:00Z');
+    const points = cumulative.map(p => ({
+      x: (new Date(p.date + 'T00:00:00Z') - firstDate) / dayMs,
+      y: p.total,
+    }));
+
+    // Simple least-squares linear regression: y = a + b*x
+    const n = points.length;
+    const sumX = points.reduce((s, p) => s + p.x, 0);
+    const sumY = points.reduce((s, p) => s + p.y, 0);
+    const sumXY = points.reduce((s, p) => s + p.x * p.y, 0);
+    const sumXX = points.reduce((s, p) => s + p.x * p.x, 0);
+    const b = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
+    const a = (sumY - b * sumX) / n;
+
+    const lastPoint = points[points.length - 1];
+    const projectionDays = 365;
+    const projected = [
+      { x: lastPoint.x, y: lastPoint.y }, // connect projection to the real last point
+      { x: lastPoint.x + projectionDays, y: a + b * (lastPoint.x + projectionDays) },
+    ];
+
+    const dateLabel = (x) => {
+      const d = new Date(firstDate.getTime() + x * dayMs);
+      return d.toISOString().slice(0, 10);
+    };
+
+    new Chart(document.getElementById('growthChart'), {
+      type: 'line',
+      data: {
+        datasets: [
+          {
+            label: 'Actual total entries',
+            data: points.map(p => ({ x: p.x, y: p.y })),
+            borderColor: '#6ee7b7',
+            backgroundColor: '#6ee7b7',
+            pointRadius: 2,
+            tension: 0.15,
+          },
+          {
+            label: 'Projected (linear trend, next year)',
+            data: projected,
+            borderColor: '#fbbf24',
+            borderDash: [6, 4],
+            pointRadius: 0,
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        parsing: false,
+        scales: {
+          x: {
+            type: 'linear',
+            ticks: {
+              color: '#9a9fab',
+              callback: (val) => dateLabel(val),
+            },
+            grid: { color: '#262a33' },
+          },
+          y: { ticks: { color: '#9a9fab' }, grid: { color: '#262a33' } },
+        },
+        plugins: {
+          legend: { labels: { color: '#e8e8ec' } },
+          tooltip: {
+            callbacks: {
+              title: (items) => dateLabel(items[0].parsed.x),
+            },
+          },
+        },
+      },
+    });
+  }
+  buildGrowthChart(stats.cumulative_series);
 
   // Additions over time -- fill in zero-count days so gaps are visible
   // instead of the chart silently skipping days with no additions.

@@ -43,6 +43,16 @@
   .def-text { color: var(--muted); }
   canvas { max-height: 320px; }
   .loading, .error { color: var(--muted); padding: 40px; text-align: center; }
+  .n-input {
+    width: 52px;
+    padding: 2px 4px;
+    border-radius: 6px;
+    border: 1px solid #262a33;
+    background: #0f1115;
+    color: var(--accent);
+    font: inherit;
+    font-weight: 700;
+  }
 </style>
 </head>
 <body>
@@ -61,7 +71,9 @@
     </div>
 
     <div class="card wide">
-      <h2>Total Word Count Over Time (+ 1-Year Projection)</h2>
+      <h2>Total Word Count Over Time (+ <input type="number" id="projMonths" value="6" min="1" max="60" step="1"
+        style="width:56px; padding:2px 4px; border-radius:6px; border:1px solid #262a33; background:#0f1115; color:var(--accent); font:inherit; font-weight:700;">
+        Month Projection)</h2>
       <canvas id="growthChart"></canvas>
     </div>
 
@@ -75,30 +87,39 @@
       <canvas id="letterChart"></canvas>
     </div>
 
-    <div class="card wide" style="display:flex; align-items:center; gap:10px;">
-      <h2 style="margin:0;">Show top</h2>
-      <input type="number" id="topN" value="5" min="1" max="50" step="1"
-        style="width:70px; padding:6px; border-radius:6px; border:1px solid #262a33; background:#0f1115; color:#e8e8ec;">
-      <span style="color:var(--muted);">shortest/longest words & definitions</span>
-    </div>
-
     <div class="card">
-      <h2 id="shortestWordsTitle">Shortest Words</h2>
+      <h2 id="shortestWordsTitle" style="display:flex; align-items:center; gap:8px;">
+        Shortest
+        <input type="number" id="nShortestWords" value="5" min="1" max="50" step="1" class="n-input">
+        Words
+      </h2>
       <ol id="shortestWords"></ol>
     </div>
 
     <div class="card">
-      <h2 id="longestWordsTitle">Longest Words</h2>
+      <h2 id="longestWordsTitle" style="display:flex; align-items:center; gap:8px;">
+        Longest
+        <input type="number" id="nLongestWords" value="5" min="1" max="50" step="1" class="n-input">
+        Words
+      </h2>
       <ol id="longestWords"></ol>
     </div>
 
     <div class="card wide">
-      <h2 id="shortestDefsTitle">Shortest Definitions</h2>
+      <h2 id="shortestDefsTitle" style="display:flex; align-items:center; gap:8px;">
+        Shortest
+        <input type="number" id="nShortestDefs" value="5" min="1" max="50" step="1" class="n-input">
+        Definitions
+      </h2>
       <ol id="shortestDefs"></ol>
     </div>
 
     <div class="card wide">
-      <h2 id="longestDefsTitle">Longest Definitions</h2>
+      <h2 id="longestDefsTitle" style="display:flex; align-items:center; gap:8px;">
+        Longest
+        <input type="number" id="nLongestDefs" value="5" min="1" max="50" step="1" class="n-input">
+        Definitions
+      </h2>
       <ol id="longestDefs"></ol>
     </div>
   </div>
@@ -127,8 +148,9 @@ async function main() {
   document.getElementById('totalEntries').textContent = stats.total_entries;
   document.getElementById('latestVersion').textContent = stats.latest_version.replace('UNICYCLIST DICTIONARY ', '').replace('.txt', '');
 
-  // Total word count over time, with a 1-year linear projection
-  function buildGrowthChart(cumulative) {
+  // Total word count over time, with an editable-length linear projection
+  let growthChartInstance = null;
+  function buildGrowthChart(cumulative, projectionMonths) {
     if (!cumulative || cumulative.length < 2) return;
 
     const dayMs = 86400000;
@@ -148,7 +170,7 @@ async function main() {
     const a = (sumY - b * sumX) / n;
 
     const lastPoint = points[points.length - 1];
-    const projectionDays = 365;
+    const projectionDays = Math.round(projectionMonths * 30.4);
     const projected = [
       { x: lastPoint.x, y: lastPoint.y }, // connect projection to the real last point
       { x: lastPoint.x + projectionDays, y: a + b * (lastPoint.x + projectionDays) },
@@ -159,7 +181,11 @@ async function main() {
       return d.toISOString().slice(0, 10);
     };
 
-    new Chart(document.getElementById('growthChart'), {
+    if (growthChartInstance) {
+      growthChartInstance.destroy();
+    }
+
+    growthChartInstance = new Chart(document.getElementById('growthChart'), {
       type: 'line',
       data: {
         datasets: [
@@ -172,7 +198,7 @@ async function main() {
             tension: 0.15,
           },
           {
-            label: 'Projected (linear trend, next year)',
+            label: `Projected (linear trend, next ${projectionMonths} month${projectionMonths === 1 ? '' : 's'})`,
             data: projected,
             borderColor: '#fbbf24',
             borderDash: [6, 4],
@@ -205,7 +231,18 @@ async function main() {
       },
     });
   }
-  buildGrowthChart(stats.cumulative_series);
+
+  function clampMonths(v) {
+    v = parseInt(v, 10);
+    if (isNaN(v)) v = 6;
+    return Math.max(1, Math.min(60, v));
+  }
+
+  const projMonthsInput = document.getElementById('projMonths');
+  buildGrowthChart(stats.cumulative_series, clampMonths(projMonthsInput.value));
+  projMonthsInput.addEventListener('input', () => {
+    buildGrowthChart(stats.cumulative_series, clampMonths(projMonthsInput.value));
+  });
 
   // Additions over time -- fill in zero-count days so gaps are visible
   // instead of the chart silently skipping days with no additions.
@@ -270,35 +307,41 @@ async function main() {
     el.innerHTML = items.map(i => `<li>${render(i)}</li>`).join('');
   };
 
-  function renderExtremes(n) {
-    n = Math.max(1, Math.min(50, n));
+  function clampN(v) {
+    v = parseInt(v, 10);
+    if (isNaN(v)) v = 5;
+    return Math.max(1, Math.min(50, v));
+  }
 
-    const words = stats.words_by_length_asc;
-    const shortestWords = words.slice(0, n);
-    const longestWords = words.slice(-n).reverse();
-
-    const defs = stats.definitions_by_length_asc;
-    const shortestDefs = defs.slice(0, n);
-    const longestDefs = defs.slice(-n).reverse();
-
-    document.getElementById('shortestWordsTitle').textContent = `Shortest ${n} Word${n === 1 ? '' : 's'}`;
-    document.getElementById('longestWordsTitle').textContent = `Longest ${n} Word${n === 1 ? '' : 's'}`;
-    document.getElementById('shortestDefsTitle').textContent = `Shortest ${n} Definition${n === 1 ? '' : 's'}`;
-    document.getElementById('longestDefsTitle').textContent = `Longest ${n} Definition${n === 1 ? '' : 's'}`;
-
-    fillList('shortestWords', shortestWords, w => `<span class="def-term">${w}</span>`);
-    fillList('longestWords', longestWords, w => `<span class="def-term">${w}</span>`);
-    fillList('shortestDefs', shortestDefs,
+  function renderShortestWords() {
+    const n = clampN(document.getElementById('nShortestWords').value);
+    fillList('shortestWords', stats.words_by_length_asc.slice(0, n),
+      w => `<span class="def-term">${w}</span>`);
+  }
+  function renderLongestWords() {
+    const n = clampN(document.getElementById('nLongestWords').value);
+    fillList('longestWords', stats.words_by_length_asc.slice(-n).reverse(),
+      w => `<span class="def-term">${w}</span>`);
+  }
+  function renderShortestDefs() {
+    const n = clampN(document.getElementById('nShortestDefs').value);
+    fillList('shortestDefs', stats.definitions_by_length_asc.slice(0, n),
       d => `<span class="def-term">${d.term}</span> — <span class="def-text">${d.definition}</span>`);
-    fillList('longestDefs', longestDefs,
+  }
+  function renderLongestDefs() {
+    const n = clampN(document.getElementById('nLongestDefs').value);
+    fillList('longestDefs', stats.definitions_by_length_asc.slice(-n).reverse(),
       d => `<span class="def-term">${d.term}</span> — <span class="def-text">${d.definition}</span>`);
   }
 
-  const topNInput = document.getElementById('topN');
-  renderExtremes(parseInt(topNInput.value, 10) || 5);
-  topNInput.addEventListener('input', () => {
-    renderExtremes(parseInt(topNInput.value, 10) || 5);
-  });
+  renderShortestWords();
+  renderLongestWords();
+  renderShortestDefs();
+  renderLongestDefs();
+  document.getElementById('nShortestWords').addEventListener('input', renderShortestWords);
+  document.getElementById('nLongestWords').addEventListener('input', renderLongestWords);
+  document.getElementById('nShortestDefs').addEventListener('input', renderShortestDefs);
+  document.getElementById('nLongestDefs').addEventListener('input', renderLongestDefs);
 }
 
 main();

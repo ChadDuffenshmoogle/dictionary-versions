@@ -46,7 +46,7 @@ ENTRY_PATTERN = r'^(.+?) \((.+?)\) - (.+)$'
 # Only commits strictly after this date represent real new words. The
 # dictionary already had BASELINE_COUNT words as of this date.
 BASELINE_DATE = "2025-08-13"
-BASELINE_COUNT = 280
+BASELINE_COUNT = 513
 
 API_ROOT = f"https://api.github.com/repos/{GITHUB_OWNER}/{GITHUB_REPO}"
 RAW_ROOT = f"https://raw.githubusercontent.com/{GITHUB_OWNER}/{GITHUB_REPO}/{GITHUB_BRANCH}"

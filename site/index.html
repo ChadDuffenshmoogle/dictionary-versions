@@ -209,6 +209,7 @@ async function main() {
       options: {
         responsive: true,
         parsing: false,
+        interaction: { mode: 'index', axis: 'x', intersect: false },
         scales: {
           x: {
             type: 'linear',
@@ -272,6 +273,7 @@ async function main() {
     },
     options: {
       responsive: true,
+      interaction: { mode: 'index', axis: 'x', intersect: false },
       scales: {
         x: { ticks: { color: '#9a9fab', maxTicksLimit: 12 }, grid: { color: '#262a33' } },
         y: { ticks: { color: '#9a9fab', precision: 0 }, grid: { color: '#262a33' } },
@@ -294,6 +296,7 @@ async function main() {
     },
     options: {
       responsive: true,
+      interaction: { mode: 'index', axis: 'x', intersect: false },
       scales: {
         x: { ticks: { color: '#9a9fab' }, grid: { display: false } },
         y: { ticks: { color: '#9a9fab', precision: 0 }, grid: { color: '#262a33' } },

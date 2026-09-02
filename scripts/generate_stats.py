@@ -182,14 +182,28 @@ def main():
         {"date": d, "count": n} for d, n in sorted(additions_by_day.items())
     ]
 
-    running_total = 0
-    cumulative_series = []
+    # --- Seed cumulative total with whatever the very first tracked file
+    # already contained -- those words predate any "with new term" commit
+    # and would otherwise be invisible to the growth chart. ---
+    filenames = get_dictionary_filenames()
+    earliest_name = min(filenames, key=parse_version_tuple)
+    earliest_content = fetch_raw(earliest_name)
+    earliest_by_letter = extract_corpus_by_letter(earliest_content)
+    base_count = len({t for terms in earliest_by_letter.values() for t in terms})
+
+    earliest_commit_date = min(
+        c["commit"]["author"]["date"][:10] for c in commits
+    )
+
+    running_total = base_count
+    cumulative_series = [{"date": earliest_commit_date, "total": base_count}]
     for d, n in sorted(additions_by_day_all.items()):
+        if d < earliest_commit_date:
+            continue
         running_total += n
         cumulative_series.append({"date": d, "total": running_total})
 
     # --- Latest file: entries, letter breakdown, word/definition extremes ---
-    filenames = get_dictionary_filenames()
     latest_name = get_latest_filename(filenames)
     content = fetch_raw(latest_name)
 

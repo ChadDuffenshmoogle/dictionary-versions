@@ -165,19 +165,28 @@ def main():
 
     # --- New-word-added frequency (== new-file frequency) ---
     additions_by_day = Counter()
+    additions_by_day_all = Counter()  # unfiltered, used for cumulative growth
     added_terms_timeline = []
     add_re = re.compile(r"with new term '(.+?)'")
     for c in commits:
         msg = c["commit"]["message"]
         date = c["commit"]["author"]["date"][:10]  # YYYY-MM-DD
         m = add_re.search(msg)
-        if m and date not in EXCLUDED_DATES:
-            additions_by_day[date] += 1
-            added_terms_timeline.append({"date": date, "term": m.group(1)})
+        if m:
+            additions_by_day_all[date] += 1
+            if date not in EXCLUDED_DATES:
+                additions_by_day[date] += 1
+                added_terms_timeline.append({"date": date, "term": m.group(1)})
 
     additions_series = [
         {"date": d, "count": n} for d, n in sorted(additions_by_day.items())
     ]
+
+    running_total = 0
+    cumulative_series = []
+    for d, n in sorted(additions_by_day_all.items()):
+        running_total += n
+        cumulative_series.append({"date": d, "total": running_total})
 
     # --- Latest file: entries, letter breakdown, word/definition extremes ---
     filenames = get_dictionary_filenames()
@@ -206,6 +215,7 @@ def main():
         "total_entries": total_entries,
         "letter_counts": letter_counts,
         "additions_series": additions_series,
+        "cumulative_series": cumulative_series,
         "added_terms_timeline": added_terms_timeline,
         "shortest_words": shortest_words,
         "longest_words": longest_words,

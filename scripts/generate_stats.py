@@ -157,6 +157,54 @@ def extract_corpus_by_letter(content):
     return by_letter
 
 
+def _clean_term(raw_term):
+    term = re.sub(r"/[^/]+/", "", raw_term)
+    term = re.sub(r"\(pronounced:\s*[^)]+\)", "", term, flags=re.IGNORECASE)
+    term = re.sub(r"\[[^\]]+\]", "", term)
+    return term.strip()
+
+
+def _parse_entry_line(line):
+    """Try progressively looser patterns to pull (term, definition) out of
+    one line, so entries with nonstandard punctuation aren't silently
+    dropped from the definitions list."""
+    # 1. Strict standard pattern: "term (pos) - definition"
+    m = re.match(ENTRY_PATTERN, line)
+    if m:
+        raw_term, _pos, definition = m.groups()
+        return _clean_term(raw_term), definition.strip()
+
+    # 2. Flexible: use the LAST "(...)" before " - " as the part-of-speech,
+    #    everything before it is the term (handles terms that themselves
+    #    contain parentheses, e.g. pronunciation guides).
+    if "(" in line and ")" in line and " - " in line:
+        left, _, definition = line.partition(" - ")
+        paren_matches = list(re.finditer(r"\(([^)]+)\)", left))
+        if paren_matches:
+            term_part = left[: paren_matches[-1].start()].strip()
+            if term_part and definition.strip():
+                return _clean_term(term_part), definition.strip()
+
+    # 3. Em dash instead of " - "
+    for sep in (" — ", " – "):
+        if sep in line and "(" in line and ")" in line:
+            left, _, definition = line.partition(sep)
+            paren_matches = list(re.finditer(r"\(([^)]+)\)", left))
+            if paren_matches and definition.strip():
+                term_part = left[: paren_matches[-1].start()].strip()
+                if term_part:
+                    return _clean_term(term_part), definition.strip()
+
+    # 4. No parentheses at all, just "term - definition" / "term: definition"
+    for sep in (" - ", ": "):
+        if sep in line:
+            term_part, _, definition = line.partition(sep)
+            if term_part.strip() and definition.strip():
+                return _clean_term(term_part), definition.strip()
+
+    return None
+
+
 def extract_definitions(content):
     """Return list of (term, definition) pulled from the dictionary body,
     covering both simple lines and hyphen-delimited complex blocks."""
@@ -171,13 +219,9 @@ def extract_definitions(content):
             ("Etymology:", "Ex:", "Example:", "Derived Terms:", "Notes:")
         ):
             continue
-        m = re.match(ENTRY_PATTERN, line)
-        if m:
-            raw_term, _pos, definition = m.groups()
-            term = re.sub(r"/[^/]+/", "", raw_term)
-            term = re.sub(r"\(pronounced:\s*[^)]+\)", "", term, flags=re.IGNORECASE)
-            term = re.sub(r"\[[^\]]+\]", "", term).strip()
-            results.append((term, definition.strip()))
+        parsed = _parse_entry_line(line)
+        if parsed:
+            results.append(parsed)
     return results
 
 
@@ -243,6 +287,11 @@ def main():
     words_by_length_asc = sorted(all_terms, key=word_len)
 
     definitions = extract_definitions(content)
+    found_terms_lower = {t.lower() for t, _ in definitions}
+    for t in all_terms:
+        if t.lower() not in found_terms_lower:
+            definitions.append((t, "(definition not parsed -- see raw file)"))
+
     definitions_by_length_asc = sorted(
         [{"term": t, "definition": d} for t, d in definitions],
         key=lambda td: len(td["definition"]),

@@ -34,6 +34,13 @@ def to_central_date(iso_timestamp):
     dt = datetime.fromisoformat(iso_timestamp.replace("Z", "+00:00"))
     return dt.astimezone(CENTRAL).strftime("%Y-%m-%d")
 
+
+def to_central_datetime_str(iso_timestamp):
+    """Human-readable Central time, e.g. 'Sep 2, 2025, 3:45 PM CT'."""
+    dt = datetime.fromisoformat(iso_timestamp.replace("Z", "+00:00"))
+    local = dt.astimezone(CENTRAL)
+    return local.strftime("%b %-d, %Y, %-I:%M %p") + " CT"
+
 GITHUB_OWNER = "ChadDuffenshmoogle"
 GITHUB_REPO = "dictionary-versions"
 GITHUB_BRANCH = "main"
@@ -192,6 +199,16 @@ def main():
                 additions_by_day[date] += 1
                 added_terms_timeline.append({"date": date, "term": m.group(1)})
 
+    # --- Most recent word added (commits come back newest-first) ---
+    latest_word_term = None
+    latest_word_timestamp = None
+    for c in commits:
+        m0 = add_re.search(c["commit"]["message"])
+        if m0:
+            latest_word_term = m0.group(1)
+            latest_word_timestamp = to_central_datetime_str(c["commit"]["author"]["date"])
+            break
+
     additions_series = [
         {"date": d, "count": n} for d, n in sorted(additions_by_day.items())
     ]
@@ -233,6 +250,9 @@ def main():
 
     stats = {
         "latest_version": latest_name,
+        "latest_word_term": latest_word_term,
+        "latest_word_timestamp": latest_word_timestamp,
+        "latest_file_content": content,
         "total_entries": total_entries,
         "letter_counts": letter_counts,
         "additions_series": additions_series,

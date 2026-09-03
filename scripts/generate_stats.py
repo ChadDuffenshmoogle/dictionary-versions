@@ -204,6 +204,22 @@ def _parse_entry_line(line):
             if term_part.strip() and definition.strip():
                 return _clean_term(term_part), definition.strip()
 
+    # 5. "term (pos): definition" -- colon right after the pos tag instead
+    #    of " - ".
+    m4 = re.match(r"^(.+?)\s*\(([^)]+)\)\s*:\s*(.+)$", line)
+    if m4:
+        term_part, _pos, definition = m4.groups()
+        if definition.strip():
+            return _clean_term(term_part), definition.strip()
+
+    # 6. "term (pos) definition" -- no separator at all, just whitespace
+    #    right after the pos tag.
+    m5 = re.match(r"^(.+?)\s*\(([^)]+)\)\.?\s+(\S.*)$", line)
+    if m5:
+        term_part, _pos, definition = m5.groups()
+        if definition.strip():
+            return _clean_term(term_part), definition.strip()
+
     return None
 
 
@@ -235,6 +251,15 @@ def _is_metadata_line(line):
     return False
 
 
+def _emit(results, term, definition):
+    results.append((term, definition))
+    if "/" in term:
+        for part in term.split("/"):
+            part = part.strip()
+            if part and part != term:
+                results.append((part, definition))
+
+
 def extract_definitions(content):
     """Return list of (term, definition), reading only each entry's actual
     main line -- ignoring Etymology/Synonym/Example/Derived-Terms sub-lines
@@ -257,14 +282,38 @@ def extract_definitions(content):
             closing_present = i + 2 < len(sections) and re.match(
                 r"^\n-{20,}\n$", sections[i + 2]
             )
-            for raw_line in block_content.split("\n"):
-                line = raw_line.strip()
+            block_lines = [l.strip() for l in block_content.split("\n")]
+            main_idx = None
+            for idx, line in enumerate(block_lines):
                 if not line or _is_metadata_line(line):
                     continue
-                parsed = _parse_entry_line(line)
+                main_idx = idx
+                break
+
+            if main_idx is not None:
+                main_line = block_lines[main_idx]
+                parsed = _parse_entry_line(main_line)
+
+                if not parsed:
+                    # "term (pos)" with nothing trailing -- the definition
+                    # is on the following bulleted line(s) instead.
+                    m_only = re.match(r"^(.+?)\s*\(([^)]+)\)\.?\s*$", main_line)
+                    if m_only:
+                        term_part = m_only.group(1)
+                        bullets = []
+                        j = main_idx + 1
+                        while j < len(block_lines):
+                            nxt = block_lines[j]
+                            if not nxt or _is_metadata_line(nxt):
+                                break
+                            bullets.append(re.sub(r"^-\s*", "", nxt))
+                            j += 1
+                        if bullets:
+                            parsed = (_clean_term(term_part), "; ".join(bullets))
+
                 if parsed:
-                    results.append(parsed)
-                break  # only ever the first real content line in the block
+                    _emit(results, parsed[0], parsed[1])
+
             i += 3 if closing_present else 2
             continue
 
@@ -275,7 +324,7 @@ def extract_definitions(content):
                 continue
             parsed = _parse_entry_line(line)
             if parsed:
-                results.append(parsed)
+                _emit(results, parsed[0], parsed[1])
         i += 1
 
     return results
@@ -342,21 +391,22 @@ def main():
 
     words_by_length_asc = sorted(all_terms, key=word_len)
 
-    corpus_terms_lower = {t.lower(): t for t in all_terms}
-
-    raw_definitions = extract_definitions(content)
-    definitions = []
-    seen_lower = set()
-    for t, d in raw_definitions:
+    # Map lowercase term -> parsed definition (first match wins if the raw
+    # text has duplicate/near-duplicate lines for the same term).
+    parsed_by_lower = {}
+    for t, d in extract_definitions(content):
         key = t.lower()
-        if key not in corpus_terms_lower or key in seen_lower:
-            continue
-        seen_lower.add(key)
-        definitions.append((corpus_terms_lower[key], d))
+        if key not in parsed_by_lower:
+            parsed_by_lower[key] = d
 
+    # Walk every distinct corpus term individually (not through a
+    # lowercase-keyed dict of terms) so two terms that only differ by
+    # capitalization each keep their own row instead of one overwriting
+    # the other.
+    definitions = []
     for t in all_terms:
-        if t.lower() not in seen_lower:
-            definitions.append((t, "(definition not parsed -- see raw file)"))
+        d = parsed_by_lower.get(t.lower(), "(definition not parsed -- see raw file)")
+        definitions.append((t, d))
 
     definitions_by_length_asc = sorted(
         [{"term": t, "definition": d} for t, d in definitions],

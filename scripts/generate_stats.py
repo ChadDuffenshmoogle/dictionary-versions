@@ -195,8 +195,10 @@ def _parse_entry_line(line):
                 if term_part:
                     return _clean_term(term_part), definition.strip()
 
-    # 4. No parentheses at all, just "term - definition" / "term: definition"
-    for sep in (" - ", ": "):
+    # 4. No parentheses at all, just "term - definition" (em/en dash or
+    #    plain hyphen with spaces on both sides -- NOT a bare colon, which
+    #    is too easy to false-positive on ordinary sentences).
+    for sep in (" - ", " — ", " – "):
         if sep in line:
             term_part, _, definition = line.partition(sep)
             if term_part.strip() and definition.strip():
@@ -205,23 +207,77 @@ def _parse_entry_line(line):
     return None
 
 
+METADATA_LABELS = {
+    "etymology", "derived terms", "synonym", "synonyms",
+    "ex", "example", "notes", "antonym", "antonyms",
+}
+
+
+def _is_metadata_line(line):
+    """Lines that are part of an entry's metadata (etymology, examples,
+    synonyms, a lone part-of-speech tag, a lone pronunciation guide, ...)
+    rather than the entry's own term/definition line."""
+    stripped = line.strip()
+    label = stripped.rstrip(":").lower()
+    if label in METADATA_LABELS:
+        return True
+    if stripped.lower().startswith(
+        ("etymology:", "derived terms:", "synonym:", "synonyms:",
+         "ex:", "example:", "notes:", "antonym:", "antonyms:", "- example:")
+    ):
+        return True
+    # A lone "(adj.)" / "(n.)" style part-of-speech tag with nothing else
+    if re.match(r"^\([^)]{1,12}\)\.?$", stripped):
+        return True
+    # A lone pronunciation guide continuation line, e.g. "aychesseedeepobadenux)"
+    if re.match(r"^[a-zA-Z\-']+\)$", stripped):
+        return True
+    return False
+
+
 def extract_definitions(content):
-    """Return list of (term, definition) pulled from the dictionary body,
-    covering both simple lines and hyphen-delimited complex blocks."""
+    """Return list of (term, definition), reading only each entry's actual
+    main line -- ignoring Etymology/Synonym/Example/Derived-Terms sub-lines
+    and multi-line continuations so those never get mistaken for entries
+    in their own right."""
     if "-----DICTIONARY PROPER-----" not in content:
         return []
     body = content.split("-----DICTIONARY PROPER-----", 1)[1]
 
     results = []
-    for line in body.split("\n"):
-        line = line.strip()
-        if not line or line.startswith("-----") or line.startswith(
-            ("Etymology:", "Ex:", "Example:", "Derived Terms:", "Notes:")
-        ):
+    sections = re.split(r"(\n-{20,}\n)", body)
+
+    i = 0
+    while i < len(sections):
+        section = sections[i]
+
+        if re.match(r"^\n-{20,}\n$", section) and i + 1 < len(sections):
+            # Hyphen-delimited complex block: find its one real main line.
+            block_content = sections[i + 1]
+            closing_present = i + 2 < len(sections) and re.match(
+                r"^\n-{20,}\n$", sections[i + 2]
+            )
+            for raw_line in block_content.split("\n"):
+                line = raw_line.strip()
+                if not line or _is_metadata_line(line):
+                    continue
+                parsed = _parse_entry_line(line)
+                if parsed:
+                    results.append(parsed)
+                break  # only ever the first real content line in the block
+            i += 3 if closing_present else 2
             continue
-        parsed = _parse_entry_line(line)
-        if parsed:
-            results.append(parsed)
+
+        # Non-block content: simple one-line entries.
+        for raw_line in section.split("\n"):
+            line = raw_line.strip()
+            if not line or line.startswith("-----") or _is_metadata_line(line):
+                continue
+            parsed = _parse_entry_line(line)
+            if parsed:
+                results.append(parsed)
+        i += 1
+
     return results
 
 
@@ -286,10 +342,20 @@ def main():
 
     words_by_length_asc = sorted(all_terms, key=word_len)
 
-    definitions = extract_definitions(content)
-    found_terms_lower = {t.lower() for t, _ in definitions}
+    corpus_terms_lower = {t.lower(): t for t in all_terms}
+
+    raw_definitions = extract_definitions(content)
+    definitions = []
+    seen_lower = set()
+    for t, d in raw_definitions:
+        key = t.lower()
+        if key not in corpus_terms_lower or key in seen_lower:
+            continue
+        seen_lower.add(key)
+        definitions.append((corpus_terms_lower[key], d))
+
     for t in all_terms:
-        if t.lower() not in found_terms_lower:
+        if t.lower() not in seen_lower:
             definitions.append((t, "(definition not parsed -- see raw file)"))
 
     definitions_by_length_asc = sorted(

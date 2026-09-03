@@ -66,8 +66,15 @@
     </div>
 
     <div class="card">
-      <h2>Latest Version</h2>
-      <div class="stat-big" id="latestVersion" style="font-size:1.4rem;">—</div>
+      <h2>Most Recent Word</h2>
+      <div class="stat-big" id="latestWord" style="font-size:1.6rem;">—</div>
+      <div id="latestWordTime" style="color:var(--muted); font-size:0.85rem; margin-top:4px;"></div>
+    </div>
+
+    <div class="card" style="display:flex; align-items:center; justify-content:center;">
+      <button id="viewFileBtn" style="background:var(--accent); color:#0f1115; border:none; border-radius:8px; padding:12px 20px; font-weight:700; font-size:0.95rem; cursor:pointer;">
+        View Current Dictionary File
+      </button>
     </div>
 
     <div class="card wide">
@@ -126,6 +133,16 @@
 
   <div id="errorBox" class="error" style="display:none;"></div>
 
+  <div id="fileModalOverlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:100; align-items:center; justify-content:center; padding:20px;">
+    <div style="background:var(--card); border:1px solid #262a33; border-radius:12px; max-width:800px; width:100%; max-height:85vh; display:flex; flex-direction:column;">
+      <div style="display:flex; justify-content:space-between; align-items:center; padding:14px 18px; border-bottom:1px solid #262a33;">
+        <strong id="fileModalTitle">Current Dictionary File</strong>
+        <button id="fileModalClose" style="background:none; border:none; color:var(--muted); font-size:1.4rem; cursor:pointer; line-height:1;">&times;</button>
+      </div>
+      <pre id="fileModalContent" style="margin:0; padding:16px 18px; overflow:auto; white-space:pre-wrap; word-break:break-word; color:var(--text); font-size:0.85rem; font-family: ui-monospace, Menlo, monospace;"></pre>
+    </div>
+  </div>
+
 <script>
 // Thin vertical line at the hovered x-position, on every chart.
 Chart.register({
@@ -166,7 +183,22 @@ async function main() {
   document.getElementById('content').style.display = 'grid';
 
   document.getElementById('totalEntries').textContent = stats.total_entries;
-  document.getElementById('latestVersion').textContent = stats.latest_version.replace('UNICYCLIST DICTIONARY ', '').replace('.txt', '');
+  document.getElementById('latestWord').textContent = stats.latest_word_term || '—';
+  document.getElementById('latestWordTime').textContent = stats.latest_word_timestamp || '';
+
+  const fileModalOverlay = document.getElementById('fileModalOverlay');
+  document.getElementById('fileModalTitle').textContent =
+    (stats.latest_version || 'Current Dictionary File').replace('.txt', '');
+  document.getElementById('fileModalContent').textContent = stats.latest_file_content || 'No file content available.';
+  document.getElementById('viewFileBtn').addEventListener('click', () => {
+    fileModalOverlay.style.display = 'flex';
+  });
+  document.getElementById('fileModalClose').addEventListener('click', () => {
+    fileModalOverlay.style.display = 'none';
+  });
+  fileModalOverlay.addEventListener('click', (e) => {
+    if (e.target === fileModalOverlay) fileModalOverlay.style.display = 'none';
+  });
 
   // Total word count over time, with an editable-length linear projection
   let growthChartInstance = null;

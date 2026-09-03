@@ -282,10 +282,24 @@ async function main() {
     .slice()
     .sort((a, b) => a.term.toLowerCase().localeCompare(b.term.toLowerCase()));
 
+  function escapeHtml(s) {
+    return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  function highlight(text, q) {
+    const escaped = escapeHtml(text);
+    if (!q) return escaped;
+    const escapedQ = q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    return escaped.replace(
+      new RegExp(`(${escapedQ})`, 'ig'),
+      '<mark style="background:#fbbf24; color:#0f1115; border-radius:3px; padding:0 2px;">$1</mark>'
+    );
+  }
+
   dictEntryList.innerHTML = dictEntries.map((e, i) => `
     <div class="dict-entry" data-i="${i}">
-      <div class="term">${e.term}</div>
-      <div class="def">${e.definition}</div>
+      <div class="term" data-term="${escapeHtml(e.term)}"></div>
+      <div class="def" data-def="${escapeHtml(e.definition)}"></div>
     </div>
   `).join('');
   const entryEls = Array.from(dictEntryList.children);
@@ -301,11 +315,19 @@ async function main() {
       else if (searchScope === 'term') match = term.includes(q);
       else if (searchScope === 'definition') match = def.includes(q);
       else match = term.includes(q) || def.includes(q);
+
       entryEls[i].style.display = match ? '' : 'none';
-      if (match) visible++;
+      if (match) {
+        visible++;
+        const highlightTerm = q && searchScope !== 'definition';
+        const highlightDef = q && searchScope !== 'term';
+        entryEls[i].querySelector('.term').innerHTML = highlight(e.term, highlightTerm ? q : '');
+        entryEls[i].querySelector('.def').innerHTML = highlight(e.definition, highlightDef ? q : '');
+      }
     });
     dictResultCount.textContent = `${visible} of ${dictEntries.length} entries`;
   }
+  filterDict();
 
   dictSearchInput.addEventListener('input', filterDict);
   scopeButtons.forEach(btn => {

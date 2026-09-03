@@ -53,6 +53,54 @@
     font: inherit;
     font-weight: 700;
   }
+  #dictSearchInput {
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid #262a33;
+    background: #0f1115;
+    color: var(--text);
+    font-size: 0.95rem;
+    box-sizing: border-box;
+  }
+  .scope-toggle {
+    display: flex;
+    gap: 6px;
+    margin: 10px 0 12px 0;
+  }
+  .scope-toggle button {
+    background: #0f1115;
+    color: var(--muted);
+    border: 1px solid #262a33;
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 0.85rem;
+    cursor: pointer;
+  }
+  .scope-toggle button.active {
+    background: var(--accent);
+    color: #0f1115;
+    border-color: var(--accent);
+    font-weight: 700;
+  }
+  .dict-entry {
+    padding: 10px 0;
+    border-bottom: 1px solid #21242c;
+  }
+  .dict-entry:last-child { border-bottom: none; }
+  .dict-entry .term {
+    color: var(--accent);
+    font-weight: 700;
+  }
+  .dict-entry .def {
+    color: var(--muted);
+    margin-top: 2px;
+  }
+  #dictResultCount {
+    color: var(--muted);
+    font-size: 0.8rem;
+    margin-bottom: 8px;
+  }
 </style>
 </head>
 <body>
@@ -71,9 +119,12 @@
       <div id="latestWordTime" style="color:var(--muted); font-size:0.85rem; margin-top:4px;"></div>
     </div>
 
-    <div class="card" style="display:flex; align-items:center; justify-content:center;">
+    <div class="card" style="display:flex; align-items:center; justify-content:center; gap:10px; flex-wrap:wrap;">
       <button id="viewFileBtn" style="background:var(--accent); color:#0f1115; border:none; border-radius:8px; padding:12px 20px; font-weight:700; font-size:0.95rem; cursor:pointer;">
         View Current Dictionary File
+      </button>
+      <button id="viewSearchBtn" style="background:#7dd3fc; color:#0f1115; border:none; border-radius:8px; padding:12px 20px; font-weight:700; font-size:0.95rem; cursor:pointer;">
+        View Searchable Dictionary
       </button>
     </div>
 
@@ -143,6 +194,25 @@
     </div>
   </div>
 
+  <div id="searchModalOverlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:100; align-items:center; justify-content:center; padding:20px;">
+    <div style="background:var(--card); border:1px solid #262a33; border-radius:12px; max-width:800px; width:100%; max-height:85vh; display:flex; flex-direction:column;">
+      <div style="display:flex; justify-content:space-between; align-items:center; padding:14px 18px; border-bottom:1px solid #262a33;">
+        <strong>Searchable Dictionary</strong>
+        <button id="searchModalClose" style="background:none; border:none; color:var(--muted); font-size:1.4rem; cursor:pointer; line-height:1;">&times;</button>
+      </div>
+      <div style="padding:16px 18px 0 18px;">
+        <input type="text" id="dictSearchInput" placeholder="Search the dictionary…" autocomplete="off">
+        <div class="scope-toggle">
+          <button type="button" data-scope="both" class="active">Both</button>
+          <button type="button" data-scope="term">Terms</button>
+          <button type="button" data-scope="definition">Definitions</button>
+        </div>
+        <div id="dictResultCount"></div>
+      </div>
+      <div id="dictEntryList" style="overflow:auto; padding:0 18px 16px 18px;"></div>
+    </div>
+  </div>
+
 <script>
 // Thin vertical line at the hovered x-position, on every chart.
 Chart.register({
@@ -198,6 +268,65 @@ async function main() {
   });
   fileModalOverlay.addEventListener('click', (e) => {
     if (e.target === fileModalOverlay) fileModalOverlay.style.display = 'none';
+  });
+
+  // Searchable dictionary modal
+  const searchModalOverlay = document.getElementById('searchModalOverlay');
+  const dictEntryList = document.getElementById('dictEntryList');
+  const dictSearchInput = document.getElementById('dictSearchInput');
+  const dictResultCount = document.getElementById('dictResultCount');
+  const scopeButtons = Array.from(document.querySelectorAll('.scope-toggle button'));
+  let searchScope = 'both';
+
+  const dictEntries = (stats.definitions_by_length_asc || [])
+    .slice()
+    .sort((a, b) => a.term.toLowerCase().localeCompare(b.term.toLowerCase()));
+
+  dictEntryList.innerHTML = dictEntries.map((e, i) => `
+    <div class="dict-entry" data-i="${i}">
+      <div class="term">${e.term}</div>
+      <div class="def">${e.definition}</div>
+    </div>
+  `).join('');
+  const entryEls = Array.from(dictEntryList.children);
+
+  function filterDict() {
+    const q = dictSearchInput.value.trim().toLowerCase();
+    let visible = 0;
+    dictEntries.forEach((e, i) => {
+      const term = e.term.toLowerCase();
+      const def = e.definition.toLowerCase();
+      let match;
+      if (!q) match = true;
+      else if (searchScope === 'term') match = term.includes(q);
+      else if (searchScope === 'definition') match = def.includes(q);
+      else match = term.includes(q) || def.includes(q);
+      entryEls[i].style.display = match ? '' : 'none';
+      if (match) visible++;
+    });
+    dictResultCount.textContent = `${visible} of ${dictEntries.length} entries`;
+  }
+
+  dictSearchInput.addEventListener('input', filterDict);
+  scopeButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      scopeButtons.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      searchScope = btn.dataset.scope;
+      filterDict();
+    });
+  });
+
+  document.getElementById('viewSearchBtn').addEventListener('click', () => {
+    searchModalOverlay.style.display = 'flex';
+    filterDict();
+    dictSearchInput.focus();
+  });
+  document.getElementById('searchModalClose').addEventListener('click', () => {
+    searchModalOverlay.style.display = 'none';
+  });
+  searchModalOverlay.addEventListener('click', (e) => {
+    if (e.target === searchModalOverlay) searchModalOverlay.style.display = 'none';
   });
 
   // Total word count over time, with an editable-length linear projection

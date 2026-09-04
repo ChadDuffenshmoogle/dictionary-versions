@@ -158,8 +158,7 @@ def extract_corpus_by_letter(content):
 
 
 def _clean_term(raw_term):
-    term = re.sub(r"/[^/]+/", "", raw_term)
-    term = re.sub(r"\(pronounced:\s*[^)]+\)", "", term, flags=re.IGNORECASE)
+    term = re.sub(r"\(pronounced:\s*[^)]+\)", "", raw_term, flags=re.IGNORECASE)
     term = re.sub(r"\[[^\]]+\]", "", term)
     return term.strip()
 
@@ -168,6 +167,10 @@ def _parse_entry_line(line):
     """Try progressively looser patterns to pull (term, definition) out of
     one line, so entries with nonstandard punctuation aren't silently
     dropped from the definitions list."""
+    # Normalize "(pos)-definition" (missing space before the dash) so
+    # every pattern below can assume a space is there.
+    line = re.sub(r"\)-", ") -", line)
+
     # 1. Strict standard pattern: "term (pos) - definition"
     m = re.match(ENTRY_PATTERN, line)
     if m:
@@ -258,76 +261,117 @@ def _emit(results, term, definition):
             part = part.strip()
             if part and part != term:
                 results.append((part, definition))
+    if re.match(r"^the\s+", term, re.IGNORECASE):
+        results.append((re.sub(r"^the\s+", "", term, flags=re.IGNORECASE), definition))
+    if ", " in term:
+        for part in term.split(", "):
+            part = part.strip()
+            if part and part != term:
+                results.append((part, definition))
+
+
+def _process_block(results, block_lines):
+    """Extract (term, definition) from one hyphen-delimited block's
+    buffered lines, using only its real main line."""
+    main_idx = None
+    for idx, line in enumerate(block_lines):
+        if not line or _is_metadata_line(line):
+            continue
+        main_idx = idx
+        break
+    if main_idx is None:
+        return
+
+    main_line = block_lines[main_idx]
+    parsed = _parse_entry_line(main_line)
+
+    if not parsed:
+        # Either "term (pos)" with nothing trailing, or a completely bare
+        # term line -- either way, the definition lives in bulleted
+        # ("- ...") lines further down the block, possibly interspersed
+        # with lone POS subheadings like "(n.)" / "Noun" / "Interjection".
+        term_part = re.sub(r"\s*\([^)]{1,20}\)\.?\s*$", "", main_line).strip()
+        if term_part:
+            bullets = []
+            j = main_idx + 1
+            while j < len(block_lines):
+                nxt = block_lines[j]
+                if not nxt:
+                    j += 1
+                    continue
+                # Stop at a genuine metadata label (etymology/example/...)
+                if re.match(
+                    r"^(etymology|ex|example|synonym|synonyms|antonym|"
+                    r"antonyms|derived terms|notes)\b",
+                    nxt, re.IGNORECASE,
+                ):
+                    break
+                # Skip (not stop at) a lone POS subheading, e.g. "(n.)" or
+                # "Noun" / "Interjection" on its own line.
+                if re.match(r"^\([^)]{1,12}\)\.?$", nxt) or nxt.lower() in (
+                    "noun", "verb", "adjective", "adverb",
+                    "interjection", "pronoun", "preposition",
+                ):
+                    j += 1
+                    continue
+                if nxt.startswith("-"):
+                    bullets.append(re.sub(r"^-\s*", "", nxt))
+                j += 1
+            if bullets:
+                parsed = (_clean_term(term_part), "; ".join(bullets))
+
+    if parsed:
+        _emit(results, parsed[0], parsed[1])
 
 
 def extract_definitions(content):
     """Return list of (term, definition), reading only each entry's actual
     main line -- ignoring Etymology/Synonym/Example/Derived-Terms sub-lines
     and multi-line continuations so those never get mistaken for entries
-    in their own right."""
+    in their own right.
+
+    Uses a simple linear state machine (in-block / not-in-block) rather
+    than pre-splitting the whole body on paired delimiters -- a single
+    unmatched or stray "-----" line anywhere in the file would otherwise
+    misalign every block after it and swallow large swaths of real
+    entries into one bad "block"."""
     if "-----DICTIONARY PROPER-----" not in content:
         return []
     body = content.split("-----DICTIONARY PROPER-----", 1)[1]
 
     results = []
-    sections = re.split(r"(\n-{20,}\n)", body)
+    in_block = False
+    block_lines = []
 
-    i = 0
-    while i < len(sections):
-        section = sections[i]
+    for raw_line in body.split("\n"):
+        line = raw_line.strip()
 
-        if re.match(r"^\n-{20,}\n$", section) and i + 1 < len(sections):
-            # Hyphen-delimited complex block: find its one real main line.
-            block_content = sections[i + 1]
-            closing_present = i + 2 < len(sections) and re.match(
-                r"^\n-{20,}\n$", sections[i + 2]
-            )
-            block_lines = [l.strip() for l in block_content.split("\n")]
-            main_idx = None
-            for idx, line in enumerate(block_lines):
-                if not line or _is_metadata_line(line):
-                    continue
-                main_idx = idx
-                break
-
-            if main_idx is not None:
-                main_line = block_lines[main_idx]
-                parsed = _parse_entry_line(main_line)
-
-                if not parsed:
-                    # "term (pos)" with nothing trailing -- the definition
-                    # is on the following bulleted line(s) instead.
-                    m_only = re.match(r"^(.+?)\s*\(([^)]+)\)\.?\s*$", main_line)
-                    if m_only:
-                        term_part = m_only.group(1)
-                        bullets = []
-                        j = main_idx + 1
-                        while j < len(block_lines):
-                            nxt = block_lines[j]
-                            if not nxt or _is_metadata_line(nxt):
-                                break
-                            bullets.append(re.sub(r"^-\s*", "", nxt))
-                            j += 1
-                        if bullets:
-                            parsed = (_clean_term(term_part), "; ".join(bullets))
-
-                if parsed:
-                    _emit(results, parsed[0], parsed[1])
-
-            i += 3 if closing_present else 2
+        if re.match(r"^-{20,}$", line):
+            if in_block:
+                _process_block(results, block_lines)
+                block_lines = []
+                in_block = False
+            else:
+                in_block = True
+                block_lines = []
             continue
 
-        # Non-block content: simple one-line entries.
-        for raw_line in section.split("\n"):
-            line = raw_line.strip()
-            if not line or line.startswith("-----") or _is_metadata_line(line):
+        if in_block:
+            block_lines.append(line)
+        else:
+            if not line or _is_metadata_line(line):
                 continue
             parsed = _parse_entry_line(line)
             if parsed:
                 _emit(results, parsed[0], parsed[1])
-        i += 1
+
+    # A block left open at end-of-file (unmatched delimiter) still gets
+    # its main entry read rather than silently dropped.
+    if in_block and block_lines:
+        _process_block(results, block_lines)
 
     return results
+
 
 
 def main():

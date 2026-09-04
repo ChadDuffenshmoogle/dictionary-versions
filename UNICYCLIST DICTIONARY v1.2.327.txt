@@ -1051,7 +1051,7 @@ irony (adj.) - ferric
 itect (n.) - any of the numerous architects, draughtsmen, or artisans involved in the design and certification of a structure 
 
 ---------------------------------------------
-I will die on that train - alt. of 'I will die on that hill'
+I will die on that train (expr.) - alt. of 'I will die on that hill'
 
 	*I will die on that train 'til I die*
 ---------------------------------------------
@@ -1070,9 +1070,10 @@ juicebox (n.) - a fan or connoisseur of juices
 
 kaboompa (alt. kaboompah) (n.) - something trivial, a small deal
 
-kaboompa space (n.)
-- a period of mundane time, when nothing extraordinary seems to occur. can have a positive or negative correlation.
+---------------------------------------------
+kaboompa space (n.) - a period of mundane time, when nothing extraordinary seems to occur. can have a positive or negative correlation.
   - a person's day to day life, what one considers usual.
+---------------------------------------------
 
 kadoozler (n.) - one who forgets their own rules, a hypocrite who doesn't realize it
 

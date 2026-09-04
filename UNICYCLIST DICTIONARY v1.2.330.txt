@@ -475,14 +475,13 @@ the Cunicularies (n.) - the Maddalena Archipelago.
 “I took these pictures on holiday in the Cunicularies.”
 ---------------------------------------------
 ---------------------------------------------
-cuniculary (1) (n.) - a place where rabbits are stored or raised
+cuniculary (n.) - (1) a place where rabbits are stored or raised
 Etymology: From “cunicular” + “ry” (as in “ossuary,” “monastery”), as if from Latin cuniculus + -arium
-cuniculary (2) (n.) - any person who works in a mine, or in connection to mining
+cuniculary (n.) - (2) any person who works in a mine, or in connection to mining
 Etymology: Learned borrowing from Latin cunicularius
 ---------------------------------------------
 ---------------------------------------------
-cunicule (n.) - 
-- bunny
+cunicule (n.) - bunny
 - (by analogy with cubicle) a small warren or cuniculary, especially one containing only one rabbit
 - (affectionate) a small or beloved miner
 ---------------------------------------------

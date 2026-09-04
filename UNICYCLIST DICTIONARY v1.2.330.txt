@@ -1188,7 +1188,7 @@ marlize (v.) - to miss call time
 masterize (v.) - to make a copy of a file, esp. off of a CD, cassette, or other physical drive. Usually used in reference to making an illicit copy, but not exclusively.
 
 ---------------------------------------------
-From the LaTeX '\mathcal' function, itself from a combination of "math" and "calligraphic," since the function produces letters in the calligraphic font used for mathematics.
+Etymology: From the LaTeX '\mathcal' function, itself from a combination of "math" and "calligraphic," since the function produces letters in the calligraphic font used for mathematics.
 
 mathical (adj.) - describing fonts or typefaces used for distinguishing variables within equations (e.g. blackboard bold)
 ---------------------------------------------

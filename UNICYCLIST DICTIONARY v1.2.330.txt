@@ -1071,9 +1071,10 @@ juicebox (n.) - a fan or connoisseur of juices
 
 kaboompa (alt. kaboompah) (n.) - something trivial, a small deal
 
-kaboompa space (n.)
-- a period of mundane time, when nothing extraordinary seems to occur. can have a positive or negative correlation.
+---------------------------------------------
+kaboompa space (n.) - a period of mundane time, when nothing extraordinary seems to occur. can have a positive or negative correlation.
   - a person's day to day life, what one considers usual.
+---------------------------------------------
 
 kadoozler (n.) - one who forgets their own rules, a hypocrite who doesn't realize it
 

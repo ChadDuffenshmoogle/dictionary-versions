@@ -375,9 +375,14 @@ async function main() {
     const lastPoint = points[points.length - 1];
     const projectionDays = Math.round(projectionMonths * 30.4);
     const projected = [];
+    // Start exactly at the real last data point, then continue forward
+    // using the fitted slope -- the regression line itself is a best-fit
+    // average through the whole history and usually does NOT pass through
+    // the actual last point, which would otherwise show as a fake drop
+    // right where the dashed projection begins.
     for (let d = 0; d <= projectionDays; d++) {
       const x = lastPoint.x + d;
-      projected.push({ x, y: a + b * x });
+      projected.push({ x, y: lastPoint.y + b * d });
     }
 
     const dateLabel = (x) => {

@@ -164,9 +164,9 @@ def _clean_term(raw_term):
 
 
 def _parse_entry_line(line):
-    """Try progressively looser patterns to pull (term, definition) out of
-    one line, so entries with nonstandard punctuation aren't silently
-    dropped from the definitions list."""
+    """Try progressively looser patterns to pull (term, pos, definition)
+    out of one line, so entries with nonstandard punctuation aren't
+    silently dropped from the definitions list."""
     # Normalize "(pos)-definition" (missing space before the dash) so
     # every pattern below can assume a space is there.
     line = re.sub(r"\)-", ") -", line)
@@ -174,8 +174,8 @@ def _parse_entry_line(line):
     # 1. Strict standard pattern: "term (pos) - definition"
     m = re.match(ENTRY_PATTERN, line)
     if m:
-        raw_term, _pos, definition = m.groups()
-        return _clean_term(raw_term), definition.strip()
+        raw_term, pos, definition = m.groups()
+        return _clean_term(raw_term), pos.strip(), definition.strip()
 
     # 2. Flexible: use the LAST "(...)" before " - " as the part-of-speech,
     #    everything before it is the term (handles terms that themselves
@@ -186,7 +186,7 @@ def _parse_entry_line(line):
         if paren_matches:
             term_part = left[: paren_matches[-1].start()].strip()
             if term_part and definition.strip():
-                return _clean_term(term_part), definition.strip()
+                return _clean_term(term_part), paren_matches[-1].group(1).strip(), definition.strip()
 
     # 3. Em dash instead of " - "
     for sep in (" — ", " – "):
@@ -196,32 +196,33 @@ def _parse_entry_line(line):
             if paren_matches and definition.strip():
                 term_part = left[: paren_matches[-1].start()].strip()
                 if term_part:
-                    return _clean_term(term_part), definition.strip()
+                    return _clean_term(term_part), paren_matches[-1].group(1).strip(), definition.strip()
 
     # 4. No parentheses at all, just "term - definition" (em/en dash or
     #    plain hyphen with spaces on both sides -- NOT a bare colon, which
-    #    is too easy to false-positive on ordinary sentences).
+    #    is too easy to false-positive on ordinary sentences). No pos tag
+    #    available in this format.
     for sep in (" - ", " — ", " – "):
         if sep in line:
             term_part, _, definition = line.partition(sep)
             if term_part.strip() and definition.strip():
-                return _clean_term(term_part), definition.strip()
+                return _clean_term(term_part), "", definition.strip()
 
     # 5. "term (pos): definition" -- colon right after the pos tag instead
     #    of " - ".
     m4 = re.match(r"^(.+?)\s*\(([^)]+)\)\s*:\s*(.+)$", line)
     if m4:
-        term_part, _pos, definition = m4.groups()
+        term_part, pos, definition = m4.groups()
         if definition.strip():
-            return _clean_term(term_part), definition.strip()
+            return _clean_term(term_part), pos.strip(), definition.strip()
 
     # 6. "term (pos) definition" -- no separator at all, just whitespace
     #    right after the pos tag.
     m5 = re.match(r"^(.+?)\s*\(([^)]+)\)\.?\s+(\S.*)$", line)
     if m5:
-        term_part, _pos, definition = m5.groups()
+        term_part, pos, definition = m5.groups()
         if definition.strip():
-            return _clean_term(term_part), definition.strip()
+            return _clean_term(term_part), pos.strip(), definition.strip()
 
     return None
 
@@ -254,24 +255,24 @@ def _is_metadata_line(line):
     return False
 
 
-def _emit(results, term, definition):
-    results.append((term, definition))
+def _emit(results, term, pos, definition):
+    results.append((term, pos, definition))
     if "/" in term:
         for part in term.split("/"):
             part = part.strip()
             if part and part != term:
-                results.append((part, definition))
+                results.append((part, pos, definition))
     if re.match(r"^the\s+", term, re.IGNORECASE):
-        results.append((re.sub(r"^the\s+", "", term, flags=re.IGNORECASE), definition))
+        results.append((re.sub(r"^the\s+", "", term, flags=re.IGNORECASE), pos, definition))
     if ", " in term:
         for part in term.split(", "):
             part = part.strip()
             if part and part != term:
-                results.append((part, definition))
+                results.append((part, pos, definition))
 
 
 def _process_block(results, block_lines):
-    """Extract (term, definition) from one hyphen-delimited block's
+    """Extract (term, pos, definition) from one hyphen-delimited block's
     buffered lines, using only its real main line."""
     main_idx = None
     for idx, line in enumerate(block_lines):
@@ -290,6 +291,8 @@ def _process_block(results, block_lines):
         # term line -- either way, the definition lives in bulleted
         # ("- ...") lines further down the block, possibly interspersed
         # with lone POS subheadings like "(n.)" / "Noun" / "Interjection".
+        pos_match = re.search(r"\(([^)]{1,20})\)\.?\s*$", main_line)
+        pos = pos_match.group(1).strip() if pos_match else ""
         term_part = re.sub(r"\s*\([^)]{1,20}\)\.?\s*$", "", main_line).strip()
         if term_part:
             bullets = []
@@ -318,10 +321,10 @@ def _process_block(results, block_lines):
                     bullets.append(re.sub(r"^-\s*", "", nxt))
                 j += 1
             if bullets:
-                parsed = (_clean_term(term_part), "; ".join(bullets))
+                parsed = (_clean_term(term_part), pos, "; ".join(bullets))
 
     if parsed:
-        _emit(results, parsed[0], parsed[1])
+        _emit(results, parsed[0], parsed[1], parsed[2])
 
 
 def extract_definitions(content):
@@ -363,7 +366,7 @@ def extract_definitions(content):
                 continue
             parsed = _parse_entry_line(line)
             if parsed:
-                _emit(results, parsed[0], parsed[1])
+                _emit(results, parsed[0], parsed[1], parsed[2])
 
     # A block left open at end-of-file (unmatched delimiter) still gets
     # its main entry read rather than silently dropped.
@@ -435,25 +438,28 @@ def main():
 
     words_by_length_asc = sorted(all_terms, key=word_len)
 
-    # Map lowercase term -> parsed definition (first match wins if the raw
-    # text has duplicate/near-duplicate lines for the same term).
+    # Map lowercase term -> (pos, parsed definition). First match wins if
+    # the raw text has duplicate/near-duplicate lines for the same term.
     parsed_by_lower = {}
-    for t, d in extract_definitions(content):
+    for t, pos, d in extract_definitions(content):
         key = t.lower()
         if key not in parsed_by_lower:
-            parsed_by_lower[key] = d
+            parsed_by_lower[key] = (pos, d)
 
     # Walk every distinct corpus term individually (not through a
     # lowercase-keyed dict of terms) so two terms that only differ by
     # capitalization each keep their own row instead of one overwriting
     # the other.
     definitions = []
+    pos_counts = Counter()
     for t in all_terms:
-        d = parsed_by_lower.get(t.lower(), "(definition not parsed -- see raw file)")
-        definitions.append((t, d))
+        pos, d = parsed_by_lower.get(t.lower(), ("", "(definition not parsed -- see raw file)"))
+        pos_clean = pos.strip() if pos else ""
+        pos_counts[pos_clean or "(no pos)"] += 1
+        definitions.append((t, pos_clean, d))
 
     definitions_by_length_asc = sorted(
-        [{"term": t, "definition": d} for t, d in definitions],
+        [{"term": t, "pos": p, "definition": d} for t, p, d in definitions],
         key=lambda td: len(td["definition"]),
     )
 
@@ -464,6 +470,7 @@ def main():
         "latest_file_content": content,
         "total_entries": total_entries,
         "letter_counts": letter_counts,
+        "pos_counts": dict(pos_counts),
         "additions_series": additions_series,
         "cumulative_series": cumulative_series,
         "added_terms_timeline": added_terms_timeline,

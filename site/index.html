@@ -570,13 +570,21 @@ async function main() {
     options: {
       responsive: true,
       interaction: { mode: 'x', intersect: false },
-      onHover: (event, elements) => {
-        event.native.target.style.cursor = elements.length ? 'pointer' : 'default';
+      onHover: (event, elements, chart) => {
+        const els = chart.getElementsAtEventForMode(
+          event.native, 'nearest', { intersect: true }, false
+        );
+        const hasWords = els.length && additionsFilled[els[0].index].count > 0;
+        event.native.target.style.cursor = hasWords ? 'pointer' : 'default';
       },
-      onClick: (event, elements) => {
-        if (!elements.length) return;
-        const date = additionsFilled[elements[0].index].date;
-        openSearchModal(`date:${date}`);
+      onClick: (event, elements, chart) => {
+        const els = chart.getElementsAtEventForMode(
+          event.native, 'nearest', { intersect: true }, false
+        );
+        if (!els.length) return;
+        const day = additionsFilled[els[0].index];
+        if (day.count === 0) return; // nothing added that day -- do nothing
+        openSearchModal(`date:${day.date}`);
       },
       scales: {
         x: {

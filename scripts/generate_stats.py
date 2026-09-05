@@ -426,7 +426,40 @@ POS_NORMALIZATION = {
     # Suffix / prefix / combining form
     "suffix": "Suffix", "suf": "Suffix", "suf.": "Suffix",
     "prefix": "Prefix", "pref": "Prefix", "pref.": "Prefix",
-    "combining form": "Combining Form",
+    "infix": "Infix", "combining form": "Combining Form", "comb. form": "Combining Form",
+    # Alternate/variant form marker
+    "alt": "Alternate Form", "alt.": "Alternate Form", "alternate": "Alternate Form",
+    "alternate form": "Alternate Form", "var": "Alternate Form", "var.": "Alternate Form",
+    "variant": "Alternate Form",
+    # Numeral
+    "num": "Numeral", "num.": "Numeral", "numeral": "Numeral",
+    # Auxiliary / modal verb
+    "aux": "Auxiliary Verb", "aux.": "Auxiliary Verb", "auxiliary": "Auxiliary Verb",
+    "auxiliary verb": "Auxiliary Verb", "modal": "Auxiliary Verb", "modal v.": "Auxiliary Verb",
+    # Contraction / clipping
+    "contr": "Contraction", "contr.": "Contraction", "contraction": "Contraction",
+    "clipping": "Clipping", "clip": "Clipping", "clip.": "Clipping",
+    # Symbol / letter
+    "sym": "Symbol", "sym.": "Symbol", "symbol": "Symbol", "letter": "Letter",
+    # Gerund / participle
+    "ger": "Gerund", "ger.": "Gerund", "gerund": "Gerund",
+    "part.n.": "Participle", "ptcp": "Participle", "ptcp.": "Participle", "participle": "Participle",
+    # Proverb / collocation
+    "prov": "Proverb", "prov.": "Proverb", "proverb": "Proverb",
+    "colloc": "Collocation", "colloc.": "Collocation", "collocation": "Collocation",
+    # Usage/register labels this dictionary sometimes uses in place of a
+    # real POS tag
+    "slang": "Slang", "colloq": "Colloquial", "colloq.": "Colloquial", "colloquial": "Colloquial",
+    "informal": "Informal", "vulgar": "Vulgar", "derog": "Derogatory", "derog.": "Derogatory",
+    "derogatory": "Derogatory", "archaic": "Archaic", "obs": "Obsolete", "obs.": "Obsolete",
+    "obsolete": "Obsolete", "dial": "Dialectal", "dial.": "Dialectal", "dialectal": "Dialectal",
+    # Interrogative / demonstrative / quantifier / classifier
+    "interrog": "Interrogative", "interrog.": "Interrogative", "interrogative": "Interrogative",
+    "dem": "Demonstrative", "dem.": "Demonstrative", "demonstrative": "Demonstrative",
+    "quant": "Quantifier", "quant.": "Quantifier", "quantifier": "Quantifier",
+    "class": "Classifier", "classifier": "Classifier",
+    # Honorific / salutation
+    "honorific": "Honorific", "salutation": "Salutation",
 }
 
 

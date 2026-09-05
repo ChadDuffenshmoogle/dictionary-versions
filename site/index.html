@@ -187,9 +187,13 @@
 
   <div id="fileModalOverlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:100; align-items:center; justify-content:center; padding:20px;">
     <div style="background:var(--card); border:1px solid #262a33; border-radius:12px; max-width:800px; width:100%; max-height:85vh; display:flex; flex-direction:column;">
-      <div style="display:flex; justify-content:space-between; align-items:center; padding:14px 18px; border-bottom:1px solid #262a33;">
-        <strong id="fileModalTitle">Current Dictionary File</strong>
-        <button id="fileModalClose" style="background:none; border:none; color:var(--muted); font-size:1.4rem; cursor:pointer; line-height:1;">&times;</button>
+      <div style="display:flex; justify-content:space-between; align-items:center; padding:14px 18px; border-bottom:1px solid #262a33; gap:12px; flex-wrap:wrap;">
+        <a id="fileModalTitle" href="#" target="_blank" rel="noopener" style="color:var(--accent); text-decoration:none; font-weight:700;">Current Dictionary File</a>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <button id="downloadTxtBtn" style="background:#0f1115; color:var(--text); border:1px solid #262a33; border-radius:6px; padding:6px 12px; font-size:0.8rem; cursor:pointer;">⬇ .txt</button>
+          <button id="downloadJsonBtn" style="background:#0f1115; color:var(--text); border:1px solid #262a33; border-radius:6px; padding:6px 12px; font-size:0.8rem; cursor:pointer;">⬇ .json</button>
+          <button id="fileModalClose" style="background:none; border:none; color:var(--muted); font-size:1.4rem; cursor:pointer; line-height:1;">&times;</button>
+        </div>
       </div>
       <pre id="fileModalContent" style="margin:0; padding:16px 18px; overflow:auto; white-space:pre-wrap; word-break:break-word; color:var(--text); font-size:0.85rem; font-family: ui-monospace, Menlo, monospace;"></pre>
     </div>
@@ -258,8 +262,11 @@ async function main() {
   document.getElementById('latestWordTime').textContent = stats.latest_word_timestamp || '';
 
   const fileModalOverlay = document.getElementById('fileModalOverlay');
-  document.getElementById('fileModalTitle').textContent =
-    (stats.latest_version || 'Current Dictionary File').replace('.txt', '');
+  const fileModalTitle = document.getElementById('fileModalTitle');
+  fileModalTitle.textContent = (stats.latest_version || 'Current Dictionary File').replace('.txt', '');
+  fileModalTitle.href = stats.latest_version
+    ? `https://github.com/ChadDuffenshmoogle/dictionary-versions/blob/main/${encodeURIComponent(stats.latest_version)}`
+    : '#';
   document.getElementById('fileModalContent').textContent = stats.latest_file_content || 'No file content available.';
   document.getElementById('viewFileBtn').addEventListener('click', () => {
     fileModalOverlay.style.display = 'flex';
@@ -269,6 +276,30 @@ async function main() {
   });
   fileModalOverlay.addEventListener('click', (e) => {
     if (e.target === fileModalOverlay) fileModalOverlay.style.display = 'none';
+  });
+
+  function downloadBlob(text, filename, mimeType) {
+    const blob = new Blob([text], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  document.getElementById('downloadTxtBtn').addEventListener('click', () => {
+    downloadBlob(
+      stats.latest_file_content || '',
+      stats.latest_version || 'dictionary.txt',
+      'text/plain'
+    );
+  });
+  document.getElementById('downloadJsonBtn').addEventListener('click', () => {
+    const jsonName = (stats.latest_version || 'dictionary.txt').replace(/\.txt$/, '.json');
+    downloadBlob(JSON.stringify(dictEntries, null, 2), jsonName, 'application/json');
   });
 
   // Searchable dictionary modal

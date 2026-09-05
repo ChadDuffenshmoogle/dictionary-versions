@@ -147,6 +147,12 @@
     </div>
 
     <div class="card">
+      <h2>Parts of Speech</h2>
+      <canvas id="posChart"></canvas>
+      <div style="color:var(--muted); font-size:0.8rem; margin-top:6px;">Click a slice to see all words of that type.</div>
+    </div>
+
+    <div class="card">
       <h2 id="shortestWordsTitle" style="display:flex; align-items:center; gap:8px;">
         Shortest
         <input type="number" id="nShortestWords" value="5" min="1" step="1" class="n-input">
@@ -339,15 +345,19 @@ async function main() {
   function filterDict() {
     const raw = dictSearchInput.value.trim().toLowerCase();
     const startsWithMatch = raw.match(/^startswith:\s*(.*)$/);
-    const q = startsWithMatch ? startsWithMatch[1] : raw;
+    const posMatch = raw.match(/^pos:\s*(.*)$/);
+    const q = startsWithMatch ? startsWithMatch[1] : (posMatch ? posMatch[1] : raw);
     const isPrefix = !!startsWithMatch;
+    const isPos = !!posMatch;
 
     let visible = 0;
     dictEntries.forEach((e, i) => {
       const term = e.term.toLowerCase();
       const def = e.definition.toLowerCase();
+      const pos = (e.pos || '').toLowerCase() || '(no pos)';
       let match;
       if (!q) match = true;
+      else if (isPos) match = pos === q;
       else if (isPrefix) match = term.startsWith(q); // prefix search is term-only
       else if (searchScope === 'term') match = term.includes(q);
       else if (searchScope === 'definition') match = def.includes(q);
@@ -356,8 +366,8 @@ async function main() {
       entryEls[i].style.display = match ? '' : 'none';
       if (match) {
         visible++;
-        const highlightTerm = q && (isPrefix || searchScope !== 'definition');
-        const highlightDef = q && !isPrefix && searchScope !== 'term';
+        const highlightTerm = isPos ? false : (q && (isPrefix || searchScope !== 'definition'));
+        const highlightDef = isPos ? false : (q && !isPrefix && searchScope !== 'term');
         entryEls[i].querySelector('.term').innerHTML = highlight(e.term, highlightTerm ? q : '');
         entryEls[i].querySelector('.def').innerHTML = highlight(e.definition, highlightDef ? q : '');
       }
@@ -596,6 +606,42 @@ async function main() {
         y: { ticks: { color: '#9a9fab', precision: 0 }, grid: { color: '#262a33' } },
       },
       plugins: { legend: { display: false } },
+    },
+  });
+
+  // Parts of speech
+  const posEntries = Object.entries(stats.pos_counts || {}).sort((a, b) => b[1] - a[1]);
+  const posLabels = posEntries.map(([label]) => label);
+  const posColors = [
+    '#6ee7b7', '#7dd3fc', '#fbbf24', '#f472b6', '#a78bfa',
+    '#fb923c', '#34d399', '#60a5fa', '#f87171', '#c084fc',
+    '#9a9fab',
+  ];
+  new Chart(document.getElementById('posChart'), {
+    type: 'pie',
+    data: {
+      labels: posLabels,
+      datasets: [{
+        data: posEntries.map(([, count]) => count),
+        backgroundColor: posLabels.map((_, i) => posColors[i % posColors.length]),
+        borderColor: '#171a21',
+        borderWidth: 2,
+      }],
+    },
+    options: {
+      responsive: true,
+      onHover: (event, elements) => {
+        event.native.target.style.cursor = elements.length ? 'pointer' : 'default';
+      },
+      onClick: (event, elements) => {
+        if (!elements.length) return;
+        const label = posLabels[elements[0].index];
+        const value = label === '(no pos)' ? '(no pos)' : label;
+        openSearchModal(`pos:${value}`);
+      },
+      plugins: {
+        legend: { position: 'bottom', labels: { color: '#e8e8ec', boxWidth: 12, font: { size: 11 } } },
+      },
     },
   });
 

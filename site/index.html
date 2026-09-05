@@ -572,14 +572,14 @@ async function main() {
       interaction: { mode: 'x', intersect: false },
       onHover: (event, elements, chart) => {
         const els = chart.getElementsAtEventForMode(
-          event.native, 'nearest', { intersect: true }, false
+          event.native, 'x', { intersect: false }, false
         );
         const hasWords = els.length && additionsFilled[els[0].index].count > 0;
         event.native.target.style.cursor = hasWords ? 'pointer' : 'default';
       },
       onClick: (event, elements, chart) => {
         const els = chart.getElementsAtEventForMode(
-          event.native, 'nearest', { intersect: true }, false
+          event.native, 'x', { intersect: false }, false
         );
         if (!els.length) return;
         const day = additionsFilled[els[0].index];

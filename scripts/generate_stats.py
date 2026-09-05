@@ -285,6 +285,7 @@ def _process_block(results, block_lines):
 
     main_line = block_lines[main_idx]
     parsed = _parse_entry_line(main_line)
+    used_fallback = False
 
     if not parsed:
         # Either "term (pos)" with nothing trailing, or a completely bare
@@ -322,6 +323,33 @@ def _process_block(results, block_lines):
                 j += 1
             if bullets:
                 parsed = (_clean_term(term_part), pos, "; ".join(bullets))
+                used_fallback = True
+
+    # Even when the main line parsed fine on its own, a definition can
+    # still continue as bulleted sub-items right after it (e.g. "part of
+    # a new lineup, along with" followed by "- item one", "- item two").
+    # Append any such trailing bullets rather than silently dropping them
+    # (skip this if the fallback above already consumed them).
+    if parsed and not used_fallback:
+        extra_bullets = []
+        j = main_idx + 1
+        while j < len(block_lines):
+            nxt = block_lines[j]
+            if not nxt:
+                j += 1
+                continue
+            if re.match(
+                r"^(etymology|ex|example|synonym|synonyms|antonym|"
+                r"antonyms|derived terms|notes)\b",
+                nxt, re.IGNORECASE,
+            ):
+                break
+            if not nxt.startswith("-"):
+                break
+            extra_bullets.append(re.sub(r"^-\s*", "", nxt))
+            j += 1
+        if extra_bullets:
+            parsed = (parsed[0], parsed[1], parsed[2] + "; " + "; ".join(extra_bullets))
 
     if parsed:
         _emit(results, parsed[0], parsed[1], parsed[2])

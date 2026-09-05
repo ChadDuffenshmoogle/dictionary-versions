@@ -9,7 +9,7 @@ E: East Skistands, eau de Farade, Eddie's Estates, editor-in-teef, edophypad kid
 F: FahThursday, faker's dozen, falacrous, FAMO, fangorious, fdakjhfjdkashfkjdahfjkahfjakhfkjadhfjkafhjkdahfjkahfkjdhfkjdhfjkdfhkjdhfjdkhfkjdhsajfkahjkfdhajkfhdjakhfjdkahfjdkahfjkdfhjkahjkhjkhjkhjkhjhjkhkjhjkhjkhjkhjkhjkhkjhjkhkjhjkhjkhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh / fdak..., feese, fictionalism, fifth-round McDonald's interview, filiupper, finth, five-eyes, flabbergoosted, flabkre, flarm, Flarmsday, fleshie, FML, food-looking, foomba, foonfub, foosdogger, forbonk, forcine, forg, forgort, Forkton, Forktonite, forthdoors / forth-of-doors, freemen from freeman, friends with detriments, frong, froop juice, Fruit by the Mile, frumbalicious, fuzzah
 G: Gabisa, Gabizsa, gada, gansö center, garf, garignak, gaven, gawgeous, gawgometry, Genievivieve, Ghidibranti, gibbler, Gilbert caféte, Gilbertian, glama, glane, glava, glig, golpear el heno, goo-gads, gooberism, good beevening, goodoc, goofy goobrother, Goople, GooSable, goosh, Goosq, gorgy, grandcycle, greecoy / greekoy, gregarity, grossitude, grosvenor, guavwa, gubble, Gwad, göse
 H: H. S. C. D'Poba'Denucks, Hallowonion, hameggchecrois'wich, HandsLinkedIndeed, hashbox, hass, health detriments, heedy howdy heimlich manoeuvre!, hemicircle, hemisphyril, henius, hibernum, hiccin' up, hipshake, hit that hide, hmork, hog maze, holgunx / holgunck, honkrs, hoosted, horlage  orloge, hoss, hot cilk, humible, humific, humify, hummucide, hungerswärme
-I: I could care more, I couldn't care more, I will die on that train, IANCW, Icebrorg, If it ain't fixed, -ilk, illinoying, impartiality bias, impresilario, in off mode, inchrishting, Indecorous, ingredient, inkspill, insubbable, intershoob/ interdoob, inusual, ipelago, irony, itect
+I: I could care more, I couldn't care more, I will die on that train, IANCW, Icebrorg, If it ain't fixed, -ilk, illinoying, impartiality bias, impresilario, in off mode, inchrishting, Indecorous, ingredient, inkspill, insubbable, intershoob / interdoob, inusual, ipelago, irony, itect
 J: J. C. La Borgbera, jablesque, jaduteo, jep, Jostin, juicebox
 K: K. K. Psider, kaboompa, kaboompa space, kadoozler, kalb, kaspoomph, kermesque, kicha, kill a fly with a gun, Kit Katter, kitchenista, KKPseine, Kleiborg, kreeb, kwikwi
 L: L + golden ratio, Lake Inferior, laptoff, lawye, Ldoba, legable, legsterity, Let's pop the stack on that one, lexshot, lilypoid, lim, linkedinfluencer, liquible, liquific, lithuania-centric, LMAO, LMFAO, logics, LOL, loqucurr, losenge, Louis Banorg, luleton, lunching / lunchin', lwk
@@ -178,7 +178,7 @@ baguetti (n.) - French spaghetti
 
 banazana (n.) - banana pizza
 
-bani==bingo - a false equivalence, a logically unsound proposition
+bani==bingo (?) - a false equivalence, a logically unsound proposition
 
 bang (n.) - an expletive censored by writing the first letter followed by an asterisk (e.g. f*, s\*, h\*, etc.)
 
@@ -249,7 +249,7 @@ brexology (n.) - the study of amphibians
 
 broful (adj.) - in the style of a bro 
 
-bruncher / brucher - a person who habitually eats only one meal a day, or the one meal they eat
+bruncher / brucher (n.) - a person who habitually eats only one meal a day, or the one meal they eat
 
 buddito (n.) - a small companion
 
@@ -345,11 +345,10 @@ chiplets (n.) - the small colorful chocolate sprinkle things on top of Cosmic Br
 chiron (n.) - a needless or cluttersome widget or ticker
 
 --------------------------------------------- 
-chog 
-(n.)
-- a cold, moist glizzy straight out of the package smothered with off brand cheez whiz
-(v.)
-- to send a thirst trap video of someone consuming a chog
+chog (n.) - a cold, moist glizzy straight out of the package smothered with off brand cheez whiz
+--------------------------------------------- 
+--------------------------------------------- 
+chog (v.) - to send a thirst trap video of someone consuming a chog
 	Ex: "You just got chogged!"
 --------------------------------------------- 
 
@@ -512,11 +511,11 @@ C.Y.O.S. (abbr.) - cut your own salad
 Cyrborg (n.) - Robo Cyril
 
 ---------------------------------------------
-Cyreal - a mannerism that is like Cyril
+Cyreal (adj.) - (of a mannerism) like Cyril
 	“that word usage was very Cyreal”
 ---------------------------------------------
 ---------------------------------------------
-Cyrealism /sərijəlɪsm/ - avant-garde movement of Cyrilesque mannerisms (not to be confused with Cyrilism, a Cyril synonym)    
+Cyrealism (n.) - /sərijəlɪsm/ avant-garde movement of Cyrilesque mannerisms (not to be confused with Cyrilism, a Cyril synonym)    
 	e.g.: the griddy while fencing
 ---------------------------------------------
 
@@ -742,7 +741,7 @@ faker's dozen (n.) - 11 of something
 
 falacrous (adj.) - bald
 
-FAMO - fear about missing out
+FAMO (acr.) - fear about missing out
 
 ---------------------------------------------
 fangorious (adj.) 
@@ -766,7 +765,7 @@ fifth-round McDonald's interview (expr.) - overkill
 
 filiupper (n.) the process of consuming large amounts of food through holding up long lines at buffets as well as other delaying tactics to ensure the annoyance of all restaurant employees.
 
-flabbergoosted - when a goose realizes a sudden earth-shattering truth
+flabbergoosted (adj.) - when a goose realizes a sudden earth-shattering truth
 
 finth (n.) - the quality of being fine
 
@@ -845,7 +844,7 @@ garignak (v.) - an utterance of ambiguity used to break the silence.
 
 gaven (adj.) - unable to taste 
 
-gawgometry - the practice of measuring how beautiful the ambient environment is
+gawgometry (n.) - the practice of measuring how beautiful the ambient environment is
 
 gawgeous (adj.) - well-groomed
 
@@ -866,11 +865,11 @@ glane (v.) - to communicate non-verbally using the eyeballs
 (n.) - such a communication
 --------------------------------------------- 
 
-golpear el heno - to go to bed
+golpear el heno (expr.) - to go to bed
 
-gooberism - the goober version of a mannerism, to have manners in the ways of shenanigans
+gooberism (n.) - the goober version of a mannerism, to have manners in the ways of shenanigans
 
-good beevening - greeting for the time after noon but before evening
+good beevening (expr.) - greeting for the time after noon but before evening
 
 glava (n.) - a ball of yarn
 
@@ -961,7 +960,7 @@ hibernum (n.) - early winter in a loose sense, ~ November and December
 
 hmork (inter.) an expression of disgust or contempt
 
-honkrs - being in honors, but actually being dumb (like me)
+honkrs (adj.) - being in honors, but actually being dumb (like me)
 
 hiccin' up (expr.) - having hiccups
 
@@ -1014,7 +1013,7 @@ IANCW (adv., abbr.) - in a non-condescending way; to assure that words or action
 Icebrorg (n.) - Rory Iceberg
 
 ---------------------------------------------
--ilk - a suffix added after the first letter or syllable of the last word of the name of a beverage, to indicated that said beverage has been mixed with milk. 
+-ilk (suff.) - a suffix added after the first letter or syllable of the last word of the name of a beverage, to indicated that said beverage has been mixed with milk. 
 
 Examples: Gilk, Mountain Dilk, Dr. Pilk, Capri Silk, Orange Jilk
 ---------------------------------------------
@@ -1153,12 +1152,12 @@ losenge (v.) - to sweetly flatter.
 Louis Banorg (n.) - A robo Louis 
 
 ---------------------------------------------
-ma - contraction of me and a
+ma (adj.) - contraction of me and a
 
 	*I love ma baceggchecrois*
 ---------------------------------------------
 
-maekluzaphed - dominated by bill gates
+maekluzaphed (adj.) - dominated by bill gates
 
 luleton (n.) - fake olumpic sport combining the luge and skeleton
 
@@ -1171,7 +1170,7 @@ lwk (abbr.) - clipping of "let we know", to reduce the need for luk
 
 madefact (v.) - to moisten
 
-make a penappapen out of a kaboompah - to make a big deal out of something trivial, to make a mountain out of a molehill
+make a penappapen out of a kaboompah (expr.) - to make a big deal out of something trivial, to make a mountain out of a molehill
 
 mander (v.) - to divide in a way that purports or superficially appears to be fair, but is biased towards one outcome
 
@@ -1517,7 +1516,7 @@ reasonably purple (n.) - a shade of purple that is sensible in every way
 
 Renaissance pizza (n.) - something that noone thought about or cared about at a particular point in time. 
 
-render twixt / render twyxt - (euphemistic) to kill
+render twixt / render twyxt (expr.) - (euphemistic) to kill
 
 rizzito (n.) /ɹ̠ɪ'zitoʊ/ - a quantum of charisma 
 
@@ -1625,7 +1624,7 @@ shellarckish (adj.) - peppy and perky, as one who has just consumed allium culti
 
 shift-planking (v.) - a part-time employee (when clocked in late) will stay longer than usual so that a full hour is recorded for a shift, typically endured with struggle
 
-shlumbis - an alternative third-person pronoun, similar to 'one', but with more negative connotation
+shlumbis (pron.) - an alternative third-person pronoun, similar to 'one', but with more negative connotation
 
 shlurp (Cyrilism, v.) - an exaggerated slurp meant to garner the attention of nearby dining hall patron
 
@@ -1742,7 +1741,7 @@ Spoonmancer (n.) - a wizard with arcane mastery over spoons
 
 spoot (v.) - to spit with a vocalized "too" sound
 
-spose / s'pose - abbreviation of suppose
+spose / s'pose (abbr.) - abbreviation of suppose
 
 sproing (v.) - to break or spin out of control on a pogocycle
 
@@ -1995,7 +1994,7 @@ Vivaldessert (n.) - a musical variety of cake
 
 voce vosta (adj.) - spoken in the accent of Damien DalVosta or (n.) a word so spoken 
 
-v'you - contraction of "have you"
+v'you (v. + pron.) - contraction of "have you"
 
 Wajaw 36B (n.) a planet of unicyclists
 
@@ -2082,7 +2081,7 @@ Zonja/Zonia/Зонйа (p.n.) - a feminine given bname
 
 zoog (n.) - a word with no definition
 
-'zza - alt. of za or 'za
+'zza (alt.) - alt. of za or 'za
 
 
 

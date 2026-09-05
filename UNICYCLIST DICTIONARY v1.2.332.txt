@@ -68,7 +68,7 @@ aic (adj.) - contemporary or not very old
 ---------------------------------------------
 Etymology: A variation of "Ain't No Way," adapted to highlight a lack of knowledge rather than general impossibility. The phrase plays on the word "Know" to suggest that someone is uninformed or clueless about a situation. 
 
-ain't know way (inter., text only) - An informal phrase used to express disbelief, rejection, or certainty that something is impossible or highly unlikely. Often used with an exaggerated tone for dramatic effect. 
+ain't know way (inter.) - (text only) An informal phrase used to express disbelief, rejection, or certainty that something is impossible or highly unlikely. Often used with an exaggerated tone for dramatic effect. 
 ---------------------------------------------
 
 AIwitness (n.) - a robot eyewitness testifying in court about a crime it saw. It may or may not spout random misinformation under oath.

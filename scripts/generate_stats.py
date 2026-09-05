@@ -383,80 +383,76 @@ def extract_definitions(content):
 # (expr., ono., acr.) grouped under their closest real category.
 POS_NORMALIZATION = {
     # Noun
-    "n": "Noun", "n.": "Noun", "noun": "Noun", "nn": "Noun", "nn.": "Noun",
-    "s": "Noun", "s.": "Noun", "sb": "Noun", "sb.": "Noun",
+    "n": "Noun", "noun": "Noun", "nn": "Noun", "s": "Noun", "sb": "Noun",
     # Proper noun
-    "p.n.": "Proper Noun", "p.n": "Proper Noun", "pn": "Proper Noun", "pn.": "Proper Noun",
-    "proper noun": "Proper Noun", "propn": "Proper Noun", "propn.": "Proper Noun",
+    "pn": "Proper Noun", "propern": "Proper Noun", "propernoun": "Proper Noun", "propn": "Proper Noun",
     # Mass / uncountable noun (kept distinct -- meaningfully different from a plain noun)
-    "mass n": "Mass Noun", "mass n.": "Mass Noun", "mass noun": "Mass Noun",
-    "uncountable": "Mass Noun", "uncountable n.": "Mass Noun",
+    "massn": "Mass Noun", "massnoun": "Mass Noun", "uncountable": "Mass Noun", "uncountablen": "Mass Noun",
     # Verb (transitive/intransitive folded into plain Verb)
-    "v": "Verb", "v.": "Verb", "verb": "Verb", "vb": "Verb", "vb.": "Verb",
-    "vt": "Verb", "vt.": "Verb", "v.t.": "Verb", "v.t": "Verb", "vtr": "Verb", "vtr.": "Verb",
-    "vi": "Verb", "vi.": "Verb", "v.i.": "Verb", "v.i": "Verb", "vintr": "Verb", "vintr.": "Verb",
-    "phrasal v": "Verb", "phrasal v.": "Verb", "phrasal verb": "Verb",
+    "v": "Verb", "verb": "Verb", "vb": "Verb",
+    "vt": "Verb", "vtr": "Verb", "vi": "Verb", "vintr": "Verb",
+    "phrasalv": "Verb", "phrasalverb": "Verb",
     # Adjective
-    "adj": "Adjective", "adj.": "Adjective", "adjective": "Adjective", "a": "Adjective", "a.": "Adjective",
+    "adj": "Adjective", "adjective": "Adjective", "a": "Adjective",
     # Adverb
-    "adv": "Adverb", "adv.": "Adverb", "adverb": "Adverb",
+    "adv": "Adverb", "adverb": "Adverb",
     # Pronoun
-    "pron": "Pronoun", "pron.": "Pronoun", "pronoun": "Pronoun",
+    "pron": "Pronoun", "pronoun": "Pronoun",
     # Preposition
-    "prep": "Preposition", "prep.": "Preposition", "preposition": "Preposition",
+    "prep": "Preposition", "preposition": "Preposition",
     # Conjunction
-    "conj": "Conjunction", "conj.": "Conjunction", "conjunction": "Conjunction",
+    "conj": "Conjunction", "conjunction": "Conjunction",
     # Determiner / article
-    "det": "Determiner", "det.": "Determiner", "determiner": "Determiner", "art": "Determiner", "art.": "Determiner",
+    "det": "Determiner", "determiner": "Determiner", "art": "Determiner", "article": "Determiner",
     # Interjection
-    "int": "Interjection", "int.": "Interjection", "inter": "Interjection", "inter.": "Interjection",
-    "interj": "Interjection", "interj.": "Interjection", "interjection": "Interjection", "excl": "Interjection", "excl.": "Interjection",
+    "int": "Interjection", "inter": "Interjection", "interj": "Interjection",
+    "interjection": "Interjection", "excl": "Interjection", "exclamation": "Interjection",
     # Expression / idiom / phrase
-    "expr": "Expression", "expr.": "Expression", "expression": "Expression",
-    "idiom": "Expression", "idiom.": "Expression", "phr": "Expression", "phr.": "Expression", "phrase": "Expression",
+    "expr": "Expression", "expression": "Expression",
+    "idiom": "Expression", "phr": "Expression", "phrase": "Expression", "saying": "Expression",
     # Abbreviation
-    "abbr": "Abbreviation", "abbr.": "Abbreviation", "abbreviation": "Abbreviation", "abbrev": "Abbreviation", "abbrev.": "Abbreviation",
+    "abbr": "Abbreviation", "abbreviation": "Abbreviation", "abbrev": "Abbreviation",
     # Acronym / initialism
-    "acr": "Acronym", "acr.": "Acronym", "acro": "Acronym", "acro.": "Acronym", "acronym": "Acronym",
-    "init": "Acronym", "init.": "Acronym", "initialism": "Acronym",
+    "acr": "Acronym", "acro": "Acronym", "acronym": "Acronym",
+    "init": "Acronym", "initialism": "Acronym",
     # Onomatopoeia
-    "ono": "Onomatopoeia", "ono.": "Onomatopoeia", "onom": "Onomatopoeia", "onom.": "Onomatopoeia", "onomatopoeia": "Onomatopoeia",
+    "ono": "Onomatopoeia", "onom": "Onomatopoeia", "onomatopoeia": "Onomatopoeia", "onomatopoeic": "Onomatopoeia",
     # Particle
-    "part": "Particle", "part.": "Particle", "particle": "Particle",
-    # Suffix / prefix / combining form
-    "suffix": "Suffix", "suf": "Suffix", "suf.": "Suffix",
-    "prefix": "Prefix", "pref": "Prefix", "pref.": "Prefix",
-    "infix": "Infix", "combining form": "Combining Form", "comb. form": "Combining Form",
+    "part": "Particle", "particle": "Particle",
+    # Suffix / prefix / infix / combining form
+    "suffix": "Suffix", "suf": "Suffix", "suff": "Suffix",
+    "prefix": "Prefix", "pref": "Prefix",
+    "infix": "Infix",
+    "combform": "Combining Form", "combiningform": "Combining Form",
     # Alternate/variant form marker
-    "alt": "Alternate Form", "alt.": "Alternate Form", "alternate": "Alternate Form",
-    "alternate form": "Alternate Form", "var": "Alternate Form", "var.": "Alternate Form",
-    "variant": "Alternate Form",
+    "alt": "Alternate Form", "alternate": "Alternate Form", "alternateform": "Alternate Form",
+    "var": "Alternate Form", "variant": "Alternate Form", "altform": "Alternate Form",
     # Numeral
-    "num": "Numeral", "num.": "Numeral", "numeral": "Numeral",
+    "num": "Numeral", "numeral": "Numeral", "number": "Numeral",
     # Auxiliary / modal verb
-    "aux": "Auxiliary Verb", "aux.": "Auxiliary Verb", "auxiliary": "Auxiliary Verb",
-    "auxiliary verb": "Auxiliary Verb", "modal": "Auxiliary Verb", "modal v.": "Auxiliary Verb",
+    "aux": "Auxiliary Verb", "auxiliary": "Auxiliary Verb", "auxiliaryverb": "Auxiliary Verb",
+    "modal": "Auxiliary Verb", "modalv": "Auxiliary Verb", "modalverb": "Auxiliary Verb",
     # Contraction / clipping
-    "contr": "Contraction", "contr.": "Contraction", "contraction": "Contraction",
-    "clipping": "Clipping", "clip": "Clipping", "clip.": "Clipping",
+    "contr": "Contraction", "contraction": "Contraction",
+    "clipping": "Clipping", "clip": "Clipping",
     # Symbol / letter
-    "sym": "Symbol", "sym.": "Symbol", "symbol": "Symbol", "letter": "Letter",
+    "sym": "Symbol", "symbol": "Symbol", "letter": "Letter",
     # Gerund / participle
-    "ger": "Gerund", "ger.": "Gerund", "gerund": "Gerund",
-    "part.n.": "Participle", "ptcp": "Participle", "ptcp.": "Participle", "participle": "Participle",
+    "ger": "Gerund", "gerund": "Gerund",
+    "ptcp": "Participle", "participle": "Participle",
     # Proverb / collocation
-    "prov": "Proverb", "prov.": "Proverb", "proverb": "Proverb",
-    "colloc": "Collocation", "colloc.": "Collocation", "collocation": "Collocation",
+    "prov": "Proverb", "proverb": "Proverb",
+    "colloc": "Collocation", "collocation": "Collocation",
     # Usage/register labels this dictionary sometimes uses in place of a
     # real POS tag
-    "slang": "Slang", "colloq": "Colloquial", "colloq.": "Colloquial", "colloquial": "Colloquial",
-    "informal": "Informal", "vulgar": "Vulgar", "derog": "Derogatory", "derog.": "Derogatory",
-    "derogatory": "Derogatory", "archaic": "Archaic", "obs": "Obsolete", "obs.": "Obsolete",
-    "obsolete": "Obsolete", "dial": "Dialectal", "dial.": "Dialectal", "dialectal": "Dialectal",
+    "slang": "Slang", "colloq": "Colloquial", "colloquial": "Colloquial",
+    "informal": "Informal", "vulgar": "Vulgar", "derog": "Derogatory", "derogatory": "Derogatory",
+    "archaic": "Archaic", "obs": "Obsolete", "obsolete": "Obsolete",
+    "dial": "Dialectal", "dialect": "Dialectal", "dialectal": "Dialectal",
     # Interrogative / demonstrative / quantifier / classifier
-    "interrog": "Interrogative", "interrog.": "Interrogative", "interrogative": "Interrogative",
-    "dem": "Demonstrative", "dem.": "Demonstrative", "demonstrative": "Demonstrative",
-    "quant": "Quantifier", "quant.": "Quantifier", "quantifier": "Quantifier",
+    "interrog": "Interrogative", "interrogative": "Interrogative",
+    "dem": "Demonstrative", "demonstrative": "Demonstrative",
+    "quant": "Quantifier", "quantifier": "Quantifier",
     "class": "Classifier", "classifier": "Classifier",
     # Honorific / salutation
     "honorific": "Honorific", "salutation": "Salutation",
@@ -464,10 +460,23 @@ POS_NORMALIZATION = {
 
 
 def _normalize_pos(raw_pos):
+    """Map a huge range of amateur-written pos tags to one canonical label.
+    Rather than enumerate every punctuation/spacing variant, this strips
+    ALL periods/commas/spaces before lookup (so "v.t.", "vt", "v t", and
+    "v.t" all collapse to the same key), then falls back to a naive
+    singular/plural fold ("nouns" / "verbs" / "adjs" -> "noun" / "verb" /
+    "adj") before giving up and just showing the tag as its own slice."""
     if not raw_pos or not raw_pos.strip():
         return "(no pos)"
-    key = raw_pos.strip().lower().rstrip(".")
-    return POS_NORMALIZATION.get(key, raw_pos.strip())
+    raw = raw_pos.strip()
+    key = re.sub(r"[.,\s]", "", raw.lower())
+    if key in POS_NORMALIZATION:
+        return POS_NORMALIZATION[key]
+    if key.endswith("s") and key[:-1] in POS_NORMALIZATION:
+        return POS_NORMALIZATION[key[:-1]]
+    if key.endswith("es") and key[:-2] in POS_NORMALIZATION:
+        return POS_NORMALIZATION[key[:-2]]
+    return raw
 
 
 def main():

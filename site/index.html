@@ -143,6 +143,7 @@
     <div class="card wide">
       <h2>Entries Per First Letter</h2>
       <canvas id="letterChart"></canvas>
+      <div style="color:var(--muted); font-size:0.8rem; margin-top:6px;">Click a letter to see all words that start with it.</div>
     </div>
 
     <div class="card">
@@ -305,13 +306,18 @@ async function main() {
   const entryEls = Array.from(dictEntryList.children);
 
   function filterDict() {
-    const q = dictSearchInput.value.trim().toLowerCase();
+    const raw = dictSearchInput.value.trim().toLowerCase();
+    const startsWithMatch = raw.match(/^startswith:\s*(.*)$/);
+    const q = startsWithMatch ? startsWithMatch[1] : raw;
+    const isPrefix = !!startsWithMatch;
+
     let visible = 0;
     dictEntries.forEach((e, i) => {
       const term = e.term.toLowerCase();
       const def = e.definition.toLowerCase();
       let match;
       if (!q) match = true;
+      else if (isPrefix) match = term.startsWith(q); // prefix search is term-only
       else if (searchScope === 'term') match = term.includes(q);
       else if (searchScope === 'definition') match = def.includes(q);
       else match = term.includes(q) || def.includes(q);
@@ -319,8 +325,8 @@ async function main() {
       entryEls[i].style.display = match ? '' : 'none';
       if (match) {
         visible++;
-        const highlightTerm = q && searchScope !== 'definition';
-        const highlightDef = q && searchScope !== 'term';
+        const highlightTerm = q && (isPrefix || searchScope !== 'definition');
+        const highlightDef = q && !isPrefix && searchScope !== 'term';
         entryEls[i].querySelector('.term').innerHTML = highlight(e.term, highlightTerm ? q : '');
         entryEls[i].querySelector('.def').innerHTML = highlight(e.definition, highlightDef ? q : '');
       }
@@ -339,11 +345,14 @@ async function main() {
     });
   });
 
-  document.getElementById('viewSearchBtn').addEventListener('click', () => {
+  function openSearchModal(query) {
     searchModalOverlay.style.display = 'flex';
+    if (query !== undefined) dictSearchInput.value = query;
     filterDict();
     dictSearchInput.focus();
-  });
+  }
+
+  document.getElementById('viewSearchBtn').addEventListener('click', () => openSearchModal());
   document.getElementById('searchModalClose').addEventListener('click', () => {
     searchModalOverlay.style.display = 'none';
   });
@@ -543,6 +552,14 @@ async function main() {
     options: {
       responsive: true,
       interaction: { mode: 'x', intersect: false },
+      onHover: (event, elements) => {
+        event.native.target.style.cursor = elements.length ? 'pointer' : 'default';
+      },
+      onClick: (event, elements) => {
+        if (!elements.length) return;
+        const letter = letters[elements[0].index];
+        openSearchModal(`startswith:${letter}`);
+      },
       scales: {
         x: { ticks: { color: '#9a9fab' }, grid: { display: false } },
         y: { ticks: { color: '#9a9fab', precision: 0 }, grid: { color: '#262a33' } },

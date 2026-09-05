@@ -217,11 +217,13 @@ def _parse_entry_line(line):
             return _clean_term(term_part), pos.strip(), definition.strip()
 
     # 6. "term (pos) definition" -- no separator at all, just whitespace
-    #    right after the pos tag.
+    #    right after the pos tag. Skip if the "definition" captured is
+    #    actually just a pronunciation guide (e.g. "/aenline/") with
+    #    nothing else -- that's not real definition text.
     m5 = re.match(r"^(.+?)\s*\(([^)]+)\)\.?\s+(\S.*)$", line)
     if m5:
         term_part, pos, definition = m5.groups()
-        if definition.strip():
+        if definition.strip() and not re.match(r"^/[^/]+/$", definition.strip()):
             return _clean_term(term_part), pos.strip(), definition.strip()
 
     return None
@@ -271,6 +273,37 @@ def _emit(results, term, pos, definition):
                 results.append((part, pos, definition))
 
 
+def _collect_continuation(block_lines, start_idx):
+    """Collect every subsequent non-blank line as part of the definition,
+    whether it's dash-bulleted or a bare continuation line (like a quoted
+    usage example with no leading marker). Skips lone POS subheadings.
+    Stops at a genuine metadata label (Etymology/Example/Synonym/...) or
+    the end of the block."""
+    chunks = []
+    j = start_idx
+    while j < len(block_lines):
+        nxt = block_lines[j]
+        if not nxt:
+            j += 1
+            continue
+        nxt_unbulleted = re.sub(r"^-\s*", "", nxt)
+        if re.match(
+            r"^(etymology|ex|example|synonym|synonyms|antonym|"
+            r"antonyms|derived terms|notes)\b",
+            nxt_unbulleted, re.IGNORECASE,
+        ):
+            break
+        if re.match(r"^\([^)]{1,12}\)\.?$", nxt) or nxt.lower() in (
+            "noun", "verb", "adjective", "adverb",
+            "interjection", "pronoun", "preposition",
+        ):
+            j += 1
+            continue
+        chunks.append(nxt_unbulleted)
+        j += 1
+    return chunks
+
+
 def _process_block(results, block_lines):
     """Extract (term, pos, definition) from one hyphen-delimited block's
     buffered lines, using only its real main line."""
@@ -289,67 +322,29 @@ def _process_block(results, block_lines):
 
     if not parsed:
         # Either "term (pos)" with nothing trailing, or a completely bare
-        # term line -- either way, the definition lives in bulleted
-        # ("- ...") lines further down the block, possibly interspersed
-        # with lone POS subheadings like "(n.)" / "Noun" / "Interjection".
-        pos_match = re.search(r"\(([^)]{1,20})\)\.?\s*$", main_line)
+        # term line -- either way, the definition lives in the lines
+        # further down the block. Strip a trailing pronunciation guide
+        # first (e.g. "anoline (adj.) /aenline/") so it doesn't block the
+        # trailing-"(pos)" match or end up glued onto the term.
+        main_line_no_pron = re.sub(r"\s*/[^/]+/\s*$", "", main_line)
+        pos_match = re.search(r"\(([^)]{1,20})\)\.?\s*$", main_line_no_pron)
         pos = pos_match.group(1).strip() if pos_match else ""
-        term_part = re.sub(r"\s*\([^)]{1,20}\)\.?\s*$", "", main_line).strip()
+        term_part = re.sub(r"\s*\([^)]{1,20}\)\.?\s*$", "", main_line_no_pron).strip()
         if term_part:
-            bullets = []
-            j = main_idx + 1
-            while j < len(block_lines):
-                nxt = block_lines[j]
-                if not nxt:
-                    j += 1
-                    continue
-                # Stop at a genuine metadata label (etymology/example/...)
-                if re.match(
-                    r"^(etymology|ex|example|synonym|synonyms|antonym|"
-                    r"antonyms|derived terms|notes)\b",
-                    nxt, re.IGNORECASE,
-                ):
-                    break
-                # Skip (not stop at) a lone POS subheading, e.g. "(n.)" or
-                # "Noun" / "Interjection" on its own line.
-                if re.match(r"^\([^)]{1,12}\)\.?$", nxt) or nxt.lower() in (
-                    "noun", "verb", "adjective", "adverb",
-                    "interjection", "pronoun", "preposition",
-                ):
-                    j += 1
-                    continue
-                if nxt.startswith("-"):
-                    bullets.append(re.sub(r"^-\s*", "", nxt))
-                j += 1
-            if bullets:
-                parsed = (_clean_term(term_part), pos, "; ".join(bullets))
+            chunks = _collect_continuation(block_lines, main_idx + 1)
+            if chunks:
+                parsed = (_clean_term(term_part), pos, "; ".join(chunks))
                 used_fallback = True
 
     # Even when the main line parsed fine on its own, a definition can
-    # still continue as bulleted sub-items right after it (e.g. "part of
-    # a new lineup, along with" followed by "- item one", "- item two").
-    # Append any such trailing bullets rather than silently dropping them
-    # (skip this if the fallback above already consumed them).
+    # still continue on the lines right after it -- bulleted sub-items,
+    # or a bare continuation like a quoted usage example with no leading
+    # marker. Append it rather than silently dropping it (skip this if
+    # the fallback above already consumed the same lines).
     if parsed and not used_fallback:
-        extra_bullets = []
-        j = main_idx + 1
-        while j < len(block_lines):
-            nxt = block_lines[j]
-            if not nxt:
-                j += 1
-                continue
-            if re.match(
-                r"^(etymology|ex|example|synonym|synonyms|antonym|"
-                r"antonyms|derived terms|notes)\b",
-                nxt, re.IGNORECASE,
-            ):
-                break
-            if not nxt.startswith("-"):
-                break
-            extra_bullets.append(re.sub(r"^-\s*", "", nxt))
-            j += 1
-        if extra_bullets:
-            parsed = (parsed[0], parsed[1], parsed[2] + "; " + "; ".join(extra_bullets))
+        extra = _collect_continuation(block_lines, main_idx + 1)
+        if extra:
+            parsed = (parsed[0], parsed[1], parsed[2] + "; " + "; ".join(extra))
 
     if parsed:
         _emit(results, parsed[0], parsed[1], parsed[2])

@@ -25,7 +25,7 @@ U: Ukkubius, ukwudubu, ultramod, ultraprano, uncrustor, undercop civilicover, un
 V: v'you, Vatican fries, verspicious, vetch, vickpiling, vigid, vigific, vigit, Vivaldessert, voce vosta
 W: waffwich, wagiant, Wajaw 36B, wallify, Walmeijarget, water under the bed, waterloose, Wdoba, weatherology, who didn't ask?, who doesn't care?, wigdo, Wiirtzing, wiisure, wordery, worge, wreak peace, WTF, wuantum, wujivye
 X: Xiao Hong Shoo!, xon
-Y: Yahtzeeconomy, Yalangelo, yarden, ybwa, yee-hawfficer, yerm, yeur, yihk, yincers, yours falsely, yurmy
+Y: Yahtzeeconomy, Yalangelo, yarden, ybwa, yee-hawfficer, yerm / yearm, yeur, yihk, yincers, yours falsely, yurmy
 Z: zeez, zeldopoly, zemail, Zilo!, zone, zonetime, Zonja, zoog, zoogemicist, zoogemics, The Zoogliography, zooglopedia, zoogpile, 'zza
 -----DICTIONARY PROPER-----
 
@@ -2051,7 +2051,7 @@ ybwa (inter.) - an interrogative exclamation
 
 yee-hawfficer (n.) - A law enforcement officer in the American Old West, especially one perceived to be particularly amicable. 
 
-yerm (alt. yearm) (n.) - the sensation of another's absence, either for an instant in time or a prolonged period. 
+yerm / yearm (n.) - the sensation of another's absence, either for an instant in time or a prolonged period. 
 
 yeur (part.) - yes
 

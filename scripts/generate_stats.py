@@ -376,6 +376,66 @@ def extract_definitions(content):
     return results
 
 
+# Standard part-of-speech abbreviation variants (as used across Merriam-
+# Webster, Oxford, and Wiktionary conventions), mapped to one canonical
+# label so "n." / "n" / "noun" all count as the same pie slice. Includes
+# a few tags this dictionary uses that aren't in standard style guides
+# (expr., ono., acr.) grouped under their closest real category.
+POS_NORMALIZATION = {
+    # Noun
+    "n": "Noun", "n.": "Noun", "noun": "Noun", "nn": "Noun", "nn.": "Noun",
+    "s": "Noun", "s.": "Noun", "sb": "Noun", "sb.": "Noun",
+    # Proper noun
+    "p.n.": "Proper Noun", "p.n": "Proper Noun", "pn": "Proper Noun", "pn.": "Proper Noun",
+    "proper noun": "Proper Noun", "propn": "Proper Noun", "propn.": "Proper Noun",
+    # Mass / uncountable noun (kept distinct -- meaningfully different from a plain noun)
+    "mass n": "Mass Noun", "mass n.": "Mass Noun", "mass noun": "Mass Noun",
+    "uncountable": "Mass Noun", "uncountable n.": "Mass Noun",
+    # Verb (transitive/intransitive folded into plain Verb)
+    "v": "Verb", "v.": "Verb", "verb": "Verb", "vb": "Verb", "vb.": "Verb",
+    "vt": "Verb", "vt.": "Verb", "v.t.": "Verb", "v.t": "Verb", "vtr": "Verb", "vtr.": "Verb",
+    "vi": "Verb", "vi.": "Verb", "v.i.": "Verb", "v.i": "Verb", "vintr": "Verb", "vintr.": "Verb",
+    "phrasal v": "Verb", "phrasal v.": "Verb", "phrasal verb": "Verb",
+    # Adjective
+    "adj": "Adjective", "adj.": "Adjective", "adjective": "Adjective", "a": "Adjective", "a.": "Adjective",
+    # Adverb
+    "adv": "Adverb", "adv.": "Adverb", "adverb": "Adverb",
+    # Pronoun
+    "pron": "Pronoun", "pron.": "Pronoun", "pronoun": "Pronoun",
+    # Preposition
+    "prep": "Preposition", "prep.": "Preposition", "preposition": "Preposition",
+    # Conjunction
+    "conj": "Conjunction", "conj.": "Conjunction", "conjunction": "Conjunction",
+    # Determiner / article
+    "det": "Determiner", "det.": "Determiner", "determiner": "Determiner", "art": "Determiner", "art.": "Determiner",
+    # Interjection
+    "int": "Interjection", "int.": "Interjection", "inter": "Interjection", "inter.": "Interjection",
+    "interj": "Interjection", "interj.": "Interjection", "interjection": "Interjection", "excl": "Interjection", "excl.": "Interjection",
+    # Expression / idiom / phrase
+    "expr": "Expression", "expr.": "Expression", "expression": "Expression",
+    "idiom": "Expression", "idiom.": "Expression", "phr": "Expression", "phr.": "Expression", "phrase": "Expression",
+    # Abbreviation
+    "abbr": "Abbreviation", "abbr.": "Abbreviation", "abbreviation": "Abbreviation", "abbrev": "Abbreviation", "abbrev.": "Abbreviation",
+    # Acronym / initialism
+    "acr": "Acronym", "acr.": "Acronym", "acro": "Acronym", "acro.": "Acronym", "acronym": "Acronym",
+    "init": "Acronym", "init.": "Acronym", "initialism": "Acronym",
+    # Onomatopoeia
+    "ono": "Onomatopoeia", "ono.": "Onomatopoeia", "onom": "Onomatopoeia", "onom.": "Onomatopoeia", "onomatopoeia": "Onomatopoeia",
+    # Particle
+    "part": "Particle", "part.": "Particle", "particle": "Particle",
+    # Suffix / prefix / combining form
+    "suffix": "Suffix", "suf": "Suffix", "suf.": "Suffix",
+    "prefix": "Prefix", "pref": "Prefix", "pref.": "Prefix",
+    "combining form": "Combining Form",
+}
+
+
+def _normalize_pos(raw_pos):
+    if not raw_pos or not raw_pos.strip():
+        return "(no pos)"
+    key = raw_pos.strip().lower().rstrip(".")
+    return POS_NORMALIZATION.get(key, raw_pos.strip())
+
 
 def main():
     commits = get_all_commits()
@@ -454,8 +514,8 @@ def main():
     pos_counts = Counter()
     for t in all_terms:
         pos, d = parsed_by_lower.get(t.lower(), ("", "(definition not parsed -- see raw file)"))
-        pos_clean = pos.strip() if pos else ""
-        pos_counts[pos_clean or "(no pos)"] += 1
+        pos_clean = _normalize_pos(pos)
+        pos_counts[pos_clean] += 1
         definitions.append((t, pos_clean, d))
 
     definitions_by_length_asc = sorted(

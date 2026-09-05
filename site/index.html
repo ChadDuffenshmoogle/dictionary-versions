@@ -20,6 +20,7 @@
     background: var(--bg);
     color: var(--text);
     padding: 24px;
+    overflow-x: hidden;
   }
   h1 { font-size: 1.6rem; margin-bottom: 4px; }
   .subtitle { color: var(--muted); margin-top: 0; margin-bottom: 24px; }
@@ -38,7 +39,7 @@
   .stat-big { font-size: 2.2rem; font-weight: 700; }
   .wide { grid-column: 1 / -1; }
   ol { margin: 0; padding-left: 20px; }
-  li { margin-bottom: 6px; }
+  li { margin-bottom: 6px; overflow-wrap: anywhere; word-break: break-word; }
   .def-term { color: var(--accent); font-weight: 600; }
   .def-text { color: var(--muted); }
   canvas { max-height: 320px; }
@@ -324,6 +325,12 @@ async function main() {
     .slice()
     .sort((a, b) => a.term.toLowerCase().localeCompare(b.term.toLowerCase()));
 
+  const termsByDate = new Map();
+  (stats.added_terms_timeline || []).forEach(({ date, term }) => {
+    if (!termsByDate.has(date)) termsByDate.set(date, new Set());
+    termsByDate.get(date).add(term.toLowerCase());
+  });
+
   function escapeHtml(s) {
     return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   }
@@ -350,9 +357,12 @@ async function main() {
     const raw = dictSearchInput.value.trim().toLowerCase();
     const startsWithMatch = raw.match(/^startswith:\s*(.*)$/);
     const posMatch = raw.match(/^pos:\s*(.*)$/);
-    const q = startsWithMatch ? startsWithMatch[1] : (posMatch ? posMatch[1] : raw);
+    const dateMatch = raw.match(/^date:\s*(.*)$/);
+    const q = startsWithMatch ? startsWithMatch[1] : (posMatch ? posMatch[1] : (dateMatch ? dateMatch[1] : raw));
     const isPrefix = !!startsWithMatch;
     const isPos = !!posMatch;
+    const isDate = !!dateMatch;
+    const dateTerms = isDate ? (termsByDate.get(q) || new Set()) : null;
 
     let visible = 0;
     dictEntries.forEach((e, i) => {
@@ -361,6 +371,7 @@ async function main() {
       const pos = (e.pos || '').toLowerCase() || '(no pos)';
       let match;
       if (!q) match = true;
+      else if (isDate) match = dateTerms.has(term);
       else if (isPos) match = pos === q;
       else if (isPrefix) match = term.startsWith(q); // prefix search is term-only
       else if (searchScope === 'term') match = term.includes(q);
@@ -370,8 +381,8 @@ async function main() {
       entryEls[i].style.display = match ? '' : 'none';
       if (match) {
         visible++;
-        const highlightTerm = isPos ? false : (q && (isPrefix || searchScope !== 'definition'));
-        const highlightDef = isPos ? false : (q && !isPrefix && searchScope !== 'term');
+        const highlightTerm = (isPos || isDate) ? false : (q && (isPrefix || searchScope !== 'definition'));
+        const highlightDef = (isPos || isDate) ? false : (q && !isPrefix && searchScope !== 'term');
         entryEls[i].querySelector('.term').innerHTML = highlight(e.term, highlightTerm ? q : '');
         entryEls[i].querySelector('.def').innerHTML = highlight(e.definition, highlightDef ? q : '');
       }
@@ -558,6 +569,14 @@ async function main() {
     options: {
       responsive: true,
       interaction: { mode: 'x', intersect: false },
+      onHover: (event, elements) => {
+        event.native.target.style.cursor = elements.length ? 'pointer' : 'default';
+      },
+      onClick: (event, elements) => {
+        if (!elements.length) return;
+        const date = additionsFilled[elements[0].index].date;
+        openSearchModal(`date:${date}`);
+      },
       scales: {
         x: {
           ticks: {

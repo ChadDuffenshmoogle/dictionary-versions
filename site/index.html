@@ -102,6 +102,16 @@
     font-size: 0.8rem;
     margin-bottom: 8px;
   }
+  .additions-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    color: var(--muted);
+    font-size: 0.8rem;
+    margin-top: 6px;
+  }
 </style>
 </head>
 <body>
@@ -139,7 +149,10 @@
     <div class="card wide">
       <h2>New Words Added Over Time</h2>
       <canvas id="additionsChart"></canvas>
-      <div style="color:var(--muted); font-size:0.8rem; margin-top:6px;">Click a bar to see all words added that day.</div>
+      <div class="additions-footer">
+        <span>Click a bar to see all words added that day.</span>
+        <span id="longestStreak"></span>
+      </div>
     </div>
 
     <div class="card wide">
@@ -556,6 +569,34 @@ async function main() {
     return filled;
   }
   const additionsFilled = fillDateGaps(stats.additions_series);
+
+  // Longest run of consecutive days with at least one word added.
+  function longestStreak(filled) {
+    let best = { len: 0, start: null, end: null };
+    let curStart = null;
+    let curLen = 0;
+    for (const day of filled) {
+      if (day.count > 0) {
+        if (curLen === 0) curStart = day.date;
+        curLen++;
+        if (curLen > best.len) best = { len: curLen, start: curStart, end: day.date };
+      } else {
+        curLen = 0;
+      }
+    }
+    return best;
+  }
+
+  function formatDateNice(iso) {
+    const d = new Date(iso + 'T00:00:00Z');
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
+  }
+
+  const streak = longestStreak(additionsFilled);
+  const streakEl = document.getElementById('longestStreak');
+  if (streak.len > 0) {
+    streakEl.textContent = `Longest streak of at least one word added: ${streak.len} day${streak.len === 1 ? '' : 's'} (${formatDateNice(streak.start)} – ${formatDateNice(streak.end)})`;
+  }
 
   new Chart(document.getElementById('additionsChart'), {
     type: 'bar',

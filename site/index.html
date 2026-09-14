@@ -698,37 +698,36 @@ async function main() {
     return counts;
   }
 
-  // Every standard two-letter combo (AA..ZZ), so the chart always shows
-  // the full alphabet grid -- real entries that group under punctuation
-  // (e.g. "A'", "A ") still show up too, just as bonus bars alongside it,
-  // rather than us inventing zero-count punctuation combos that don't
-  // actually occur in the data.
-  function fullTwoLetterKeys() {
+  // Every standard letter combo of length n (A..Z for n=1, AA..ZZ for
+  // n=2), so the chart always shows the full alphabet grid -- real
+  // entries that group under punctuation (e.g. "A'", "A ") still show up
+  // too, just as bonus bars alongside it, rather than us inventing
+  // zero-count punctuation combos that don't actually occur in the data.
+  function fullLetterKeys(n) {
+    const total = Math.pow(26, n);
     const keys = [];
-    for (let i = 0; i < 26; i++) {
-      for (let j = 0; j < 26; j++) {
-        keys.push(String.fromCharCode(65 + i) + String.fromCharCode(65 + j));
+    for (let i = 0; i < total; i++) {
+      let rem = i;
+      let key = '';
+      for (let p = 0; p < n; p++) {
+        key = String.fromCharCode(65 + (rem % 26)) + key;
+        rem = Math.floor(rem / 26);
       }
+      keys.push(key);
     }
     return keys;
   }
 
   let letterChartInstance = null;
   function buildLetterChart(n) {
-    let labels, counts;
-    if (n === 1) {
-      labels = Object.keys(stats.letter_counts).sort();
-      counts = labels.map(l => stats.letter_counts[l]);
-    } else {
-      const grouped = computeLetterGroups(stats.words_by_length_asc, n);
-      const merged = {};
-      fullTwoLetterKeys().forEach(k => { merged[k] = 0; });
-      Object.entries(grouped).forEach(([k, v]) => {
-        merged[k] = (merged[k] || 0) + v;
-      });
-      labels = Object.keys(merged).sort();
-      counts = labels.map(l => merged[l]);
-    }
+    const grouped = computeLetterGroups(stats.words_by_length_asc, n);
+    const merged = {};
+    fullLetterKeys(n).forEach(k => { merged[k] = 0; });
+    Object.entries(grouped).forEach(([k, v]) => {
+      merged[k] = (merged[k] || 0) + v;
+    });
+    const labels = Object.keys(merged).sort();
+    const counts = labels.map(l => merged[l]);
 
     document.getElementById('letterChartClickLabel').textContent =
       n === 1 ? 'letter' : 'letter pair';

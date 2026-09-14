@@ -51,9 +51,10 @@ ENTRY_PATTERN = r'^(.+?) \((.+?)\) - (.+)$'
 # Everything up through this date is noise (bulk backfill + a week of
 # test/delete/reset churn) and gets excluded from both charts entirely.
 # Only commits strictly after this date represent real new words. The
-# dictionary already had BASELINE_COUNT words as of this date.
+# word count as of this date is solved dynamically in main() (see
+# "effective_baseline") rather than hardcoded, so it can never drift out
+# of sync with the live file's actual total_entries.
 BASELINE_DATE = "2025-08-13"
-BASELINE_COUNT = 513
 
 API_ROOT = f"https://api.github.com/repos/{GITHUB_OWNER}/{GITHUB_REPO}"
 RAW_ROOT = f"https://raw.githubusercontent.com/{GITHUB_OWNER}/{GITHUB_REPO}/{GITHUB_BRANCH}"
@@ -501,18 +502,6 @@ def main():
         {"date": d, "count": n} for d, n in sorted(additions_by_day.items())
     ]
 
-    # --- Seed cumulative total with the known baseline, then add only
-    # commits strictly after that date (everything up to and including
-    # the baseline date is bulk backfill / test noise, already baked
-    # into BASELINE_COUNT). ---
-    running_total = BASELINE_COUNT
-    cumulative_series = [{"date": BASELINE_DATE, "total": BASELINE_COUNT}]
-    for d, n in sorted(additions_by_day_all.items()):
-        if d <= BASELINE_DATE:
-            continue
-        running_total += n
-        cumulative_series.append({"date": d, "total": running_total})
-
     # --- Latest file: entries, letter breakdown, word/definition extremes ---
     filenames = get_dictionary_filenames()
     latest_name = get_latest_filename(filenames)
@@ -530,6 +519,32 @@ def main():
         key=sort_key_ignore_punct,
     )
     total_entries = len(all_terms)
+
+    # --- Cumulative growth series, anchored to the real current total ---
+    # additions_by_day_all is a commit-count proxy (1 commit == 1 new
+    # word), which drifts from reality over time -- a commit whose
+    # message didn't match the regex, an entry edited or removed outside
+    # the normal "new term" flow, etc. Rather than grow forward from a
+    # fixed historical BASELINE_COUNT and risk the endpoint disagreeing
+    # with total_entries (the actual current parse of the live file), the
+    # effective baseline is solved backward from today's true total: take
+    # the real total_entries, subtract everything the commit log says was
+    # added since the baseline date, and whatever's left is what the
+    # baseline must have been. This keeps the chart's shape (relative
+    # growth) intact while guaranteeing its last point always matches the
+    # Total Entries card exactly.
+    additions_since_baseline = sum(
+        n for d, n in additions_by_day_all.items() if d > BASELINE_DATE
+    )
+    effective_baseline = total_entries - additions_since_baseline
+
+    running_total = effective_baseline
+    cumulative_series = [{"date": BASELINE_DATE, "total": effective_baseline}]
+    for d, n in sorted(additions_by_day_all.items()):
+        if d <= BASELINE_DATE:
+            continue
+        running_total += n
+        cumulative_series.append({"date": d, "total": running_total})
 
     def first_letter_key(term):
         for ch in sort_key_ignore_punct(term):

@@ -266,11 +266,6 @@ def _emit(results, term, pos, definition):
                 results.append((part, pos, definition))
     if re.match(r"^the\s+", term, re.IGNORECASE):
         results.append((re.sub(r"^the\s+", "", term, flags=re.IGNORECASE), pos, definition))
-    if ", " in term:
-        for part in term.split(", "):
-            part = part.strip()
-            if part and part != term:
-                results.append((part, pos, definition))
 
 
 def _collect_continuation(block_lines, start_idx):

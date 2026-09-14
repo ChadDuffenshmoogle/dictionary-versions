@@ -1,618 +1,818 @@
-"""
-Generates site/stats.json for the UNICYCLIST DICTIONARY stats page.
-
-Reads:
-  - Full commit history of the repo (for the "new words added over time"
-    frequency chart -- one commit == one new file == one new word, per
-    the existing bot logic in dictionary_manager.py).
-  - The single most recent "UNICYCLIST DICTIONARY v*.txt" file (for
-    total entries, entries-per-letter, shortest/longest words, and
-    shortest/longest definitions).
-
-Requires no secrets for a public repo: GITHUB_TOKEN provided
-automatically by GitHub Actions is enough to raise the anonymous rate
-limit from 60/hr to 1000/hr.
-"""
-
-import json
-import os
-import re
-import sys
-from collections import defaultdict, Counter
-from datetime import datetime
-from zoneinfo import ZoneInfo
-
-import requests
-
-CENTRAL = ZoneInfo("America/Chicago")
-
-
-def to_central_date(iso_timestamp):
-    """GitHub commit timestamps come back in UTC (Z-suffixed). Convert to
-    Central time before taking the calendar date, otherwise a commit made
-    in the evening Central time lands on the wrong (next) UTC day."""
-    dt = datetime.fromisoformat(iso_timestamp.replace("Z", "+00:00"))
-    return dt.astimezone(CENTRAL).strftime("%Y-%m-%d")
-
-
-def to_central_datetime_str(iso_timestamp):
-    """Human-readable Central time, e.g. 'Sep 2, 2025, 3:45 PM CT'."""
-    dt = datetime.fromisoformat(iso_timestamp.replace("Z", "+00:00"))
-    local = dt.astimezone(CENTRAL)
-    return local.strftime("%b %-d, %Y, %-I:%M %p") + " CT"
-
-GITHUB_OWNER = "ChadDuffenshmoogle"
-GITHUB_REPO = "dictionary-versions"
-GITHUB_BRANCH = "main"
-FILE_PREFIX = "UNICYCLIST DICTIONARY"
-FILE_EXTENSION = ".txt"
-ENTRY_PATTERN = r'^(.+?) \((.+?)\) - (.+)$'
-
-# Everything up through this date is noise (bulk backfill + a week of
-# test/delete/reset churn) and gets excluded from both charts entirely.
-# Only commits strictly after this date represent real new words. The
-# dictionary already had BASELINE_COUNT words as of this date.
-BASELINE_DATE = "2025-08-13"
-BASELINE_COUNT = 513
-
-API_ROOT = f"https://api.github.com/repos/{GITHUB_OWNER}/{GITHUB_REPO}"
-RAW_ROOT = f"https://raw.githubusercontent.com/{GITHUB_OWNER}/{GITHUB_REPO}/{GITHUB_BRANCH}"
-
-TOKEN = os.environ.get("GITHUB_TOKEN")
-HEADERS = {"Accept": "application/vnd.github+json"}
-if TOKEN:
-    HEADERS["Authorization"] = f"Bearer {TOKEN}"
-
-
-def api_get(url, params=None):
-    resp = requests.get(url, headers=HEADERS, params=params, timeout=30)
-    resp.raise_for_status()
-    return resp
-
-
-def get_all_commits():
-    """Paginate through every commit on the branch."""
-    commits = []
-    page = 1
-    while True:
-        resp = api_get(
-            f"{API_ROOT}/commits",
-            params={"sha": GITHUB_BRANCH, "per_page": 100, "page": page},
-        )
-        batch = resp.json()
-        if not batch:
-            break
-        commits.extend(batch)
-        if len(batch) < 100:
-            break
-        page += 1
-    return commits
-
-
-def get_dictionary_filenames():
-    """List every dictionary version file in the repo root."""
-    resp = api_get(f"{API_ROOT}/contents/", params={"ref": GITHUB_BRANCH})
-    files = resp.json()
-    names = [
-        f["name"] for f in files
-        if f["name"].startswith(FILE_PREFIX) and f["name"].endswith(FILE_EXTENSION)
-    ]
-    return names
-
-
-def parse_version_tuple(filename):
-    m = re.search(r"v\.?(\d+)\.(\d+)\.(\d+)", filename, re.IGNORECASE)
-    if not m:
-        return (0, 0, 0)
-    return tuple(int(x) for x in m.groups())
-
-
-def get_latest_filename(filenames):
-    return max(filenames, key=parse_version_tuple)
-
-
-def sort_key_ignore_punct(s):
-    term = s.split(" (")[0] if " (" in s else s
-    term = term.lstrip(" '-\"")
-    if term.lower().startswith("the "):
-        term = term[4:] + ", the"
-    return term.lower()
-
-
-def fetch_raw(filename):
-    url = f"{RAW_ROOT}/{requests.utils.quote(filename)}"
-    resp = requests.get(url, timeout=30)
-    resp.raise_for_status()
-    return resp.text
-
-
-def extract_corpus_by_letter(content):
-    """Parse the '-----CORPUS-----' block into {letter: [terms]}."""
-    m = re.search(
-        r"-----CORPUS-----\s*\n(.*?)\n-----DICTIONARY PROPER-----",
-        content, re.DOTALL,
-    )
-    if not m:
-        return {}
-    corpus_text = m.group(1)
-
-    # Normalise "\nX: " markers into a consistent split point, keep the
-    # leading "A: " label on the first group.
-    groups = re.split(r"\n([A-Z]):\s+", corpus_text)
-    by_letter = defaultdict(list)
-
-    # groups[0] is the leading "A: term, term, ..." chunk (or similar)
-    first_chunk = groups[0]
-    lm = re.match(r"^([A-Z]):\s*(.*)$", first_chunk.strip(), re.DOTALL)
-    if lm:
-        letter, rest = lm.group(1), lm.group(2)
-        by_letter[letter].extend([t.strip() for t in rest.split(",") if t.strip()])
-
-    # Remaining groups come in (letter, text) pairs
-    for i in range(1, len(groups) - 1, 2):
-        letter = groups[i]
-        text = groups[i + 1]
-        by_letter[letter].extend([t.strip() for t in text.split(",") if t.strip()])
-
-    return by_letter
-
-
-def _clean_term(raw_term):
-    term = re.sub(r"\(pronounced:\s*[^)]+\)", "", raw_term, flags=re.IGNORECASE)
-    term = re.sub(r"\[[^\]]+\]", "", term)
-    return term.strip()
-
-
-def _parse_entry_line(line):
-    """Try progressively looser patterns to pull (term, pos, definition)
-    out of one line, so entries with nonstandard punctuation aren't
-    silently dropped from the definitions list."""
-    # Normalize "(pos)-definition" (missing space before the dash) so
-    # every pattern below can assume a space is there.
-    line = re.sub(r"\)-", ") -", line)
-
-    # 1. Strict standard pattern: "term (pos) - definition"
-    m = re.match(ENTRY_PATTERN, line)
-    if m:
-        raw_term, pos, definition = m.groups()
-        return _clean_term(raw_term), pos.strip(), definition.strip()
-
-    # 2. Flexible: use the LAST "(...)" before " - " as the part-of-speech,
-    #    everything before it is the term (handles terms that themselves
-    #    contain parentheses, e.g. pronunciation guides).
-    if "(" in line and ")" in line and " - " in line:
-        left, _, definition = line.partition(" - ")
-        paren_matches = list(re.finditer(r"\(([^)]+)\)", left))
-        if paren_matches:
-            term_part = left[: paren_matches[-1].start()].strip()
-            if term_part and definition.strip():
-                return _clean_term(term_part), paren_matches[-1].group(1).strip(), definition.strip()
-
-    # 3. Em dash instead of " - "
-    for sep in (" — ", " – "):
-        if sep in line and "(" in line and ")" in line:
-            left, _, definition = line.partition(sep)
-            paren_matches = list(re.finditer(r"\(([^)]+)\)", left))
-            if paren_matches and definition.strip():
-                term_part = left[: paren_matches[-1].start()].strip()
-                if term_part:
-                    return _clean_term(term_part), paren_matches[-1].group(1).strip(), definition.strip()
-
-    # 4. No parentheses at all, just "term - definition" (em/en dash or
-    #    plain hyphen with spaces on both sides -- NOT a bare colon, which
-    #    is too easy to false-positive on ordinary sentences). No pos tag
-    #    available in this format.
-    for sep in (" - ", " — ", " – "):
-        if sep in line:
-            term_part, _, definition = line.partition(sep)
-            if term_part.strip() and definition.strip():
-                return _clean_term(term_part), "", definition.strip()
-
-    # 5. "term (pos): definition" -- colon right after the pos tag instead
-    #    of " - ".
-    m4 = re.match(r"^(.+?)\s*\(([^)]+)\)\s*:\s*(.+)$", line)
-    if m4:
-        term_part, pos, definition = m4.groups()
-        if definition.strip():
-            return _clean_term(term_part), pos.strip(), definition.strip()
-
-    # 6. "term (pos) definition" -- no separator at all, just whitespace
-    #    right after the pos tag. Skip if the "definition" captured is
-    #    actually just a pronunciation guide (e.g. "/aenline/") with
-    #    nothing else -- that's not real definition text.
-    m5 = re.match(r"^(.+?)\s*\(([^)]+)\)\.?\s+(\S.*)$", line)
-    if m5:
-        term_part, pos, definition = m5.groups()
-        if definition.strip() and not re.match(r"^/[^/]+/$", definition.strip()):
-            return _clean_term(term_part), pos.strip(), definition.strip()
-
-    return None
-
-
-METADATA_LABELS = {
-    "etymology", "derived terms", "synonym", "synonyms",
-    "ex", "example", "notes", "antonym", "antonyms",
-}
-
-
-def _is_metadata_line(line):
-    """Lines that are part of an entry's metadata (etymology, examples,
-    synonyms, a lone part-of-speech tag, a lone pronunciation guide, ...)
-    rather than the entry's own term/definition line."""
-    stripped = line.strip()
-    label = stripped.rstrip(":").lower()
-    if label in METADATA_LABELS:
-        return True
-    if stripped.lower().startswith(
-        ("etymology:", "derived terms:", "synonym:", "synonyms:",
-         "ex:", "example:", "notes:", "antonym:", "antonyms:", "- example:")
-    ):
-        return True
-    # A lone "(adj.)" / "(n.)" style part-of-speech tag with nothing else
-    if re.match(r"^\([^)]{1,12}\)\.?$", stripped):
-        return True
-    # A lone pronunciation guide continuation line, e.g. "aychesseedeepobadenux)"
-    if re.match(r"^[a-zA-Z\-']+\)$", stripped):
-        return True
-    return False
-
-
-def _emit(results, term, pos, definition):
-    results.append((term, pos, definition))
-    if "/" in term:
-        for part in term.split("/"):
-            part = part.strip()
-            if part and part != term:
-                results.append((part, pos, definition))
-    if re.match(r"^the\s+", term, re.IGNORECASE):
-        results.append((re.sub(r"^the\s+", "", term, flags=re.IGNORECASE), pos, definition))
-    if ", " in term:
-        for part in term.split(", "):
-            part = part.strip()
-            if part and part != term:
-                results.append((part, pos, definition))
-
-
-def _collect_continuation(block_lines, start_idx):
-    """Collect every subsequent non-blank line as part of the definition,
-    whether it's dash-bulleted or a bare continuation line (like a quoted
-    usage example with no leading marker). Skips lone POS subheadings.
-    Stops at a genuine metadata label (Etymology/Example/Synonym/...) or
-    the end of the block."""
-    chunks = []
-    j = start_idx
-    while j < len(block_lines):
-        nxt = block_lines[j]
-        if not nxt:
-            j += 1
-            continue
-        nxt_unbulleted = re.sub(r"^-\s*", "", nxt)
-        if re.match(
-            r"^(etymology|ex|example|synonym|synonyms|antonym|"
-            r"antonyms|derived terms|notes)\b",
-            nxt_unbulleted, re.IGNORECASE,
-        ):
-            break
-        if re.match(r"^\([^)]{1,12}\)\.?$", nxt) or nxt.lower() in (
-            "noun", "verb", "adjective", "adverb",
-            "interjection", "pronoun", "preposition",
-        ):
-            j += 1
-            continue
-        chunks.append(nxt_unbulleted)
-        j += 1
-    return chunks
-
-
-def _process_block(results, block_lines):
-    """Extract (term, pos, definition) from one hyphen-delimited block's
-    buffered lines, using only its real main line."""
-    main_idx = None
-    for idx, line in enumerate(block_lines):
-        if not line or _is_metadata_line(line):
-            continue
-        main_idx = idx
-        break
-    if main_idx is None:
-        return
-
-    main_line = block_lines[main_idx]
-    parsed = _parse_entry_line(main_line)
-    used_fallback = False
-
-    if not parsed:
-        # Either "term (pos)" with nothing trailing, or a completely bare
-        # term line -- either way, the definition lives in the lines
-        # further down the block. Strip a trailing pronunciation guide
-        # first (e.g. "anoline (adj.) /aenline/") so it doesn't block the
-        # trailing-"(pos)" match or end up glued onto the term.
-        main_line_no_pron = re.sub(r"\s*/[^/]+/\s*$", "", main_line)
-        pos_match = re.search(r"\(([^)]{1,20})\)\.?\s*$", main_line_no_pron)
-        pos = pos_match.group(1).strip() if pos_match else ""
-        term_part = re.sub(r"\s*\([^)]{1,20}\)\.?\s*$", "", main_line_no_pron).strip()
-        if term_part:
-            chunks = _collect_continuation(block_lines, main_idx + 1)
-            if chunks:
-                parsed = (_clean_term(term_part), pos, "; ".join(chunks))
-                used_fallback = True
-
-    # Even when the main line parsed fine on its own, a definition can
-    # still continue on the lines right after it -- bulleted sub-items,
-    # or a bare continuation like a quoted usage example with no leading
-    # marker. Append it rather than silently dropping it (skip this if
-    # the fallback above already consumed the same lines).
-    if parsed and not used_fallback:
-        extra = _collect_continuation(block_lines, main_idx + 1)
-        if extra:
-            parsed = (parsed[0], parsed[1], parsed[2] + "; " + "; ".join(extra))
-
-    if parsed:
-        _emit(results, parsed[0], parsed[1], parsed[2])
-
-
-def extract_definitions(content):
-    """Return list of (term, definition), reading only each entry's actual
-    main line -- ignoring Etymology/Synonym/Example/Derived-Terms sub-lines
-    and multi-line continuations so those never get mistaken for entries
-    in their own right.
-
-    Uses a simple linear state machine (in-block / not-in-block) rather
-    than pre-splitting the whole body on paired delimiters -- a single
-    unmatched or stray "-----" line anywhere in the file would otherwise
-    misalign every block after it and swallow large swaths of real
-    entries into one bad "block"."""
-    if "-----DICTIONARY PROPER-----" not in content:
-        return []
-    body = content.split("-----DICTIONARY PROPER-----", 1)[1]
-
-    results = []
-    in_block = False
-    block_lines = []
-
-    for raw_line in body.split("\n"):
-        line = raw_line.strip()
-
-        if re.match(r"^-{20,}$", line):
-            if in_block:
-                _process_block(results, block_lines)
-                block_lines = []
-                in_block = False
-            else:
-                in_block = True
-                block_lines = []
-            continue
-
-        if in_block:
-            block_lines.append(line)
-        else:
-            if not line or _is_metadata_line(line):
-                continue
-            parsed = _parse_entry_line(line)
-            if parsed:
-                _emit(results, parsed[0], parsed[1], parsed[2])
-
-    # A block left open at end-of-file (unmatched delimiter) still gets
-    # its main entry read rather than silently dropped.
-    if in_block and block_lines:
-        _process_block(results, block_lines)
-
-    return results
-
-
-# Standard part-of-speech abbreviation variants (as used across Merriam-
-# Webster, Oxford, and Wiktionary conventions), mapped to one canonical
-# label so "n." / "n" / "noun" all count as the same pie slice. Includes
-# a few tags this dictionary uses that aren't in standard style guides
-# (expr., ono., acr.) grouped under their closest real category.
-POS_NORMALIZATION = {
-    # Noun
-    "n": "Noun", "noun": "Noun", "nn": "Noun", "s": "Noun", "sb": "Noun",
-    # Proper noun
-    "pn": "Proper Noun", "propern": "Proper Noun", "propernoun": "Proper Noun", "propn": "Proper Noun",
-    # Mass / uncountable noun (kept distinct -- meaningfully different from a plain noun)
-    "massn": "Mass Noun", "massnoun": "Mass Noun", "uncountable": "Mass Noun", "uncountablen": "Mass Noun",
-    # Verb (transitive/intransitive folded into plain Verb)
-    "v": "Verb", "verb": "Verb", "vb": "Verb",
-    "vt": "Verb", "vtr": "Verb", "vi": "Verb", "vintr": "Verb",
-    "phrasalv": "Verb", "phrasalverb": "Verb",
-    # Adjective
-    "adj": "Adjective", "adjective": "Adjective", "a": "Adjective",
-    # Adverb
-    "adv": "Adverb", "adverb": "Adverb",
-    # Pronoun
-    "pron": "Pronoun", "pronoun": "Pronoun",
-    # Preposition
-    "prep": "Preposition", "preposition": "Preposition",
-    # Conjunction
-    "conj": "Conjunction", "conjunction": "Conjunction",
-    # Determiner / article
-    "det": "Determiner", "determiner": "Determiner", "art": "Determiner", "article": "Determiner",
-    # Interjection
-    "int": "Interjection", "inter": "Interjection", "interj": "Interjection",
-    "interjection": "Interjection", "excl": "Interjection", "exclamation": "Interjection",
-    # Expression / idiom / phrase
-    "expr": "Expression", "expression": "Expression",
-    "idiom": "Expression", "phr": "Expression", "phrase": "Expression", "saying": "Expression",
-    # Abbreviation
-    "abbr": "Abbreviation", "abbreviation": "Abbreviation", "abbrev": "Abbreviation",
-    # Acronym / initialism
-    "acr": "Acronym", "acro": "Acronym", "acronym": "Acronym",
-    "init": "Acronym", "initialism": "Acronym",
-    # Onomatopoeia
-    "ono": "Onomatopoeia", "onom": "Onomatopoeia", "onomatopoeia": "Onomatopoeia", "onomatopoeic": "Onomatopoeia",
-    # Particle
-    "part": "Particle", "particle": "Particle",
-    # Suffix / prefix / infix / combining form
-    "suffix": "Suffix", "suf": "Suffix", "suff": "Suffix",
-    "prefix": "Prefix", "pref": "Prefix",
-    "infix": "Infix",
-    "combform": "Combining Form", "combiningform": "Combining Form",
-    # Alternate/variant form marker
-    "alt": "Alternate Form", "alternate": "Alternate Form", "alternateform": "Alternate Form",
-    "var": "Alternate Form", "variant": "Alternate Form", "altform": "Alternate Form",
-    # Numeral
-    "num": "Numeral", "numeral": "Numeral", "number": "Numeral",
-    # Auxiliary / modal verb
-    "aux": "Auxiliary Verb", "auxiliary": "Auxiliary Verb", "auxiliaryverb": "Auxiliary Verb",
-    "modal": "Auxiliary Verb", "modalv": "Auxiliary Verb", "modalverb": "Auxiliary Verb",
-    # Contraction / clipping
-    "contr": "Contraction", "contraction": "Contraction",
-    "clipping": "Clipping", "clip": "Clipping",
-    # Symbol / letter
-    "sym": "Symbol", "symbol": "Symbol", "letter": "Letter",
-    # Gerund / participle
-    "ger": "Gerund", "gerund": "Gerund",
-    "ptcp": "Participle", "participle": "Participle",
-    # Proverb / collocation
-    "prov": "Proverb", "proverb": "Proverb",
-    "colloc": "Collocation", "collocation": "Collocation",
-    # Usage/register labels this dictionary sometimes uses in place of a
-    # real POS tag
-    "slang": "Slang", "colloq": "Colloquial", "colloquial": "Colloquial",
-    "informal": "Informal", "vulgar": "Vulgar", "derog": "Derogatory", "derogatory": "Derogatory",
-    "archaic": "Archaic", "obs": "Obsolete", "obsolete": "Obsolete",
-    "dial": "Dialectal", "dialect": "Dialectal", "dialectal": "Dialectal",
-    # Interrogative / demonstrative / quantifier / classifier
-    "interrog": "Interrogative", "interrogative": "Interrogative",
-    "dem": "Demonstrative", "demonstrative": "Demonstrative",
-    "quant": "Quantifier", "quantifier": "Quantifier",
-    "class": "Classifier", "classifier": "Classifier",
-    # Honorific / salutation
-    "honorific": "Honorific", "salutation": "Salutation",
-}
-
-
-def _normalize_pos(raw_pos):
-    """Map a huge range of amateur-written pos tags to one canonical label.
-    Rather than enumerate every punctuation/spacing variant, this strips
-    ALL periods/commas/spaces before lookup (so "v.t.", "vt", "v t", and
-    "v.t" all collapse to the same key), then falls back to a naive
-    singular/plural fold ("nouns" / "verbs" / "adjs" -> "noun" / "verb" /
-    "adj") before giving up and just showing the tag as its own slice."""
-    if not raw_pos or not raw_pos.strip():
-        return "(no pos)"
-    raw = raw_pos.strip()
-    key = re.sub(r"[.,\s]", "", raw.lower())
-    if key in POS_NORMALIZATION:
-        return POS_NORMALIZATION[key]
-    if key.endswith("s") and key[:-1] in POS_NORMALIZATION:
-        return POS_NORMALIZATION[key[:-1]]
-    if key.endswith("es") and key[:-2] in POS_NORMALIZATION:
-        return POS_NORMALIZATION[key[:-2]]
-    return raw
-
-
-def main():
-    commits = get_all_commits()
-
-    # --- New-word-added frequency (== new-file frequency) ---
-    additions_by_day = Counter()
-    additions_by_day_all = Counter()  # unfiltered, used for cumulative growth
-    added_terms_timeline = []
-    add_re = re.compile(r"with new term '(.+?)'")
-    for c in commits:
-        msg = c["commit"]["message"]
-        date = to_central_date(c["commit"]["author"]["date"])
-        m = add_re.search(msg)
-        if m:
-            additions_by_day_all[date] += 1
-            if date > BASELINE_DATE:
-                additions_by_day[date] += 1
-                added_terms_timeline.append({"date": date, "term": m.group(1)})
-
-    # --- Most recent word added (commits come back newest-first) ---
-    latest_word_term = None
-    latest_word_timestamp = None
-    for c in commits:
-        m0 = add_re.search(c["commit"]["message"])
-        if m0:
-            latest_word_term = m0.group(1)
-            latest_word_timestamp = to_central_datetime_str(c["commit"]["author"]["date"])
-            break
-
-    additions_series = [
-        {"date": d, "count": n} for d, n in sorted(additions_by_day.items())
-    ]
-
-    # --- Seed cumulative total with the known baseline, then add only
-    # commits strictly after that date (everything up to and including
-    # the baseline date is bulk backfill / test noise, already baked
-    # into BASELINE_COUNT). ---
-    running_total = BASELINE_COUNT
-    cumulative_series = [{"date": BASELINE_DATE, "total": BASELINE_COUNT}]
-    for d, n in sorted(additions_by_day_all.items()):
-        if d <= BASELINE_DATE:
-            continue
-        running_total += n
-        cumulative_series.append({"date": d, "total": running_total})
-
-    # --- Latest file: entries, letter breakdown, word/definition extremes ---
-    filenames = get_dictionary_filenames()
-    latest_name = get_latest_filename(filenames)
-    content = fetch_raw(latest_name)
-
-    by_letter = extract_corpus_by_letter(content)
-    letter_counts = {letter: len(terms) for letter, terms in sorted(by_letter.items())}
-    all_terms = sorted(
-        {t for terms in by_letter.values() for t in terms}, key=sort_key_ignore_punct
-    )
-    total_entries = len(all_terms)
-
-    def word_len(t):
-        return len(sort_key_ignore_punct(t).replace(", the", ""))
-
-    words_by_length_asc = sorted(all_terms, key=word_len)
-
-    # Map lowercase term -> (pos, parsed definition). First match wins if
-    # the raw text has duplicate/near-duplicate lines for the same term.
-    parsed_by_lower = {}
-    for t, pos, d in extract_definitions(content):
-        key = t.lower()
-        if key not in parsed_by_lower:
-            parsed_by_lower[key] = (pos, d)
-
-    # Walk every distinct corpus term individually (not through a
-    # lowercase-keyed dict of terms) so two terms that only differ by
-    # capitalization each keep their own row instead of one overwriting
-    # the other.
-    definitions = []
-    pos_counts = Counter()
-    for t in all_terms:
-        pos, d = parsed_by_lower.get(t.lower(), ("", "(definition not parsed -- see raw file)"))
-        pos_clean = _normalize_pos(pos)
-        pos_counts[pos_clean] += 1
-        definitions.append((t, pos_clean, d))
-
-    definitions_by_length_asc = sorted(
-        [{"term": t, "pos": p, "definition": d} for t, p, d in definitions],
-        key=lambda td: len(td["definition"]),
-    )
-
-    stats = {
-        "latest_version": latest_name,
-        "latest_word_term": latest_word_term,
-        "latest_word_timestamp": latest_word_timestamp,
-        "latest_file_content": content,
-        "total_entries": total_entries,
-        "letter_counts": letter_counts,
-        "pos_counts": dict(pos_counts),
-        "additions_series": additions_series,
-        "cumulative_series": cumulative_series,
-        "added_terms_timeline": added_terms_timeline,
-        "words_by_length_asc": words_by_length_asc,
-        "definitions_by_length_asc": definitions_by_length_asc,
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Unicyclist Dictionary — Stats</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg: #0f1115;
+    --card: #171a21;
+    --text: #e8e8ec;
+    --muted: #9a9fab;
+    --accent: #6ee7b7;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    padding: 24px;
+    overflow-x: hidden;
+  }
+  h1 { font-size: 1.6rem; margin-bottom: 4px; }
+  .subtitle { color: var(--muted); margin-top: 0; margin-bottom: 24px; }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 16px;
+  }
+  .card {
+    background: var(--card);
+    border-radius: 12px;
+    padding: 18px;
+    border: 1px solid #262a33;
+  }
+  .card h2 { margin: 0 0 12px 0; font-size: 1rem; color: var(--accent); }
+  .stat-big { font-size: 2.2rem; font-weight: 700; }
+  .wide { grid-column: 1 / -1; }
+  ol { margin: 0; padding-left: 20px; }
+  li { margin-bottom: 6px; overflow-wrap: anywhere; word-break: break-word; }
+  .def-term { color: var(--accent); font-weight: 600; }
+  .def-text { color: var(--muted); }
+  canvas { max-height: 320px; }
+  .loading, .error { color: var(--muted); padding: 40px; text-align: center; }
+  .n-input {
+    width: 52px;
+    padding: 2px 4px;
+    border-radius: 6px;
+    border: 1px solid #262a33;
+    background: #0f1115;
+    color: var(--accent);
+    font: inherit;
+    font-weight: 700;
+  }
+  #dictSearchInput {
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid #262a33;
+    background: #0f1115;
+    color: var(--text);
+    font-size: 0.95rem;
+    box-sizing: border-box;
+  }
+  .scope-toggle {
+    display: flex;
+    gap: 6px;
+    margin: 10px 0 12px 0;
+  }
+  .scope-toggle button {
+    background: #0f1115;
+    color: var(--muted);
+    border: 1px solid #262a33;
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 0.85rem;
+    cursor: pointer;
+  }
+  .scope-toggle button.active {
+    background: var(--accent);
+    color: #0f1115;
+    border-color: var(--accent);
+    font-weight: 700;
+  }
+  .dict-entry {
+    padding: 10px 0;
+    border-bottom: 1px solid #21242c;
+  }
+  .dict-entry:last-child { border-bottom: none; }
+  .dict-entry .term {
+    color: var(--accent);
+    font-weight: 700;
+  }
+  .dict-entry .def {
+    color: var(--muted);
+    margin-top: 2px;
+  }
+  #dictResultCount {
+    color: var(--muted);
+    font-size: 0.8rem;
+    margin-bottom: 8px;
+  }
+  .additions-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    color: var(--muted);
+    font-size: 0.8rem;
+    margin-top: 6px;
+  }
+</style>
+</head>
+<body>
+  <h1>Unicyclist Dictionary — Live Stats</h1>
+  <p class="subtitle" id="subtitle">Loading…</p>
+
+  <div id="content" class="grid" style="display:none;">
+    <div class="card">
+      <h2>Total Entries</h2>
+      <div class="stat-big" id="totalEntries">—</div>
+    </div>
+
+    <div class="card">
+      <h2>Most Recent Word</h2>
+      <div class="stat-big" id="latestWord" style="font-size:1.6rem;">—</div>
+      <div id="latestWordTime" style="color:var(--muted); font-size:0.85rem; margin-top:4px;"></div>
+    </div>
+
+    <div class="card" style="display:flex; align-items:center; justify-content:center; gap:10px; flex-wrap:wrap;">
+      <button id="viewFileBtn" style="background:var(--accent); color:#0f1115; border:none; border-radius:8px; padding:12px 20px; font-weight:700; font-size:0.95rem; cursor:pointer;">
+        View Current Dictionary File
+      </button>
+      <button id="viewSearchBtn" style="background:#7dd3fc; color:#0f1115; border:none; border-radius:8px; padding:12px 20px; font-weight:700; font-size:0.95rem; cursor:pointer;">
+        View Searchable Dictionary
+      </button>
+    </div>
+
+    <div class="card wide">
+      <h2>Total Word Count Over Time (+ <input type="number" id="projMonths" value="6" min="1" step="1"
+        style="width:56px; padding:2px 4px; border-radius:6px; border:1px solid #262a33; background:#0f1115; color:var(--accent); font:inherit; font-weight:700;">
+        Month Projection)</h2>
+      <canvas id="growthChart"></canvas>
+    </div>
+
+    <div class="card wide">
+      <h2>New Words Added Over Time</h2>
+      <canvas id="additionsChart"></canvas>
+      <div class="additions-footer">
+        <span>Click a bar to see all words added that day.</span>
+        <span id="longestStreak"></span>
+      </div>
+    </div>
+
+    <div class="card wide">
+      <h2 style="display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap;">
+        <span id="letterChartTitle">Entries Per First Letter</span>
+        <select id="letterGroupMode" style="background:#0f1115; color:var(--accent); border:1px solid #262a33; border-radius:6px; padding:4px 8px; font-size:0.85rem; font-weight:700; font-family:inherit;">
+          <option value="1">First Letter</option>
+          <option value="2">First Two Letters</option>
+        </select>
+      </h2>
+      <canvas id="letterChart"></canvas>
+      <div style="color:var(--muted); font-size:0.8rem; margin-top:6px;">Click a <span id="letterChartClickLabel">letter</span> to see all words that start with it.</div>
+    </div>
+
+    <div class="wide" style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
+      <div class="card">
+        <h2 id="shortestWordsTitle" style="display:flex; align-items:center; gap:8px;">
+          Shortest
+          <input type="number" id="nShortestWords" value="5" min="1" step="1" class="n-input">
+          Words
+        </h2>
+        <ol id="shortestWords"></ol>
+      </div>
+
+      <div class="card">
+        <h2 id="longestWordsTitle" style="display:flex; align-items:center; gap:8px;">
+          Longest
+          <input type="number" id="nLongestWords" value="5" min="1" step="1" class="n-input">
+          Words
+        </h2>
+        <ol id="longestWords"></ol>
+      </div>
+    </div>
+
+    <div class="wide" style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
+      <div class="card">
+        <h2 id="shortestDefsTitle" style="display:flex; align-items:center; gap:8px;">
+          Shortest
+          <input type="number" id="nShortestDefs" value="5" min="1" step="1" class="n-input">
+          Definitions
+        </h2>
+        <ol id="shortestDefs"></ol>
+      </div>
+
+      <div class="card">
+        <h2 id="longestDefsTitle" style="display:flex; align-items:center; gap:8px;">
+          Longest
+          <input type="number" id="nLongestDefs" value="5" min="1" step="1" class="n-input">
+          Definitions
+        </h2>
+        <ol id="longestDefs"></ol>
+      </div>
+    </div>
+
+    <div class="card wide">
+      <h2>Parts of Speech</h2>
+      <canvas id="posChart"></canvas>
+      <div style="color:var(--muted); font-size:0.8rem; margin-top:6px;">Click a slice to see all words of that type.</div>
+    </div>
+  </div>
+
+  <div id="errorBox" class="error" style="display:none;"></div>
+
+  <div id="fileModalOverlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:100; align-items:center; justify-content:center; padding:20px;">
+    <div style="background:var(--card); border:1px solid #262a33; border-radius:12px; max-width:800px; width:100%; max-height:85vh; display:flex; flex-direction:column;">
+      <div style="display:flex; justify-content:space-between; align-items:center; padding:14px 18px; border-bottom:1px solid #262a33; gap:12px; flex-wrap:wrap;">
+        <a id="fileModalTitle" href="#" target="_blank" rel="noopener" style="color:var(--accent); text-decoration:none; font-weight:700;">Current Dictionary File</a>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <button id="downloadTxtBtn" style="background:#0f1115; color:var(--text); border:1px solid #262a33; border-radius:6px; padding:6px 12px; font-size:0.8rem; cursor:pointer;">⬇ .txt</button>
+          <button id="downloadJsonBtn" style="background:#0f1115; color:var(--text); border:1px solid #262a33; border-radius:6px; padding:6px 12px; font-size:0.8rem; cursor:pointer;">⬇ .json</button>
+          <button id="fileModalClose" style="background:none; border:none; color:var(--muted); font-size:1.4rem; cursor:pointer; line-height:1;">&times;</button>
+        </div>
+      </div>
+      <pre id="fileModalContent" style="margin:0; padding:16px 18px; overflow:auto; white-space:pre-wrap; word-break:break-word; color:var(--text); font-size:0.85rem; font-family: ui-monospace, Menlo, monospace;"></pre>
+    </div>
+  </div>
+
+  <div id="searchModalOverlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:100; align-items:center; justify-content:center; padding:20px;">
+    <div style="background:var(--card); border:1px solid #262a33; border-radius:12px; max-width:800px; width:100%; max-height:85vh; display:flex; flex-direction:column;">
+      <div style="display:flex; justify-content:space-between; align-items:center; padding:14px 18px; border-bottom:1px solid #262a33;">
+        <strong>Searchable Dictionary</strong>
+        <button id="searchModalClose" style="background:none; border:none; color:var(--muted); font-size:1.4rem; cursor:pointer; line-height:1;">&times;</button>
+      </div>
+      <div style="padding:16px 18px 0 18px;">
+        <input type="text" id="dictSearchInput" placeholder="Search the dictionary…" autocomplete="off">
+        <div class="scope-toggle">
+          <button type="button" data-scope="both" class="active">Both</button>
+          <button type="button" data-scope="term">Terms</button>
+          <button type="button" data-scope="definition">Definitions</button>
+        </div>
+        <div id="dictResultCount"></div>
+      </div>
+      <div id="dictEntryList" style="overflow:auto; padding:0 18px 16px 18px;"></div>
+    </div>
+  </div>
+
+<script>
+// Thin vertical line at the hovered x-position, on every chart.
+Chart.register({
+  id: 'crosshair',
+  afterDraw(chart) {
+    const active = chart.tooltip && chart.tooltip._active;
+    if (!active || !active.length) return;
+    const x = active[0].element.x;
+    const { top, bottom } = chart.chartArea;
+    const ctx = chart.ctx;
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(x, top);
+    ctx.lineTo(x, bottom);
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = 'rgba(232, 232, 236, 0.35)';
+    ctx.stroke();
+    ctx.restore();
+  },
+});
+
+async function main() {
+  let stats;
+  try {
+    const res = await fetch('stats.json', { cache: 'no-store' });
+    if (!res.ok) throw new Error('stats.json not found (' + res.status + ')');
+    stats = await res.json();
+  } catch (e) {
+    document.getElementById('subtitle').textContent = '';
+    const box = document.getElementById('errorBox');
+    box.style.display = 'block';
+    box.textContent = 'Could not load stats: ' + e.message;
+    return;
+  }
+
+  document.getElementById('subtitle').textContent =
+    'Automatically rebuilt whenever a new word is added.';
+  document.getElementById('content').style.display = 'grid';
+
+  document.getElementById('totalEntries').textContent = stats.total_entries;
+  document.getElementById('latestWord').textContent = stats.latest_word_term || '—';
+  document.getElementById('latestWordTime').textContent = stats.latest_word_timestamp || '';
+
+  const fileModalOverlay = document.getElementById('fileModalOverlay');
+  const fileModalTitle = document.getElementById('fileModalTitle');
+  fileModalTitle.textContent = (stats.latest_version || 'Current Dictionary File').replace('.txt', '');
+  fileModalTitle.href = stats.latest_version
+    ? `https://github.com/ChadDuffenshmoogle/dictionary-versions/blob/main/${encodeURIComponent(stats.latest_version)}`
+    : '#';
+  document.getElementById('fileModalContent').textContent = stats.latest_file_content || 'No file content available.';
+  document.getElementById('viewFileBtn').addEventListener('click', () => {
+    fileModalOverlay.style.display = 'flex';
+  });
+  document.getElementById('fileModalClose').addEventListener('click', () => {
+    fileModalOverlay.style.display = 'none';
+  });
+  fileModalOverlay.addEventListener('click', (e) => {
+    if (e.target === fileModalOverlay) fileModalOverlay.style.display = 'none';
+  });
+
+  function downloadBlob(text, filename, mimeType) {
+    const blob = new Blob([text], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  document.getElementById('downloadTxtBtn').addEventListener('click', () => {
+    downloadBlob(
+      stats.latest_file_content || '',
+      stats.latest_version || 'dictionary.txt',
+      'text/plain'
+    );
+  });
+  document.getElementById('downloadJsonBtn').addEventListener('click', () => {
+    const jsonName = (stats.latest_version || 'dictionary.txt').replace(/\.txt$/, '.json');
+    downloadBlob(JSON.stringify(dictEntries, null, 2), jsonName, 'application/json');
+  });
+
+  // Searchable dictionary modal
+  const searchModalOverlay = document.getElementById('searchModalOverlay');
+  const dictEntryList = document.getElementById('dictEntryList');
+  const dictSearchInput = document.getElementById('dictSearchInput');
+  const dictResultCount = document.getElementById('dictResultCount');
+  const scopeButtons = Array.from(document.querySelectorAll('.scope-toggle button'));
+  let searchScope = 'both';
+
+  const dictEntries = (stats.definitions_by_length_asc || [])
+    .slice()
+    .sort((a, b) => a.term.toLowerCase().localeCompare(b.term.toLowerCase()));
+
+  const termsByDate = new Map();
+  (stats.added_terms_timeline || []).forEach(({ date, term }) => {
+    if (!termsByDate.has(date)) termsByDate.set(date, new Set());
+    termsByDate.get(date).add(term.toLowerCase());
+  });
+
+  function escapeHtml(s) {
+    return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  function highlight(text, q) {
+    const escaped = escapeHtml(text);
+    if (!q) return escaped;
+    const escapedQ = q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    return escaped.replace(
+      new RegExp(`(${escapedQ})`, 'ig'),
+      '<mark style="background:#fbbf24; color:#0f1115; border-radius:3px; padding:0 2px;">$1</mark>'
+    );
+  }
+
+  dictEntryList.innerHTML = dictEntries.map((e, i) => `
+    <div class="dict-entry" data-i="${i}">
+      <div class="term" data-term="${escapeHtml(e.term)}"></div>
+      <div class="def" data-def="${escapeHtml(e.definition)}"></div>
+    </div>
+  `).join('');
+  const entryEls = Array.from(dictEntryList.children);
+
+  function filterDict() {
+    const raw = dictSearchInput.value.trim().toLowerCase();
+    const startsWithMatch = raw.match(/^startswith:\s*(.*)$/);
+    const posMatch = raw.match(/^pos:\s*(.*)$/);
+    const dateMatch = raw.match(/^date:\s*(.*)$/);
+    const q = startsWithMatch ? startsWithMatch[1] : (posMatch ? posMatch[1] : (dateMatch ? dateMatch[1] : raw));
+    const isPrefix = !!startsWithMatch;
+    const isPos = !!posMatch;
+    const isDate = !!dateMatch;
+    const dateTerms = isDate ? (termsByDate.get(q) || new Set()) : null;
+
+    let visible = 0;
+    dictEntries.forEach((e, i) => {
+      const term = e.term.toLowerCase();
+      const def = e.definition.toLowerCase();
+      const pos = (e.pos || '').toLowerCase() || '(no pos)';
+      let match;
+      if (!q) match = true;
+      else if (isDate) match = dateTerms.has(term);
+      else if (isPos) match = pos === q;
+      else if (isPrefix) match = term.startsWith(q); // prefix search is term-only
+      else if (searchScope === 'term') match = term.includes(q);
+      else if (searchScope === 'definition') match = def.includes(q);
+      else match = term.includes(q) || def.includes(q);
+
+      entryEls[i].style.display = match ? '' : 'none';
+      if (match) {
+        visible++;
+        const highlightTerm = (isPos || isDate) ? false : (q && (isPrefix || searchScope !== 'definition'));
+        const highlightDef = (isPos || isDate) ? false : (q && !isPrefix && searchScope !== 'term');
+        entryEls[i].querySelector('.term').innerHTML = highlight(e.term, highlightTerm ? q : '');
+        entryEls[i].querySelector('.def').innerHTML = highlight(e.definition, highlightDef ? q : '');
+      }
+    });
+    dictResultCount.textContent = `${visible} of ${dictEntries.length} entries`;
+  }
+  filterDict();
+
+  dictSearchInput.addEventListener('input', filterDict);
+  scopeButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      scopeButtons.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      searchScope = btn.dataset.scope;
+      filterDict();
+    });
+  });
+
+  function openSearchModal(query) {
+    searchModalOverlay.style.display = 'flex';
+    if (query !== undefined) dictSearchInput.value = query;
+    filterDict();
+    dictSearchInput.focus();
+  }
+
+  document.getElementById('viewSearchBtn').addEventListener('click', () => openSearchModal());
+  document.getElementById('searchModalClose').addEventListener('click', () => {
+    searchModalOverlay.style.display = 'none';
+  });
+  searchModalOverlay.addEventListener('click', (e) => {
+    if (e.target === searchModalOverlay) searchModalOverlay.style.display = 'none';
+  });
+
+  // Total word count over time, with an editable-length linear projection
+  let growthChartInstance = null;
+  function buildGrowthChart(cumulative, projectionMonths) {
+    if (!cumulative || cumulative.length < 2) return;
+
+    const dayMs = 86400000;
+    const firstDate = new Date(cumulative[0].date + 'T00:00:00Z');
+    const points = cumulative.map(p => ({
+      x: (new Date(p.date + 'T00:00:00Z') - firstDate) / dayMs,
+      y: p.total,
+    }));
+
+    // Simple least-squares linear regression: y = a + b*x
+    const n = points.length;
+    const sumX = points.reduce((s, p) => s + p.x, 0);
+    const sumY = points.reduce((s, p) => s + p.y, 0);
+    const sumXY = points.reduce((s, p) => s + p.x * p.y, 0);
+    const sumXX = points.reduce((s, p) => s + p.x * p.x, 0);
+    const b = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
+    const a = (sumY - b * sumX) / n;
+
+    const lastPoint = points[points.length - 1];
+    const projectionDays = Math.round(projectionMonths * 30.4);
+    const projected = [];
+    // Start exactly at the real last data point, then continue forward
+    // using the fitted slope -- the regression line itself is a best-fit
+    // average through the whole history and usually does NOT pass through
+    // the actual last point, which would otherwise show as a fake drop
+    // right where the dashed projection begins.
+    for (let d = 0; d <= projectionDays; d++) {
+      const x = lastPoint.x + d;
+      projected.push({ x, y: lastPoint.y + b * d });
     }
 
-    out_path = os.path.join(os.path.dirname(__file__), "..", "site", "stats.json")
-    with open(out_path, "w") as f:
-        json.dump(stats, f, indent=2)
+    const dateLabel = (x) => {
+      const d = new Date(firstDate.getTime() + x * dayMs);
+      return d.toISOString().slice(0, 10);
+    };
 
-    print(f"Wrote {out_path}: {total_entries} entries, latest={latest_name}")
+    const monthYearLabel = (x) => {
+      const d = new Date(firstDate.getTime() + x * dayMs);
+      const month = d.toLocaleString('en-US', { month: 'short', timeZone: 'UTC' });
+      return `${month}. ${d.getUTCFullYear()}`;
+    };
 
+    function monthStartTicks(minX, maxX) {
+      const ticks = [];
+      let d = new Date(Date.UTC(firstDate.getUTCFullYear(), firstDate.getUTCMonth(), 1));
+      while ((d - firstDate) / dayMs < minX) d.setUTCMonth(d.getUTCMonth() + 1);
+      while ((d - firstDate) / dayMs <= maxX) {
+        ticks.push({ value: Math.round((d - firstDate) / dayMs) });
+        d.setUTCMonth(d.getUTCMonth() + 1);
+      }
+      return ticks;
+    }
 
-if __name__ == "__main__":
-    try:
-        main()
-    except Exception as e:
-        print(f"ERROR: {e}", file=sys.stderr)
-        sys.exit(1)
+    if (growthChartInstance) {
+      growthChartInstance.destroy();
+    }
+
+    growthChartInstance = new Chart(document.getElementById('growthChart'), {
+      type: 'line',
+      data: {
+        datasets: [
+          {
+            label: 'Actual total entries',
+            data: points.map(p => ({ x: p.x, y: p.y })),
+            borderColor: '#6ee7b7',
+            backgroundColor: '#6ee7b7',
+            pointRadius: 2,
+            tension: 0.15,
+          },
+          {
+            label: `Projected (linear trend, next ${projectionMonths} month${projectionMonths === 1 ? '' : 's'})`,
+            data: projected,
+            borderColor: '#fbbf24',
+            borderDash: [6, 4],
+            pointRadius: 0,
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        parsing: false,
+        interaction: { mode: 'nearest', axis: 'x', intersect: false },
+        scales: {
+          x: {
+            type: 'linear',
+            afterBuildTicks: (scale) => {
+              scale.ticks = monthStartTicks(scale.min, scale.max);
+            },
+            ticks: {
+              color: '#9a9fab',
+              callback: (val) => monthYearLabel(val),
+            },
+            grid: { color: '#262a33' },
+          },
+          y: { ticks: { color: '#9a9fab' }, grid: { color: '#262a33' } },
+        },
+        plugins: {
+          legend: { labels: { color: '#e8e8ec' } },
+          tooltip: {
+            callbacks: {
+              title: (items) => dateLabel(items[0].parsed.x),
+              label: (item) => `${item.dataset.label}: ${Math.round(item.parsed.y)}`,
+            },
+          },
+        },
+      },
+    });
+  }
+
+  function clampMonths(v) {
+    v = parseInt(v, 10);
+    if (isNaN(v)) v = 6;
+    return Math.max(1, v);
+  }
+
+  const projMonthsInput = document.getElementById('projMonths');
+  buildGrowthChart(stats.cumulative_series, clampMonths(projMonthsInput.value));
+  projMonthsInput.addEventListener('input', () => {
+    buildGrowthChart(stats.cumulative_series, clampMonths(projMonthsInput.value));
+  });
+
+  // Additions over time -- fill in zero-count days so gaps are visible
+  // instead of the chart silently skipping days with no additions.
+  function fillDateGaps(series) {
+    if (series.length === 0) return series;
+    const byDate = new Map(series.map(p => [p.date, p.count]));
+    const start = new Date(series[0].date + 'T00:00:00Z');
+    const end = new Date(series[series.length - 1].date + 'T00:00:00Z');
+    const filled = [];
+    for (let d = new Date(start); d <= end; d.setUTCDate(d.getUTCDate() + 1)) {
+      const key = d.toISOString().slice(0, 10);
+      filled.push({ date: key, count: byDate.get(key) || 0 });
+    }
+    return filled;
+  }
+  const additionsFilled = fillDateGaps(stats.additions_series);
+
+  // Longest run of consecutive days with at least one word added.
+  function longestStreak(filled) {
+    let best = { len: 0, start: null, end: null };
+    let curStart = null;
+    let curLen = 0;
+    for (const day of filled) {
+      if (day.count > 0) {
+        if (curLen === 0) curStart = day.date;
+        curLen++;
+        if (curLen > best.len) best = { len: curLen, start: curStart, end: day.date };
+      } else {
+        curLen = 0;
+      }
+    }
+    return best;
+  }
+
+  function formatDateNice(iso) {
+    const d = new Date(iso + 'T00:00:00Z');
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
+  }
+
+  const streak = longestStreak(additionsFilled);
+  const streakEl = document.getElementById('longestStreak');
+  if (streak.len > 0) {
+    streakEl.textContent = `Longest streak of at least one word added: ${streak.len} day${streak.len === 1 ? '' : 's'} (${formatDateNice(streak.start)} – ${formatDateNice(streak.end)})`;
+  }
+
+  new Chart(document.getElementById('additionsChart'), {
+    type: 'bar',
+    data: {
+      labels: additionsFilled.map(p => p.date),
+      datasets: [{
+        label: 'New words added',
+        data: additionsFilled.map(p => p.count),
+        backgroundColor: '#6ee7b7',
+      }],
+    },
+    options: {
+      responsive: true,
+      interaction: { mode: 'x', intersect: false },
+      onHover: (event, elements, chart) => {
+        const els = chart.getElementsAtEventForMode(
+          event.native, 'x', { intersect: false }, false
+        );
+        const hasWords = els.length && additionsFilled[els[0].index].count > 0;
+        event.native.target.style.cursor = hasWords ? 'pointer' : 'default';
+      },
+      onClick: (event, elements, chart) => {
+        const els = chart.getElementsAtEventForMode(
+          event.native, 'x', { intersect: false }, false
+        );
+        if (!els.length) return;
+        const day = additionsFilled[els[0].index];
+        if (day.count === 0) return; // nothing added that day -- do nothing
+        openSearchModal(`date:${day.date}`);
+      },
+      scales: {
+        x: {
+          ticks: {
+            color: '#9a9fab',
+            autoSkip: false,
+            maxRotation: 0,
+            minRotation: 0,
+            callback: function (value) {
+              const label = this.getLabelForValue(value); // 'YYYY-MM-DD'
+              if (!label || label.slice(8, 10) !== '01') return '';
+              const [y, m] = label.split('-');
+              const d = new Date(Date.UTC(+y, +m - 1, 1));
+              const month = d.toLocaleString('en-US', { month: 'short', timeZone: 'UTC' });
+              return `${month}. ${y}`;
+            },
+          },
+          grid: { color: '#262a33' },
+        },
+        y: { ticks: { color: '#9a9fab', precision: 0 }, grid: { color: '#262a33' } },
+      },
+      plugins: { legend: { labels: { color: '#e8e8ec' } } },
+    },
+  });
+
+  // Letter breakdown -- either by first letter (exact, server-computed
+  // counts) or by first two letters (grouped client-side from the full
+  // term list, using the same leading-punctuation/"the"-prefix handling
+  // as the backend's sort key, so groupings line up with alphabetical
+  // placement).
+  function sortKeyIgnorePunctJs(term) {
+    let t = term.includes(' (') ? term.split(' (')[0] : term;
+    t = t.replace(/^[\s'"\-]+/, '');
+    if (/^the\s/i.test(t)) t = t.slice(4);
+    return t.toLowerCase();
+  }
+
+  function computeLetterGroups(terms, n) {
+    const counts = {};
+    terms.forEach(t => {
+      const key = sortKeyIgnorePunctJs(t).slice(0, n).toUpperCase();
+      if (!key) return;
+      counts[key] = (counts[key] || 0) + 1;
+    });
+    return counts;
+  }
+
+  let letterChartInstance = null;
+  function buildLetterChart(n) {
+    let labels, counts;
+    if (n === 1) {
+      labels = Object.keys(stats.letter_counts).sort();
+      counts = labels.map(l => stats.letter_counts[l]);
+    } else {
+      const grouped = computeLetterGroups(stats.words_by_length_asc, n);
+      labels = Object.keys(grouped).sort();
+      counts = labels.map(l => grouped[l]);
+    }
+
+    document.getElementById('letterChartTitle').textContent =
+      n === 1 ? 'Entries Per First Letter' : 'Entries Per First Two Letters';
+    document.getElementById('letterChartClickLabel').textContent =
+      n === 1 ? 'letter' : 'letter pair';
+
+    if (letterChartInstance) letterChartInstance.destroy();
+
+    letterChartInstance = new Chart(document.getElementById('letterChart'), {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [{
+          label: 'Entries',
+          data: counts,
+          backgroundColor: '#7dd3fc',
+        }],
+      },
+      options: {
+        responsive: true,
+        interaction: { mode: 'x', intersect: false },
+        onHover: (event, elements) => {
+          event.native.target.style.cursor = elements.length ? 'pointer' : 'default';
+        },
+        onClick: (event, elements) => {
+          if (!elements.length) return;
+          const key = labels[elements[0].index];
+          openSearchModal(`startswith:${key}`);
+        },
+        scales: {
+          x: { ticks: { color: '#9a9fab' }, grid: { display: false } },
+          y: { ticks: { color: '#9a9fab', precision: 0 }, grid: { color: '#262a33' } },
+        },
+        plugins: { legend: { display: false } },
+      },
+    });
+  }
+
+  const letterGroupModeSelect = document.getElementById('letterGroupMode');
+  buildLetterChart(parseInt(letterGroupModeSelect.value, 10));
+  letterGroupModeSelect.addEventListener('change', () => {
+    buildLetterChart(parseInt(letterGroupModeSelect.value, 10));
+  });
+
+  // Parts of speech
+  const posEntries = Object.entries(stats.pos_counts || {}).sort((a, b) => b[1] - a[1]);
+  const posLabels = posEntries.map(([label]) => label);
+  const posColors = [
+    '#6ee7b7', '#7dd3fc', '#fbbf24', '#f472b6', '#a78bfa',
+    '#fb923c', '#34d399', '#60a5fa', '#f87171', '#c084fc',
+    '#9a9fab',
+  ];
+  new Chart(document.getElementById('posChart'), {
+    type: 'pie',
+    data: {
+      labels: posLabels,
+      datasets: [{
+        data: posEntries.map(([, count]) => count),
+        backgroundColor: posLabels.map((_, i) => posColors[i % posColors.length]),
+        borderColor: '#171a21',
+        borderWidth: 2,
+      }],
+    },
+    options: {
+      responsive: true,
+      onHover: (event, elements) => {
+        event.native.target.style.cursor = elements.length ? 'pointer' : 'default';
+      },
+      onClick: (event, elements) => {
+        if (!elements.length) return;
+        const label = posLabels[elements[0].index];
+        const value = label === '(no pos)' ? '(no pos)' : label;
+        openSearchModal(`pos:${value}`);
+      },
+      plugins: {
+        legend: { position: 'bottom', labels: { color: '#e8e8ec', boxWidth: 12, font: { size: 11 } } },
+      },
+    },
+  });
+
+  const fillList = (id, items, render) => {
+    const el = document.getElementById(id);
+    el.innerHTML = items.map(i => `<li>${render(i)}</li>`).join('');
+  };
+
+  function clampN(v) {
+    v = parseInt(v, 10);
+    if (isNaN(v)) v = 5;
+    return Math.max(1, v);
+  }
+
+  function renderShortestWords() {
+    const n = clampN(document.getElementById('nShortestWords').value);
+    fillList('shortestWords', stats.words_by_length_asc.slice(0, n),
+      w => `<span class="def-term">${w}</span>`);
+  }
+  function renderLongestWords() {
+    const n = clampN(document.getElementById('nLongestWords').value);
+    fillList('longestWords', stats.words_by_length_asc.slice(-n).reverse(),
+      w => `<span class="def-term">${w}</span>`);
+  }
+  function renderShortestDefs() {
+    const n = clampN(document.getElementById('nShortestDefs').value);
+    fillList('shortestDefs', stats.definitions_by_length_asc.slice(0, n),
+      d => `<span class="def-term">${d.term}</span> — <span class="def-text">${d.definition}</span>`);
+  }
+  function renderLongestDefs() {
+    const n = clampN(document.getElementById('nLongestDefs').value);
+    fillList('longestDefs', stats.definitions_by_length_asc.slice(-n).reverse(),
+      d => `<span class="def-term">${d.term}</span> — <span class="def-text">${d.definition}</span>`);
+  }
+
+  renderShortestWords();
+  renderLongestWords();
+  renderShortestDefs();
+  renderLongestDefs();
+  document.getElementById('nShortestWords').addEventListener('input', renderShortestWords);
+  document.getElementById('nLongestWords').addEventListener('input', renderLongestWords);
+  document.getElementById('nShortestDefs').addEventListener('input', renderShortestDefs);
+  document.getElementById('nLongestDefs').addEventListener('input', renderLongestDefs);
+}
+
+main();
+</script>
+</body>
+</html>

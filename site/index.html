@@ -102,6 +102,24 @@
     font-size: 0.8rem;
     margin-bottom: 8px;
   }
+  .title-select {
+    display: block;
+    margin: 0 0 12px 0;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--accent);
+    background: transparent;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .title-select option {
+    color: var(--text);
+    background: var(--card);
+    font-weight: 400;
+    font-size: 0.95rem;
+  }
   .additions-footer {
     display: flex;
     justify-content: space-between;
@@ -156,14 +174,15 @@
     </div>
 
     <div class="card wide">
-      <h2 style="display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap;">
-        <span id="letterChartTitle">Entries Per First Letter</span>
-        <select id="letterGroupMode" style="background:#0f1115; color:var(--accent); border:1px solid #262a33; border-radius:6px; padding:4px 8px; font-size:0.85rem; font-weight:700; font-family:inherit;">
-          <option value="1">First Letter</option>
-          <option value="2">First Two Letters</option>
-        </select>
-      </h2>
-      <canvas id="letterChart"></canvas>
+      <select id="letterGroupMode" class="title-select">
+        <option value="1">Entries Per First Letter</option>
+        <option value="2">Entries Per First Two Letters</option>
+      </select>
+      <div id="letterChartOuter" style="overflow-x:auto;">
+        <div id="letterChartInner" style="height:320px;">
+          <canvas id="letterChart"></canvas>
+        </div>
+      </div>
       <div style="color:var(--muted); font-size:0.8rem; margin-top:6px;">Click a <span id="letterChartClickLabel">letter</span> to see all words that start with it.</div>
     </div>
 
@@ -374,7 +393,7 @@ async function main() {
   const entryEls = Array.from(dictEntryList.children);
 
   function filterDict() {
-    const raw = dictSearchInput.value.trim().toLowerCase();
+    const raw = dictSearchInput.value.replace(/^\s+/, '').toLowerCase();
     const startsWithMatch = raw.match(/^startswith:\s*(.*)$/);
     const posMatch = raw.match(/^pos:\s*(.*)$/);
     const dateMatch = raw.match(/^date:\s*(.*)$/);
@@ -679,6 +698,21 @@ async function main() {
     return counts;
   }
 
+  // Every standard two-letter combo (AA..ZZ), so the chart always shows
+  // the full alphabet grid -- real entries that group under punctuation
+  // (e.g. "A'", "A ") still show up too, just as bonus bars alongside it,
+  // rather than us inventing zero-count punctuation combos that don't
+  // actually occur in the data.
+  function fullTwoLetterKeys() {
+    const keys = [];
+    for (let i = 0; i < 26; i++) {
+      for (let j = 0; j < 26; j++) {
+        keys.push(String.fromCharCode(65 + i) + String.fromCharCode(65 + j));
+      }
+    }
+    return keys;
+  }
+
   let letterChartInstance = null;
   function buildLetterChart(n) {
     let labels, counts;
@@ -687,14 +721,26 @@ async function main() {
       counts = labels.map(l => stats.letter_counts[l]);
     } else {
       const grouped = computeLetterGroups(stats.words_by_length_asc, n);
-      labels = Object.keys(grouped).sort();
-      counts = labels.map(l => grouped[l]);
+      const merged = {};
+      fullTwoLetterKeys().forEach(k => { merged[k] = 0; });
+      Object.entries(grouped).forEach(([k, v]) => {
+        merged[k] = (merged[k] || 0) + v;
+      });
+      labels = Object.keys(merged).sort();
+      counts = labels.map(l => merged[l]);
     }
 
-    document.getElementById('letterChartTitle').textContent =
-      n === 1 ? 'Entries Per First Letter' : 'Entries Per First Two Letters';
     document.getElementById('letterChartClickLabel').textContent =
       n === 1 ? 'letter' : 'letter pair';
+
+    // Widen the scroll container only as far as the bar count actually
+    // needs -- 26 bars still fill the card at full width with no scroll,
+    // 676 bars get just enough width to stay readable and scroll instead
+    // of endlessly.
+    const inner = document.getElementById('letterChartInner');
+    const outerWidth = document.getElementById('letterChartOuter').clientWidth || 600;
+    const barWidth = n === 1 ? 0 : 20;
+    inner.style.width = Math.max(labels.length * barWidth, outerWidth) + 'px';
 
     if (letterChartInstance) letterChartInstance.destroy();
 
@@ -710,6 +756,7 @@ async function main() {
       },
       options: {
         responsive: true,
+        maintainAspectRatio: false,
         interaction: { mode: 'x', intersect: false },
         onHover: (event, elements) => {
           event.native.target.style.cursor = elements.length ? 'pointer' : 'default';
@@ -720,7 +767,12 @@ async function main() {
           openSearchModal(`startswith:${key}`);
         },
         scales: {
-          x: { ticks: { color: '#9a9fab' }, grid: { display: false } },
+          x: {
+            ticks: n === 1
+              ? { color: '#9a9fab' }
+              : { color: '#9a9fab', autoSkip: false, maxRotation: 90, minRotation: 90, font: { size: 9 } },
+            grid: { display: false },
+          },
           y: { ticks: { color: '#9a9fab', precision: 0 }, grid: { color: '#262a33' } },
         },
         plugins: { legend: { display: false } },

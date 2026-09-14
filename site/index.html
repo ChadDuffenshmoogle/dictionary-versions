@@ -749,7 +749,9 @@ async function main() {
     } else {
       // 26^n combos is far too many to zero-fill (17k+ at n=3 alone), so
       // only the combos that actually occur get a bar -- no blank columns.
-      labels = Object.keys(grouped).sort();
+      // Groups with just one entry are dropped too, since a lone bar of
+      // height 1 at this many possible combos is mostly noise.
+      labels = Object.keys(grouped).filter(k => grouped[k] > 1).sort();
       counts = labels.map(l => grouped[l]);
     }
 

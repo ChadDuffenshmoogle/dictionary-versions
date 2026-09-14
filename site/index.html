@@ -102,19 +102,27 @@
     font-size: 0.8rem;
     margin-bottom: 8px;
   }
-  .title-select {
-    display: block;
+  .letter-chart-title {
+    display: flex;
+    align-items: center;
+    gap: 6px;
     margin: 0 0 12px 0;
     font-size: 1rem;
     font-weight: 700;
     color: var(--accent);
-    background: transparent;
-    border: none;
-    padding: 0;
+  }
+  .inline-select {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--accent);
+    background: #0f1115;
+    border: 1px solid #262a33;
+    border-radius: 6px;
+    padding: 2px 6px;
     cursor: pointer;
     font-family: inherit;
   }
-  .title-select option {
+  .inline-select option {
     color: var(--text);
     background: var(--card);
     font-weight: 400;
@@ -174,23 +182,32 @@
     </div>
 
     <div class="card wide">
-      <select id="letterGroupMode" class="title-select">
-        <option value="1">Entries Per First Letter</option>
-        <option value="2">Entries Per First Two Letters</option>
-        <option value="3">Entries Per First 3 Letters</option>
-        <option value="4">Entries Per First 4 Letters</option>
-        <option value="5">Entries Per First 5 Letters</option>
-        <option value="6">Entries Per First 6 Letters</option>
-        <option value="7">Entries Per First 7 Letters</option>
-        <option value="8">Entries Per First 8 Letters</option>
-        <option value="9">Entries Per First 9 Letters</option>
-        <option value="10">Entries Per First 10 Letters</option>
-        <option value="11">Entries Per First 11 Letters</option>
-        <option value="12">Entries Per First 12 Letters</option>
-        <option value="13">Entries Per First 13 Letters</option>
-        <option value="14">Entries Per First 14 Letters</option>
-        <option value="15">Entries Per First 15 Letters</option>
-      </select>
+      <div class="letter-chart-title">
+        Entries per first
+        <select id="letterGroupMode" class="inline-select">
+          <option value="1">1</option>
+          <option value="2">2</option>
+          <option value="3">3</option>
+          <option value="4">4</option>
+          <option value="5">5</option>
+          <option value="6">6</option>
+          <option value="7">7</option>
+          <option value="8">8</option>
+          <option value="9">9</option>
+          <option value="10">10</option>
+          <option value="11">11</option>
+          <option value="12">12</option>
+          <option value="13">13</option>
+          <option value="14">14</option>
+          <option value="15">15</option>
+          <option value="16">16</option>
+          <option value="17">17</option>
+          <option value="18">18</option>
+          <option value="19">19</option>
+          <option value="20">20</option>
+        </select>
+        Letters
+      </div>
       <div id="letterChartOuter" style="overflow-x:auto;">
         <div id="letterChartInner" style="height:320px;">
           <canvas id="letterChart"></canvas>

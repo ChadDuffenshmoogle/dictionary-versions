@@ -156,9 +156,15 @@
     </div>
 
     <div class="card wide">
-      <h2>Entries Per First Letter</h2>
+      <h2 style="display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap;">
+        <span id="letterChartTitle">Entries Per First Letter</span>
+        <select id="letterGroupMode" style="background:#0f1115; color:var(--accent); border:1px solid #262a33; border-radius:6px; padding:4px 8px; font-size:0.85rem; font-weight:700; font-family:inherit;">
+          <option value="1">First Letter</option>
+          <option value="2">First Two Letters</option>
+        </select>
+      </h2>
       <canvas id="letterChart"></canvas>
-      <div style="color:var(--muted); font-size:0.8rem; margin-top:6px;">Click a letter to see all words that start with it.</div>
+      <div style="color:var(--muted); font-size:0.8rem; margin-top:6px;">Click a <span id="letterChartClickLabel">letter</span> to see all words that start with it.</div>
     </div>
 
     <div class="wide" style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
@@ -651,35 +657,81 @@ async function main() {
     },
   });
 
-  // Letter breakdown
-  const letters = Object.keys(stats.letter_counts).sort();
-  new Chart(document.getElementById('letterChart'), {
-    type: 'bar',
-    data: {
-      labels: letters,
-      datasets: [{
-        label: 'Entries',
-        data: letters.map(l => stats.letter_counts[l]),
-        backgroundColor: '#7dd3fc',
-      }],
-    },
-    options: {
-      responsive: true,
-      interaction: { mode: 'x', intersect: false },
-      onHover: (event, elements) => {
-        event.native.target.style.cursor = elements.length ? 'pointer' : 'default';
+  // Letter breakdown -- either by first letter (exact, server-computed
+  // counts) or by first two letters (grouped client-side from the full
+  // term list, using the same leading-punctuation/"the"-prefix handling
+  // as the backend's sort key, so groupings line up with alphabetical
+  // placement).
+  function sortKeyIgnorePunctJs(term) {
+    let t = term.includes(' (') ? term.split(' (')[0] : term;
+    t = t.replace(/^[\s'"\-]+/, '');
+    if (/^the\s/i.test(t)) t = t.slice(4);
+    return t.toLowerCase();
+  }
+
+  function computeLetterGroups(terms, n) {
+    const counts = {};
+    terms.forEach(t => {
+      const key = sortKeyIgnorePunctJs(t).slice(0, n).toUpperCase();
+      if (!key) return;
+      counts[key] = (counts[key] || 0) + 1;
+    });
+    return counts;
+  }
+
+  let letterChartInstance = null;
+  function buildLetterChart(n) {
+    let labels, counts;
+    if (n === 1) {
+      labels = Object.keys(stats.letter_counts).sort();
+      counts = labels.map(l => stats.letter_counts[l]);
+    } else {
+      const grouped = computeLetterGroups(stats.words_by_length_asc, n);
+      labels = Object.keys(grouped).sort();
+      counts = labels.map(l => grouped[l]);
+    }
+
+    document.getElementById('letterChartTitle').textContent =
+      n === 1 ? 'Entries Per First Letter' : 'Entries Per First Two Letters';
+    document.getElementById('letterChartClickLabel').textContent =
+      n === 1 ? 'letter' : 'letter pair';
+
+    if (letterChartInstance) letterChartInstance.destroy();
+
+    letterChartInstance = new Chart(document.getElementById('letterChart'), {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [{
+          label: 'Entries',
+          data: counts,
+          backgroundColor: '#7dd3fc',
+        }],
       },
-      onClick: (event, elements) => {
-        if (!elements.length) return;
-        const letter = letters[elements[0].index];
-        openSearchModal(`startswith:${letter}`);
+      options: {
+        responsive: true,
+        interaction: { mode: 'x', intersect: false },
+        onHover: (event, elements) => {
+          event.native.target.style.cursor = elements.length ? 'pointer' : 'default';
+        },
+        onClick: (event, elements) => {
+          if (!elements.length) return;
+          const key = labels[elements[0].index];
+          openSearchModal(`startswith:${key}`);
+        },
+        scales: {
+          x: { ticks: { color: '#9a9fab' }, grid: { display: false } },
+          y: { ticks: { color: '#9a9fab', precision: 0 }, grid: { color: '#262a33' } },
+        },
+        plugins: { legend: { display: false } },
       },
-      scales: {
-        x: { ticks: { color: '#9a9fab' }, grid: { display: false } },
-        y: { ticks: { color: '#9a9fab', precision: 0 }, grid: { color: '#262a33' } },
-      },
-      plugins: { legend: { display: false } },
-    },
+    });
+  }
+
+  const letterGroupModeSelect = document.getElementById('letterGroupMode');
+  buildLetterChart(parseInt(letterGroupModeSelect.value, 10));
+  letterGroupModeSelect.addEventListener('change', () => {
+    buildLetterChart(parseInt(letterGroupModeSelect.value, 10));
   });
 
   // Parts of speech

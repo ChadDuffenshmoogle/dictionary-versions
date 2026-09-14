@@ -18,7 +18,7 @@ import json
 import os
 import re
 import sys
-from collections import defaultdict, Counter
+from collections import Counter
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
@@ -126,37 +126,6 @@ def fetch_raw(filename):
     return resp.text
 
 
-def extract_corpus_by_letter(content):
-    """Parse the '-----CORPUS-----' block into {letter: [terms]}."""
-    m = re.search(
-        r"-----CORPUS-----\s*\n(.*?)\n-----DICTIONARY PROPER-----",
-        content, re.DOTALL,
-    )
-    if not m:
-        return {}
-    corpus_text = m.group(1)
-
-    # Normalise "\nX: " markers into a consistent split point, keep the
-    # leading "A: " label on the first group.
-    groups = re.split(r"\n([A-Z]):\s+", corpus_text)
-    by_letter = defaultdict(list)
-
-    # groups[0] is the leading "A: term, term, ..." chunk (or similar)
-    first_chunk = groups[0]
-    lm = re.match(r"^([A-Z]):\s*(.*)$", first_chunk.strip(), re.DOTALL)
-    if lm:
-        letter, rest = lm.group(1), lm.group(2)
-        by_letter[letter].extend([t.strip() for t in rest.split(",") if t.strip()])
-
-    # Remaining groups come in (letter, text) pairs
-    for i in range(1, len(groups) - 1, 2):
-        letter = groups[i]
-        text = groups[i + 1]
-        by_letter[letter].extend([t.strip() for t in text.split(",") if t.strip()])
-
-    return by_letter
-
-
 def _clean_term(raw_term):
     term = re.sub(r"\(pronounced:\s*[^)]+\)", "", raw_term, flags=re.IGNORECASE)
     term = re.sub(r"\[[^\]]+\]", "", term)
@@ -258,14 +227,14 @@ def _is_metadata_line(line):
 
 
 def _emit(results, term, pos, definition):
-    results.append((term, pos, definition))
+    results.append((term, pos, definition, True))
     if "/" in term:
         for part in term.split("/"):
             part = part.strip()
             if part and part != term:
-                results.append((part, pos, definition))
+                results.append((part, pos, definition, False))
     if re.match(r"^the\s+", term, re.IGNORECASE):
-        results.append((re.sub(r"^the\s+", "", term, flags=re.IGNORECASE), pos, definition))
+        results.append((re.sub(r"^the\s+", "", term, flags=re.IGNORECASE), pos, definition, False))
 
 
 def _collect_continuation(block_lines, start_idx):
@@ -346,10 +315,13 @@ def _process_block(results, block_lines):
 
 
 def extract_definitions(content):
-    """Return list of (term, definition), reading only each entry's actual
-    main line -- ignoring Etymology/Synonym/Example/Derived-Terms sub-lines
-    and multi-line continuations so those never get mistaken for entries
-    in their own right.
+    """Return list of (term, pos, definition, is_primary), reading only each
+    entry's actual main line -- ignoring Etymology/Synonym/Example/Derived-
+    Terms sub-lines and multi-line continuations so those never get
+    mistaken for entries in their own right. is_primary is True for the
+    entry's real term and False for a derived alternate form (a "/"-split
+    variant or a "the "-stripped variant) -- callers that need the true,
+    one-term-per-entry list (e.g. total counts) should filter on it.
 
     Uses a simple linear state machine (in-block / not-in-block) rather
     than pre-splitting the whole body on paired delimiters -- a single
@@ -546,12 +518,28 @@ def main():
     latest_name = get_latest_filename(filenames)
     content = fetch_raw(latest_name)
 
-    by_letter = extract_corpus_by_letter(content)
-    letter_counts = {letter: len(terms) for letter, terms in sorted(by_letter.items())}
+    # The CORPUS block is just a comma-joined index and can't reliably be
+    # split back into terms -- a term that itself contains a comma (e.g.
+    # the idiom "If it ain't fixed, don't break it") is indistinguishable
+    # from two separate terms once it's been joined with ", ". So the
+    # term list comes from the DICTIONARY PROPER parse instead, which is
+    # delimited by "-----" lines and never splits inside a term.
+    raw_rows = extract_definitions(content)
     all_terms = sorted(
-        {t for terms in by_letter.values() for t in terms}, key=sort_key_ignore_punct
+        {t for t, _, _, is_primary in raw_rows if is_primary},
+        key=sort_key_ignore_punct,
     )
     total_entries = len(all_terms)
+
+    def first_letter_key(term):
+        for ch in sort_key_ignore_punct(term):
+            if ch.isalpha():
+                return ch.upper()
+        return None
+
+    letter_counts = dict(sorted(Counter(
+        k for k in (first_letter_key(t) for t in all_terms) if k
+    ).items()))
 
     def word_len(t):
         return len(sort_key_ignore_punct(t).replace(", the", ""))
@@ -561,15 +549,14 @@ def main():
     # Map lowercase term -> (pos, parsed definition). First match wins if
     # the raw text has duplicate/near-duplicate lines for the same term.
     parsed_by_lower = {}
-    for t, pos, d in extract_definitions(content):
+    for t, pos, d, _ in raw_rows:
         key = t.lower()
         if key not in parsed_by_lower:
             parsed_by_lower[key] = (pos, d)
 
-    # Walk every distinct corpus term individually (not through a
-    # lowercase-keyed dict of terms) so two terms that only differ by
-    # capitalization each keep their own row instead of one overwriting
-    # the other.
+    # Walk every distinct term individually (not through a lowercase-keyed
+    # dict of terms) so two terms that only differ by capitalization each
+    # keep their own row instead of one overwriting the other.
     definitions = []
     pos_counts = Counter()
     for t in all_terms:

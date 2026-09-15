@@ -361,9 +361,7 @@ chocchemuff (n.) - chocolate chip muffin
 
 --------------------------------------------- 
 chog (n.) - a cold, moist glizzy straight out of the package smothered with off brand cheez whiz
---------------------------------------------- 
---------------------------------------------- 
-chog (v.) - to send a thirst trap video of someone consuming a chog
+(v.) - to send a thirst trap video of someone consuming a chog
 	Ex: "You just got chogged!"
 --------------------------------------------- 
 
@@ -940,11 +938,7 @@ gorgy (v.) - goose orgy
 Etymology: from goose, influenced onomatopoeically
 
 göse (n.) - /'gœzɐ/ nominative/emphatic singular of goose.
---------------------------------------------- 
---------------------------------------------- 
-Etymology: from goose, influenced onomatopoeically
-
-göse (int.) - /'gœzɐ/ an exclamation uttered upon seeing a goose.
+(int.) an exclamation uttered upon seeing a goose.
 - a cry believed to ward off geese or to deter anserine aggression.
   - Synonym: hjonk
 ---------------------------------------------
@@ -1437,8 +1431,6 @@ penpinappapppen (n.) - shortening of Pen, Pineapple, Apple, Pen, a composite of 
 
 perschbeased (adj.) - possibly having died twice
 
-pershleased (adj.) - pershlaps deceased
-
 perschlostumous (adj.) - possible having occurred after one's death
 
 pershlaponymous (adj.) - having identical meaning to "pershlaps"
@@ -1487,9 +1479,7 @@ povving off (v.) - losing money rapidly
 p'pmpic (adj.) - (of water) having a high concentration of particulates
 - (of water) enriched with additional electrolytes or analogous compounds
 - excited, moderately ecstatic
----------------------------------------------
----------------------------------------------
-p'pmpic (int.) - an exclamation of wonder, joy, or surprise
+(int.) an exclamation of wonder, joy, or surprise
 ---------------------------------------------
 
 pringling (v.) - act of sticking your hand into the pringles can at risk of getting your hand stuck

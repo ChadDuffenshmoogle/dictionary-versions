@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dictionary Lint</title>
+<style>
+  body {
+    max-width: 900px;
+    margin: 40px auto;
+    padding: 0 16px;
+    font-family: monospace;
+    color: #111;
+    background: #fff;
+  }
+  h1 { font-size: 1.3rem; margin-bottom: 4px; }
+  p { color: #555; margin-top: 0; }
+  textarea {
+    width: 100%;
+    height: 320px;
+    font-family: monospace;
+    font-size: 0.9rem;
+    box-sizing: border-box;
+    padding: 8px;
+  }
+  button {
+    margin-top: 10px;
+    padding: 8px 16px;
+    font-family: monospace;
+    font-size: 0.95rem;
+    cursor: pointer;
+  }
+  pre#output {
+    white-space: pre-wrap;
+    word-break: break-word;
+    border-top: 1px solid #ccc;
+    margin-top: 20px;
+    padding-top: 14px;
+    font-size: 0.85rem;
+    line-height: 1.5;
+  }
+</style>
+</head>
+<body>
+
+<h1>Dictionary Lint</h1>
+<p>Paste the full dictionary .txt content below (the whole file, CORPUS section and DICTIONARY PROPER section both included), then click Check. Nothing leaves this page -- it's all checked in your browser.</p>
+
+<textarea id="input" placeholder="Paste dictionary text here..."></textarea>
+<br>
+<button id="checkBtn">Check</button>
+<pre id="output"></pre>
+
+<script>
+function cleanTerm(t) {
+  return t.replace(/\(pronounced:\s*[^)]+\)/i, '').replace(/\[[^\]]+\]/g, '').trim();
+}
+
+function sortKeyIgnorePunct(s) {
+  let term = s.includes(' (') ? s.split(' (')[0] : s;
+  term = term.replace(/^[\s'"\-]+/, '');
+  if (/^the\s/i.test(term)) term = term.slice(4);
+  return term.toLowerCase();
+}
+
+function firstLetter(term) {
+  const key = sortKeyIgnorePunct(term);
+  for (const ch of key) {
+    if (/[a-z]/i.test(ch)) return ch.toUpperCase();
+  }
+  return null;
+}
+
+function partition(str, sep) {
+  const i = str.indexOf(sep);
+  if (i === -1) return [str, '', ''];
+  return [str.slice(0, i), sep, str.slice(i + sep.length)];
+}
+
+function parseCorpus(text) {
+  const m = text.match(/-----CORPUS-----\s*\n([\s\S]*?)\n-----DICTIONARY PROPER-----/);
+  if (!m) return { terms: [], found: false };
+  const corpusText = m[1];
+  const parts = corpusText.split(/\n([A-Z]):\s+/);
+  const byLetter = {};
+
+  function addTerms(letter, chunk) {
+    const terms = chunk.split(',').map(t => t.trim()).filter(Boolean);
+    if (!byLetter[letter]) byLetter[letter] = [];
+    byLetter[letter].push(...terms);
+  }
+
+  const first = parts[0].trim();
+  const lm = first.match(/^([A-Z]):\s*([\s\S]*)$/);
+  if (lm) addTerms(lm[1], lm[2]);
+
+  for (let i = 1; i < parts.length - 1; i += 2) {
+    addTerms(parts[i], parts[i + 1]);
+  }
+
+  const terms = [];
+  Object.entries(byLetter).forEach(([letter, list]) => {
+    list.forEach(term => terms.push({ term, letter }));
+  });
+  return { terms, found: true };
+}
+
+const METADATA_LABELS = ['etymology', 'derived terms', 'synonym', 'synonyms', 'ex', 'example', 'notes', 'antonym', 'antonyms'];
+
+function isMetadataLine(line) {
+  const stripped = line.trim();
+  const label = stripped.replace(/:$/, '').toLowerCase();
+  if (METADATA_LABELS.includes(label)) return true;
+  if (/^(etymology|derived terms|synonym|synonyms|ex|example|notes|antonym|antonyms):/i.test(stripped)) return true;
+  if (/^\([^)]{1,12}\)\.?$/.test(stripped)) return true;
+  if (/^[a-zA-Z\-']+\)$/.test(stripped)) return true;
+  return false;
+}
+
+function parseEntryLine(rawLine) {
+  const line = rawLine.replace(/\)-/g, ') -');
+
+  // 1. Strict: "term (pos) - definition"
+  let m = line.match(/^(.+?) \((.+?)\) - (.+)$/);
+  if (m) {
+    return { term: cleanTerm(m[1]), pos: m[2].trim(), definition: m[3].trim(), strict: true };
+  }
+
+  // 2. Loose: last "(...)" before " - " is the pos tag
+  if (line.includes('(') && line.includes(')') && line.includes(' - ')) {
+    const [left, , definition] = partition(line, ' - ');
+    const parenMatches = [...left.matchAll(/\(([^)]+)\)/g)];
+    if (parenMatches.length && definition.trim()) {
+      const last = parenMatches[parenMatches.length - 1];
+      const termPart = left.slice(0, last.index).trim();
+      if (termPart) {
+        return { term: cleanTerm(termPart), pos: last[1].trim(), definition: definition.trim(), strict: false };
+      }
+    }
+  }
+
+  // 3. No parentheses: "term - definition" (no pos tag available)
+  for (const sep of [' - ', ' — ', ' – ']) {
+    if (line.includes(sep)) {
+      const [term, , definition] = partition(line, sep);
+      if (term.trim() && definition.trim()) {
+        return { term: cleanTerm(term), pos: '', definition: definition.trim(), strict: false };
+      }
+    }
+  }
+
+  return null;
+}
+
+function parseProper(text) {
+  const marker = '-----DICTIONARY PROPER-----';
+  const idx = text.indexOf(marker);
+  if (idx === -1) return { entries: [], found: false, oddDelimiters: false };
+
+  const body = text.slice(idx + marker.length);
+  const lines = body.split('\n');
+  const entries = [];
+  let inBlock = false;
+  let blockLines = [];
+  let delimCount = 0;
+
+  function processBlock(bl) {
+    let mainIdx = -1;
+    for (let i = 0; i < bl.length; i++) {
+      const line = bl[i].trim();
+      if (!line || isMetadataLine(line)) continue;
+      mainIdx = i;
+      break;
+    }
+    if (mainIdx === -1) return;
+    const mainLine = bl[mainIdx].trim();
+    entries.push({ raw: mainLine, parsed: parseEntryLine(mainLine) });
+  }
+
+  for (const rawLine of lines) {
+    const line = rawLine.trim();
+    if (/^-{20,}$/.test(line)) {
+      delimCount++;
+      if (inBlock) {
+        processBlock(blockLines);
+        blockLines = [];
+        inBlock = false;
+      } else {
+        inBlock = true;
+        blockLines = [];
+      }
+      continue;
+    }
+    if (inBlock) blockLines.push(line);
+  }
+  if (inBlock && blockLines.length) processBlock(blockLines);
+
+  return { entries, found: true, oddDelimiters: delimCount % 2 !== 0 };
+}
+
+function runCheck() {
+  const text = document.getElementById('input').value;
+  const out = [];
+
+  const corpus = parseCorpus(text);
+  const proper = parseProper(text);
+
+  if (!corpus.found) out.push('\u26A0 Could not find a -----CORPUS----- ... -----DICTIONARY PROPER----- block.');
+  if (!proper.found) out.push('\u26A0 Could not find a -----DICTIONARY PROPER----- section.');
+  if (proper.found && proper.oddDelimiters) {
+    out.push('\u26A0 Odd number of "-----" delimiter lines in DICTIONARY PROPER -- a block is unclosed, so everything after it may be read wrong.');
+  }
+
+  const corpusNorm = new Map();
+  corpus.terms.forEach(({ term, letter }) => {
+    const norm = term.toLowerCase().trim();
+    if (!corpusNorm.has(norm)) corpusNorm.set(norm, []);
+    corpusNorm.get(norm).push({ term, letter });
+  });
+
+  const properEntries = proper.entries.filter(e => e.parsed);
+  const unparseable = proper.entries.filter(e => !e.parsed);
+
+  const properNorm = new Map();
+  properEntries.forEach(e => {
+    const norm = e.parsed.term.toLowerCase().trim();
+    if (!properNorm.has(norm)) properNorm.set(norm, []);
+    properNorm.get(norm).push(e);
+  });
+
+  if (unparseable.length) {
+    out.push(`\n\u274C ${unparseable.length} entr${unparseable.length === 1 ? 'y' : 'ies'} in DICTIONARY PROPER could not be parsed at all:`);
+    unparseable.forEach(e => out.push(`   - "${e.raw}"`));
+  }
+
+  const loose = properEntries.filter(e => !e.parsed.strict);
+  if (loose.length) {
+    out.push(`\n\u26A0 ${loose.length} entr${loose.length === 1 ? 'y' : 'ies'} didn't match the standard "term (pos) - definition" format:`);
+    loose.forEach(e => out.push(`   - "${e.raw}"`));
+  }
+
+  const missingPos = properEntries.filter(e => !e.parsed.pos);
+  if (missingPos.length) {
+    out.push(`\n\u26A0 ${missingPos.length} entr${missingPos.length === 1 ? 'y has' : 'ies have'} no part-of-speech tag:`);
+    missingPos.forEach(e => out.push(`   - "${e.parsed.term}"`));
+  }
+
+  const properDupes = [...properNorm.entries()].filter(([, v]) => v.length > 1);
+  if (properDupes.length) {
+    out.push(`\n\u26A0 ${properDupes.length} term(s) appear more than once in DICTIONARY PROPER:`);
+    properDupes.forEach(([, list]) => out.push(`   - "${list[0].parsed.term}" (${list.length}x)`));
+  }
+
+  const corpusDupes = [...corpusNorm.entries()].filter(([, v]) => v.length > 1);
+  if (corpusDupes.length) {
+    out.push(`\n\u26A0 ${corpusDupes.length} term(s) appear more than once in the CORPUS index:`);
+    corpusDupes.forEach(([, list]) => out.push(`   - "${list[0].term}" (${list.length}x)`));
+  }
+
+  if (corpus.found && proper.found) {
+    const corpusOnly = [...corpusNorm.keys()].filter(k => !properNorm.has(k));
+    const properOnly = [...properNorm.keys()].filter(k => !corpusNorm.has(k));
+
+    if (corpusOnly.length) {
+      out.push(`\n\u274C ${corpusOnly.length} term(s) are listed in CORPUS but have no entry in DICTIONARY PROPER:`);
+      corpusOnly.forEach(k => out.push(`   - "${corpusNorm.get(k)[0].term}"`));
+    }
+    if (properOnly.length) {
+      out.push(`\n\u274C ${properOnly.length} term(s) have an entry in DICTIONARY PROPER but aren't listed in CORPUS:`);
+      properOnly.forEach(k => out.push(`   - "${properNorm.get(k)[0].parsed.term}"`));
+    }
+
+    const misplaced = [];
+    corpus.terms.forEach(({ term, letter }) => {
+      const expected = firstLetter(term);
+      if (expected && expected !== letter) misplaced.push({ term, letter, expected });
+    });
+    if (misplaced.length) {
+      out.push(`\n\u26A0 ${misplaced.length} term(s) in CORPUS are filed under a letter that doesn't match their first letter:`);
+      misplaced.forEach(({ term, letter, expected }) =>
+        out.push(`   - "${term}" is under "${letter}:" but looks like it should be under "${expected}:"`));
+    }
+  }
+
+  if (out.length === 0) out.push('\u2705 No issues found.');
+
+  document.getElementById('output').textContent = out.join('\n');
+}
+
+document.getElementById('checkBtn').addEventListener('click', runCheck);
+</script>
+
+</body>
+</html>

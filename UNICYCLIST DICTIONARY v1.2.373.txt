@@ -510,7 +510,7 @@ Etymology: Learned borrowing from Latin cuniculosus
 
 cyberg (n.) - Half machine half iceberg
 
-Cybril (n.) Robot Cyril
+Cybril (n.) - Robot Cyril
 
 Cyborge (n.) - Robo Jorge
 
@@ -793,7 +793,7 @@ fictionalism (n.) - a made up word
 
 fifth-round McDonald's interview (expr.) - overkill
 
-filiupper (n.) the process of consuming large amounts of food through holding up long lines at buffets as well as other delaying tactics to ensure the annoyance of all restaurant employees.
+filiupper (n.) - the process of consuming large amounts of food through holding up long lines at buffets as well as other delaying tactics to ensure the annoyance of all restaurant employees.
 
 flabbergoosted (adj.) - when a goose realizes a sudden earth-shattering truth
 
@@ -1005,7 +1005,7 @@ henius (adj.) - megalomaniacal
 
 hibernum (n.) - early winter in a loose sense, ~ November and December
 
-hmork (inter.) an expression of disgust or contempt
+hmork (inter.) - an expression of disgust or contempt
 
 honkrs (adj.) - being in honors, but actually being dumb (like me)
 
@@ -1045,7 +1045,7 @@ humific (adj.) - causing a dramatic shift in mood, emotion, or affect
 - "That movie was so humific, it brought me to tears"
 --------------------------------------------- 
 
-humify / humefy (v.) -- to douse in liquid, make wet
+humify / humefy (v.) - to douse in liquid, make wet
 
 hummucide (n.) - death by ground chickpeas
 
@@ -1294,7 +1294,7 @@ merito baby (n.) -  one who gains success or opportunities through hard work and
 
 Microsophft (n.) - A fantastical term referring to the ancient, mystical art of micro-philosophy—a discipline where wise sages seek profound truths in the tiniest details of life. Practitioners, known as "microsophists," believe that even the smallest, seemingly insignificant elements hold the keys to the universe's greatest mysteries
 
-mid-crowave (n.) A freaking horrible microwave
+mid-crowave (n.) - A freaking horrible microwave
 
 mid-gerator (n.) - An icebox or cooler
 
@@ -1403,7 +1403,7 @@ orgberg (n.) - Half man, half iceberg
 
 orgborg (n.) - A synthetic being/robot that has organic body parts for some reason
 
-overcover undercover civcopcivcop (n.) A cop dressed as an undercover civilian dressed as an undercover civilian dressed as a cop dressed as a civilian dressed as a cop
+overcover undercover civcopcivcop (n.) - A cop dressed as an undercover civilian dressed as an undercover civilian dressed as a cop dressed as a civilian dressed as a cop
 
 ouphemism (n.) - a word which sounds like a euphemism but isn't
 
@@ -1745,7 +1745,7 @@ Sis /sis/ (n.) - a nickname for Sierra
 
 sjort (n.) - a one-piece combination of a tshirt and shorts 
 
-skadover (v.) to quickly shift to the side while sitting down
+skadover (v.) - to quickly shift to the side while sitting down
 
 skedale (v.) - synonym of skedaddle, but only for dale
 
@@ -2005,7 +2005,7 @@ Tsauditu! (Int.) - a greeting in an unknown language, it always is followed by t
 
 tsscfila (n.) - a very exotic pasta served at fancy restaurants
 
-ttshoke (ono.) The sound of a satisfied horse
+ttshoke (ono.) - The sound of a satisfied horse
 
 tupp (v.) - to store in Tupperware 
 
@@ -2042,11 +2042,11 @@ ultraprano (n.)  - a voice type even higher than soprano. Known for their remark
 
 uncrustor (v.) - buying a great multitude of Smucker's Uncrustables Peanut Butter and Jelly Sandwiches for your personal inventory
 
-undercop civilicover (n.) a civilian dressing as a cop dressing as a cover
+undercop civilicover (n.) - a civilian dressing as a cop dressing as a cover
 
 undercover civilian (n.) - a civilian dressed as a cop
 
-undercover civilicop (n.) a cop dressing as a civilian dressing as a cop
+undercover civilicop (n.) - a cop dressing as a civilian dressing as a cop
 
 undercover criminal (n.) - a criminal dressed as a cop
 
@@ -2094,7 +2094,7 @@ voce vosta (adj.) - spoken in the accent of Damien DalVosta or (n.) a word so sp
 
 v'you (v. + pron.) - contraction of "have you"
 
-Wajaw 36B (n.) a planet of unicyclists
+Wajaw 36B (n.) - a planet of unicyclists
 
 waffwich (n.) - a waffle sandwich
 

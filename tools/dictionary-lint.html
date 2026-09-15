@@ -272,10 +272,31 @@ function runCheck() {
 
   // --- Alphabetization check ---
   function findOutOfOrder(termList) {
+    // Full correct order, so a misplaced term's true neighbors can be
+    // reported directly -- "comes before X" alone doesn't say where it
+    // actually belongs, just that it's wrong relative to one neighbor.
+    const sorted = termList.slice().sort((a, b) => {
+      const ka = sortKeyIgnorePunct(a), kb = sortKeyIgnorePunct(b);
+      return ka < kb ? -1 : ka > kb ? 1 : 0;
+    });
+    // Queue of correct slot indices per term text, so duplicate term
+    // strings each still resolve to their own distinct correct slot.
+    const slotQueues = new Map();
+    sorted.forEach((t, i) => {
+      if (!slotQueues.has(t)) slotQueues.set(t, []);
+      slotQueues.get(t).push(i);
+    });
+
     const issues = [];
     for (let i = 1; i < termList.length; i++) {
-      if (sortKeyIgnorePunct(termList[i]) < sortKeyIgnorePunct(termList[i - 1])) {
-        issues.push({ prev: termList[i - 1], cur: termList[i] });
+      const prev = termList[i - 1];
+      const cur = termList[i];
+      if (sortKeyIgnorePunct(cur) < sortKeyIgnorePunct(prev)) {
+        const q = slotQueues.get(cur);
+        const slot = q && q.length ? q.shift() : sorted.indexOf(cur);
+        const before = slot > 0 ? sorted[slot - 1] : null;
+        const after = slot < sorted.length - 1 ? sorted[slot + 1] : null;
+        issues.push({ prev, cur, before, after });
       }
     }
     return issues;
@@ -285,7 +306,14 @@ function runCheck() {
     const misorder = findOutOfOrder(properEntries.map(e => e.parsed.term));
     if (misorder.length) {
       out.push(`\n\u26A0 ${misorder.length} place(s) are out of alphabetical order:`);
-      misorder.forEach(({ prev, cur }) => out.push(`   - "${cur}" comes right after "${prev}", but should come before it`));
+      misorder.forEach(({ cur, prev, before, after }) => {
+        let loc;
+        if (before && after) loc = `belongs between "${before}" and "${after}"`;
+        else if (after) loc = `belongs at the very start, right before "${after}"`;
+        else if (before) loc = `belongs at the very end, right after "${before}"`;
+        else loc = 'is the only entry';
+        out.push(`   - "${cur}" ${loc} (currently sits right after "${prev}")`);
+      });
     }
   }
 

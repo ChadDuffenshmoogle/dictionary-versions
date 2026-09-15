@@ -39,7 +39,7 @@ Abnormal Road (n.) - the section of Normal Road that's blocked off
 
 acarrangement (n.) - an arrangement of a song for a cappella
 
-acaseine (adj.) /ɐ'keisain/ - marked by an absence of cheese, or of dairy more generally 
+acaseine (adj.) - /ɐ'keisain/ marked by an absence of cheese, or of dairy more generally 
 
 Achilles heels (expr.) - vulnerability of something otherwise strong when it has specifically two distinct weaknesses
 
@@ -94,8 +94,7 @@ analactic (adj.) - dairy-free; lacking dairy
 ---------------------------------------------
 Etymology: from an- + Latin 'olus', itself from Latin 'holus' ("vegetable, greens"), + -ine
 
-anoline (adj.) /ænɐlȧɪn/
-- empty
+anoline (adj.) - /ænɐlȧɪn/ empty
   - (by extension, of containers) open, not fully enclosed, characterized by the absence of a traditional enclosed space.
 - barren; waste (esp. of locations)
 ---------------------------------------------
@@ -133,7 +132,7 @@ applau (n.) - a single collective clap as a gesture of respect
 
 Apples to Candypumpkincorn (n.) - a fun party game in which cards are used to make comparisons that do not make sense at all. It is a crossover between Mattel and Brach's. 
 
-aquavache (n.) — A collection of water bottles kept for their uniqueness, design, or sentimental value.
+aquavache (n.) - A collection of water bottles kept for their uniqueness, design, or sentimental value.
 
 ---------------------------------------------
 arm-to-bed-microwave-distance ratio (n.) - the ratio of the usable length of one's arms to the distance between one's bed and one's microwave.
@@ -147,7 +146,7 @@ avachement / bird decay (n.) - when a tree loses all its leaves in teh fall, rev
 
 avat (adj.) - (of a door) wide or all the way open
 
-ayje (interjection) /aiʝᵊ/ - used to expressed displeasure, disapproval, or dissapointment 
+ayje (inter.) - /aiʝᵊ/ used to expressed displeasure, disapproval, or dissapointment 
 
 Ayn Ham (n.) - a pork chop that actually isn't port, it could be anything else
 
@@ -333,7 +332,7 @@ chemiclore/chemiclor/kemiklor (n.) - knowledge of chemistry or chemical properti
 ---------------------------------------------
 Etymology: From Yurok "chergeesh" ("small woodpecker"), usage likely shaped by analogy with "cherish"
 
-Chereesh (n.) /tʃɚ'ɹiʃ/ - a feminine given name
+Chereesh (n.) - /tʃɚ'ɹiʃ/ a feminine given name
 ---------------------------------------------
 
 ches (n.) - (Dianism) alt. of yes
@@ -400,7 +399,7 @@ coach (adj.) - giving big brother or like uncle vibes
 
 cobblerstone (n.) - the rock used by cobblers for crafting stone shoes
 
-colade (adj.) /coʊ'leɪdʰ/ - relaxed, carefree, as one who has just taken a sip of a delicious beverage or is breathing in warm spring air. 
+colade (adj.) - /coʊ'leɪdʰ/ relaxed, carefree, as one who has just taken a sip of a delicious beverage or is breathing in warm spring air. 
 
 colific (adj.) - vibrantly colorful
 
@@ -467,7 +466,7 @@ croiseggchesaus (n.) - a breakfast sandwich with sausage on the top and bottom a
 
 croismaxxing (v.) - generic term for using up all your meal swipes at the end of the week in bulk
 
-crum (n.) /krəm/ - 'etymologically correct' spelling of "crumb." 
+crum (n.) - /krəm/ 'etymologically correct' spelling of "crumb." 
 
 crustable (n.) - a sandwich that is all crust (both ends of the loaf)
 
@@ -563,7 +562,7 @@ debig (v.) - (transitive) to turn off the primary light source of one's domicile
 
 degoombafy (v.) - to remove unruly fungi
 
-deice (adv.) /dais:/ - ten times
+deice (adv.) - /dais:/ ten times
 
 DeKalbitated (n.) - having your head removed on the NIU campus
 
@@ -640,7 +639,7 @@ doversquiver (v.) - to bond with others by reading inside-joke material, such as
 
 D. P'Doughba (n.) - a Mexican-Italian restaurant franchise, home of the BurritoZone 
 
-drizzito (n.) /ɹɪ'zitoʊ/ - a type of protracted low-impact rain characteristic of the American Grain Plains 
+drizzito (n.) - /ɹɪ'zitoʊ/ a type of protracted low-impact rain characteristic of the American Grain Plains 
 
 dubchemuff (n.) - double-chocolate muffin
 
@@ -683,7 +682,7 @@ eggeggcheegg (n.) - a breakfast sandwich consisting of an egg, egg and a chee on
 
 egnuol renroc / scorner scrounge (n.) - the corner lounge on the odds side of the 4th floor of Gilbert
 
-eice (adv.) /əɪs:/ - eight times 
+eice (adv.) - /əɪs:/ eight times 
 
 eir guitar (n.) - an air electric guitar
 
@@ -746,7 +745,7 @@ equestrigram (n.) - an instagram feed oversaturated with horse media
 ---------------------------------------------
 Etymology: From Middle English "eyrcapote", from dialectal Middle English "eigre" ("egg") + Latin "capus" ("head") + "-ote" (demonym suffix)
 
-ercapote / ecapote (n.) /'ɛɚkɐpoːtʼ/ - a fool, a person of low intelligence
+ercapote / ecapote (n.) - /'ɛɚkɐpoːtʼ/ a fool, a person of low intelligence
 ---------------------------------------------
 
 ergy (n.) - a repeated compulsion to do something
@@ -931,7 +930,7 @@ Goople (n.) - nickname for Google AI Overview / Gemini, especially when it says 
 GooSable (n.)- Dusable when the geese have taken over
 
 --------------------------------------------- 
-goosh (n.) /guʃ/ - a term of endearment 
+goosh (n.) - /guʃ/ a term of endearment 
 - Alternatly, a goose related exclamation, such as "Oh my goosh" in response to learning of dead geese
 --------------------------------------------- 
 
@@ -947,7 +946,7 @@ göse (n.) - /'gœzɐ/ nominative/emphatic singular of goose.
 --------------------------------------------- 
 Etymology: from goose, influenced onomatopoeically
 
-göse (int.) - /'gœzɐ/ - an exclamation uttered upon seeing a goose.
+göse (int.) - /'gœzɐ/ an exclamation uttered upon seeing a goose.
 - a cry believed to ward off geese or to deter anserine aggression.
   - Synonym: hjonk
 ---------------------------------------------
@@ -1176,7 +1175,7 @@ L + golden ratio (expr.) - when a reply has approximately 1.618 times more likes
 
 lilypoid (n.) - a stylized depiction of a lilypad, especially in two dimensions.
 
-lim (n.) /lɪm/ - 'etymologically correct' spelling of "limb." 
+lim (n.) - /lɪm/ 'etymologically correct' spelling of "limb." 
 
 limon (n.) - the flavor of lemon-lime. Coined by soda companies to save ink by printing five fewer characters.
 
@@ -1586,7 +1585,7 @@ Renaissance pizza (n.) - something that noone thought about or cared about at a 
 
 render twixt / render twyxt (expr.) - (euphemistic) to kill
 
-rizzito (n.) /ɹ̠ɪ'zitoʊ/ - a quantum of charisma 
+rizzito (n.) - /ɹ̠ɪ'zitoʊ/ a quantum of charisma 
 
 ROFL (acr.) - Reminded of Found Love
 
@@ -1620,7 +1619,7 @@ ryxis (n.) - when you give yourself little cuts and don't know where they came f
 
 saise (adv.) - six times
 
-'san (n.) /dʒaːn/ - nickname for parmesan, often in the phrase "the 'san"
+'san (n.) - /dʒaːn/ nickname for parmesan, often in the phrase "the 'san"
 
 sarm hametizer (Zinnianism, n.) - alt. of hand sanatizer 
 
@@ -1673,7 +1672,7 @@ secondary alcoholism (n.) - an addiction to specifically secondary alcohols
 
 sedenter (n.) - one who sits a lot
 
-seece (adj.) /si:s/ - dexterous, skilled with one's hands 
+seece (adj.) - /si:s/ dexterous, skilled with one's hands 
 
 ---------------------------------------------
 seil / seyl (inter.) - an exclamation of triumph
@@ -1773,11 +1772,11 @@ snarody - (n.) a parody of a song replacing the first syllables of words with "s
 
 sneech (n.) - a kind of fish
 
-snijkers (n.) /'snikɹ̠z/ - shoes made out of Snickers (TM)
+snijkers (n.) - /'snikɹ̠z/ shoes made out of Snickers (TM)
 
 snix (n.) - generecized trademark of pretzel/chocolate trail mix
 
-snodem (n.) /'snoʊdəm/ - breathlessness (the state of being out of breath)
+snodem (n.) - /'snoʊdəm/ breathlessness (the state of being out of breath)
 
 snork (v.) - snicker + snort + chortle
 
@@ -1857,7 +1856,7 @@ starkitch (n.) - a cooking room used on a space ship or station (my Dad made thi
 
 Starkitch (n.) - a knock-off brand of Sunkist
 
-stchewstund (n.) /'stʃustʊnd/ - an institutional manifesto, a published policy plan for an organization
+stchewstund (n.) - /'stʃustʊnd/ an institutional manifesto, a published policy plan for an organization
 
 STFU (acr.) - See The Future Unfold
 
@@ -1900,7 +1899,7 @@ supmeanik (n.) - someone who goes beyond everyday meanness
 
 supraessential / supressential (adj.) - not strictly necessary
 
-surger (v.) /'sɹ̠d̠ʒɹ̠/ - to operate upon surgically
+surger (v.) - /'sɹ̠d̠ʒɹ̠/ to operate upon surgically
 
 sven worde! (inter.) - used as an exclamation for when something is really bad
 
@@ -1957,7 +1956,7 @@ thropen (adj.) - with mouth agape
 
 throwing bangs (adj.) - in an angry and copralic frenzy
 
-thum (n.) /thəm/ - 'etymologically correct' spelling of "thumb." 
+thum (n.) - /thəm/ 'etymologically correct' spelling of "thumb." 
 
 to beat the cat out of the bag (expr.) - to persist in discussion about a topic for so long you accidentally let slip or reveal a major secret
 

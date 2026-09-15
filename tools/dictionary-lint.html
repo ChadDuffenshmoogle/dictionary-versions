@@ -152,14 +152,35 @@ function parseEntryLine(rawLine) {
   return null;
 }
 
+function collectContinuation(blockLines, startIdx) {
+  const chunks = [];
+  let j = startIdx;
+  while (j < blockLines.length) {
+    const nxt = blockLines[j];
+    if (!nxt) { j++; continue; }
+    const nxtUnbulleted = nxt.replace(/^-\s*/, '');
+    if (/^(etymology|ex|example|synonym|synonyms|antonym|antonyms|derived terms|notes)\b/i.test(nxtUnbulleted)) break;
+    const lower = nxt.toLowerCase();
+    if (/^\([^)]{1,12}\)\.?$/.test(nxt) ||
+        ['noun', 'verb', 'adjective', 'adverb', 'interjection', 'pronoun', 'preposition'].includes(lower)) {
+      j++;
+      continue;
+    }
+    chunks.push(nxtUnbulleted);
+    j++;
+  }
+  return chunks;
+}
+
 function parseProper(text) {
   const marker = '-----DICTIONARY PROPER-----';
   const idx = text.indexOf(marker);
-  if (idx === -1) return { entries: [], found: false, oddDelimiters: false };
+  if (idx === -1) return { entries: [], emptyBlocks: [], found: false, oddDelimiters: false };
 
   const body = text.slice(idx + marker.length);
   const lines = body.split('\n');
   const entries = [];
+  const emptyBlocks = [];
   let inBlock = false;
   let blockLines = [];
   let delimCount = 0;
@@ -172,9 +193,45 @@ function parseProper(text) {
       mainIdx = i;
       break;
     }
-    if (mainIdx === -1) return;
+    if (mainIdx === -1) {
+      emptyBlocks.push(bl.filter(l => l.trim()).join(' / ') || '(blank block)');
+      return;
+    }
+
     const mainLine = bl[mainIdx].trim();
-    entries.push({ raw: mainLine, parsed: parseEntryLine(mainLine) });
+    let parsed = parseEntryLine(mainLine);
+    let usedFallback = false;
+
+    if (!parsed) {
+      // No dash/colon separator on the main line at all -- the
+      // definition is probably down in the continuation lines instead
+      // (e.g. "anoline (adj.) /pronunciation/" on its own, definition
+      // below). Strip a trailing pronunciation guide, pull the last
+      // "(pos)" off the end, and treat everything after as the term.
+      const mainLineNoPron = mainLine.replace(/\s*\/[^/]+\/\s*$/, '');
+      const posMatch = mainLineNoPron.match(/\(([^)]{1,20})\)\.?\s*$/);
+      const pos = posMatch ? posMatch[1].trim() : '';
+      const termPart = mainLineNoPron.replace(/\s*\([^)]{1,20}\)\.?\s*$/, '').trim();
+      if (termPart) {
+        const chunks = collectContinuation(bl, mainIdx + 1);
+        if (chunks.length) {
+          parsed = { term: cleanTerm(termPart), pos, definition: chunks.join('; '), strict: false };
+          usedFallback = true;
+        }
+      }
+    }
+
+    // Even when the main line parsed fine by itself, trailing bulleted or
+    // bare continuation lines (extra examples, wrapped definition text)
+    // still belong to this entry rather than being dropped.
+    if (parsed && !usedFallback) {
+      const extra = collectContinuation(bl, mainIdx + 1);
+      if (extra.length) {
+        parsed = { term: parsed.term, pos: parsed.pos, definition: parsed.definition + '; ' + extra.join('; '), strict: parsed.strict };
+      }
+    }
+
+    entries.push({ raw: mainLine, parsed });
   }
 
   for (const rawLine of lines) {
@@ -191,11 +248,16 @@ function parseProper(text) {
       }
       continue;
     }
-    if (inBlock) blockLines.push(line);
+    if (inBlock) {
+      blockLines.push(line);
+    } else if (line && !isMetadataLine(line)) {
+      // A standalone entry with no surrounding "-----" block at all.
+      entries.push({ raw: line, parsed: parseEntryLine(line) });
+    }
   }
   if (inBlock && blockLines.length) processBlock(blockLines);
 
-  return { entries, found: true, oddDelimiters: delimCount % 2 !== 0 };
+  return { entries, emptyBlocks, found: true, oddDelimiters: delimCount % 2 !== 0 };
 }
 
 function runCheck() {
@@ -209,6 +271,10 @@ function runCheck() {
   if (!proper.found) out.push('\u26A0 Could not find a -----DICTIONARY PROPER----- section.');
   if (proper.found && proper.oddDelimiters) {
     out.push('\u26A0 Odd number of "-----" delimiter lines in DICTIONARY PROPER -- a block is unclosed, so everything after it may be read wrong.');
+  }
+  if (proper.found && proper.emptyBlocks.length) {
+    out.push(`\n\u274C ${proper.emptyBlocks.length} block(s) between "-----" lines had no readable entry at all:`);
+    proper.emptyBlocks.forEach(b => out.push(`   - "${b}"`));
   }
 
   const corpusNorm = new Map();

@@ -2,10 +2,6 @@ UNICYCLIST DICTIONARY v1.2.374 - September 14, 2026 08:27 PM CDT
 
 -----DICTIONARY PROPER-----
 
-a sound for sore ears (expr.) - a person or thing you are pleased or relieved to hear
-
-A'Dobo (n.) - A Q'Doba subsidiary that exclusively sells adobo bowls
-
 abgde (n.) - /aβ̞ɣð̠e/ an earlier form of something
 
 Abnormal Road (n.) - the section of Normal Road that's blocked off
@@ -22,6 +18,8 @@ action-figuring (n.) - falling over with completely rigid joints. As opposed to 
 ---------------------------------------------
 
 addictionary (n.) - a list of definitions of all addictions
+
+A'Dobo (n.) - A Q'Doba subsidiary that exclusively sells adobo bowls
 
 aegiliptic (adj.) - too steep, even for mountain goats
 
@@ -60,11 +58,13 @@ ambient grill (n.) - a kitchen on fire
 
 amputorse (n.) - a construction horse with only two supports
 
-an eye for a tooth, and a tooth for an eye (expr.) - reciprocating vengeance in a proportional but completely different way than what was received. For example, if someone steals your phone, and now you can't call anyone, you can knock over the nearest cell tower, and now *they* can't call anyone. Gottem.
-
 analactic (adj.) - dairy-free; lacking dairy
 
 anazontal (adj.) - in alignment along your preferred fourth-dimensional primary axis
+
+an eye for a tooth, and a tooth for an eye (expr.) - reciprocating vengeance in a proportional but completely different way than what was received. For example, if someone steals your phone, and now you can't call anyone, you can knock over the nearest cell tower, and now *they* can't call anyone. Gottem.
+
+anienie (inter.) - /anini'je/ that's irrelevant, that's niether here nor there
 
 ---------------------------------------------
 Etymology: from an- + Latin 'olus', itself from Latin 'holus' ("vegetable, greens"), + -ine
@@ -73,9 +73,6 @@ anoline (adj.) - /ænɐlȧɪn/ empty
   - (by extension, of containers) open, not fully enclosed, characterized by the absence of a traditional enclosed space.
 - barren; waste (esp. of locations)
 ---------------------------------------------
-
-
-anienie (inter.) - /anini'je/ that's irrelevant, that's niether here nor there
 
 antalarm (n.) - a device that makes a sound that causes you to fall asleep
 
@@ -86,9 +83,9 @@ antevellum (adj.) - before animal skins were used as a writing surface
 
 anti beard knife (n.) - a razor
 
-anti-ironing board (n.) - another word for an oven mitt
-
 anticlinactic (adj.) - resembling or characteristic of an anticline
+
+anti-ironing board (n.) - another word for an oven mitt
 
 antitode (n.) - a substance that counteracts the effects of health supplements
 
@@ -114,6 +111,8 @@ arm-to-bed-microwave-distance ratio (n.) - the ratio of the usable length of one
 Ex. "Wow! I can't believe Louis and I have the same arm-to-bed-microwave-distance ratio!"
 ---------------------------------------------
 
+a sound for sore ears (expr.) - a person or thing you are pleased or relieved to hear
+
 assalted (v.) - what you are when someone hands you salt
 
 avachement / bird decay (n.) - when a tree loses all its leaves in teh fall, revealing dozens of abandoned bird nests 
@@ -123,8 +122,6 @@ avat (adj.) - (of a door) wide or all the way open
 ayje (inter.) - /aiʝᵊ/ used to expressed displeasure, disapproval, or dissapointment 
 
 Ayn Ham (n.) - a pork chop that actually isn't port, it could be anything else
-
-b. b. quipposan (n.) - BBQ pork sandwich
 
 ---------------------------------------------
 babingo (inter.) - an enthusiastic exclamatory interjection
@@ -164,6 +161,8 @@ barlineus (adj.) - along the line which passes through both Barsema Hall and Bar
 baumkuchen (n.) - alt. of Baumkuchen (case-variant)
 
 bayoeignet (n.) -  /bay-yo-nyay/ A bayonet with a beignet kebab'd onto it
+
+b. b. quipposan (n.) - BBQ pork sandwich
 
 bean (n.) - one of Cyril's little guys
 
@@ -277,9 +276,9 @@ carzone (n.) - an Italitan turnover filled with chipped paint, vulcanized rubber
 
 caseine/caseose (adj.) - possessing the attributes of or marked by cheese
 
-C. D. Pough / HS C. D. Pough (n.) - a convenience shop with assorted items such as calzones
-
 casseroke (v.) - to use intensive cooking as an excuse to avoid social activities, or (n.) - an instance thereof
+
+C. D. Pough / HS C. D. Pough (n.) - a convenience shop with assorted items such as calzones
 
 celse (n.) - shorthand for a Celsius enegry drink
 
@@ -492,11 +491,11 @@ Cyclexicon (n.) - alternate name for the Unicyclist Dictionary
 
 cycsmith / unicyclinguist (n.) - a coiner of new cyclexiclisms
 
-C.Y.O.S. (abbr.) - cut your own salad
-
 cymaffle (n.) - a cinnamon flavoured waffle
 
 cyndrilic (adj.) - cylindrical
+
+C.Y.O.S. (abbr.) - cut your own salad
 
 Cyrborg (n.) - Robo Cyril
 
@@ -513,16 +512,14 @@ Cyrilindrical (n.) - Cryil if he were to transform into a can
 
 Cyrorg (n.) - Robo Rory 
 
-d'deice (adv.) - twelve times  
-
 davior (n.) - a person who does good or heroic deeds at giltune
+
+d'deice (adv.) - twelve times  
 
 ---------------------------------------------
 de (v.) - to perform two complementary actions on an object that are both prefixed with 'de-'. 
     *I accidentally just* **deed** *the light, when I only meant to debig it.*
 ---------------------------------------------
-
-de-zoog (v.) - to make a definition for a zoog
 
 ---------------------------------------------
 debear (v.) - to remove the bear from
@@ -567,6 +564,8 @@ desultor (n.) - The state or quality of being desultory; desultoriness
 
 deuter (v.) - to make secondary
 
+de-zoog (v.) - to make a definition for a zoog
+
 diabeatle (n.) - a beatle’s fan with diabetes
 
 diaphotothanize (v.) - to kill using light, e.g. a laser
@@ -608,9 +607,9 @@ doringles / pringitos (n.) - dorito minis in a pringles-esque can
 
 dort (v.) - to sort something in descending order
 
-D. P'Doughba (n.) - a Mexican-Italian restaurant franchise, home of the BurritoZone 
-
 doversquiver (v.) - to bond with others by reading inside-joke material, such as the Unicyclist Dictionary, or a quote book.
+
+D. P'Doughba (n.) - a Mexican-Italian restaurant franchise, home of the BurritoZone 
 
 drizzito (n.) - /ɹɪ'zitoʊ/ a type of protracted low-impact rain characteristic of the American Grain Plains 
 
@@ -661,8 +660,6 @@ eir guitar (n.) - an air electric guitar
 
 ekstatization (n.) - the process by which a second-person pronoun can be transformed into a fourth-person pronoun through disassociation with a material referent.
 
-El Humidor (n.) - A local Mexican grill known for it's delicious food and climate-controllable dining space. Usually kept at 70% relative humidity, the food is guaranteed to be adequately soggy to the taste. The kitchen also houses baseballs for the Barbs and Huskies teams in case DeKalb ever rises 4000+ feet in elevation.
-
 elevated (adj.) - high (all senses)
 
 elevenacity (n.) - steadfast persistence to the extreme
@@ -673,6 +670,8 @@ eleventative (adj.) - something planned but not definitive, specifically of whic
 ---------------------------------------------
 
 Elgonqgin (n.) - merged city of Elgin and Algonquin
+
+El Humidor (n.) - A local Mexican grill known for it's delicious food and climate-controllable dining space. Usually kept at 70% relative humidity, the food is guaranteed to be adequately soggy to the taste. The kitchen also houses baseballs for the Barbs and Huskies teams in case DeKalb ever rises 4000+ feet in elevation.
 
 Elphafied / Elphaphied (adj.) - similar to Glindafied; just being so enacted to copy traits of Elphaba from Wicked
 
@@ -721,9 +720,9 @@ Etymology: From Middle English "eyrcapote", from dialectal Middle English "eigre
 ercapote / ecapote (n.) - /'ɛɚkɐpoːtʼ/ a fool, a person of low intelligence
 ---------------------------------------------
 
-er wer (expr.) - alt. of 'oh well', vibes like 'womp womp'
-
 ergy (n.) - a repeated compulsion to do something
+
+er wer (expr.) - alt. of 'oh well', vibes like 'womp womp'
 
 est (n.) - early 'summer' in a loose sense, May and June 
 
@@ -733,19 +732,19 @@ eucry (adj.) - tiring
 
 EUui / eui (v.) - to drink water
 
-ex-expatriate (n.) - someone who renounced their native country but changed their mind decided to come back
-
 exaxely (adv.) - (Wisconsinism, Zinnianism) alt. of 'exactly' 
 
+ex-expatriate (n.) - someone who renounced their native country but changed their mind decided to come back
+
 exply (v.) - the opposite of imply, to state explicitly
+
+FahThursday (n.) - the special occasion when Father's Day lands on a Thursday
 
 faker's dozen (n.) - 11 of something
 
 falacrous (adj.) - bald
 
 FAMO (acr.) - fear about missing out
-
-FahThursday (n.) - the special occasion when Father's Day lands on a Thursday
 
 ---------------------------------------------
 fangorious (adj.) - having or bearing fangs.
@@ -768,9 +767,9 @@ filiupper (n.) - the process of consuming large amounts of food through holding 
 
 finth (n.) - the quality of being fine
 
-flabbergoosted (adj.) - when a goose realizes a sudden earth-shattering truth
-
 five-eyes (expr.) - an insult of someone with camera glasses
+
+flabbergoosted (adj.) - when a goose realizes a sudden earth-shattering truth
 
 flabkre (v.) - to engage in an ambiguous cooking process. Food cooked in such a way can be said to be 'flabkred'
 
@@ -876,26 +875,21 @@ glane (v.) - to communicate non-verbally using the eyeballs
 (n.) - such a communication
 --------------------------------------------- 
 
----------------------------------------------
-go out on a twig (expr.) - to say something extremely unpopular that is utterly defenseless to criticism.
-"I'm gonna go out on a twig here and say maybe we should just pick a random person to be our next president. Like, anyone! Let's get all the names on a wheel or something."
----------------------------------------------
+glava (n.) - a ball of yarn
+
+glig (acr.) - good luck i guess
 
 golpear el heno (expr.) - to go to bed
 
 gooberism (n.) - the goober version of a mannerism, to have manners in the ways of shenanigans
 
-glava (n.) - a ball of yarn
-
 good beevening (expr.) - greeting for the time after noon but before evening
-
-glig (acr.) - good luck i guess
 
 goodoc (n.) - a gilbertian delicacy
 
-goo-gads (n.) - gadgets and knick knacks used for goofy pranks (joy buzzer, snake in a can, etc)
-
 goofy goobrother (n.) - kin of shenanigans. Plural: googy goobrethren
+
+goo-gads (n.) - gadgets and knick knacks used for goofy pranks (joy buzzer, snake in a can, etc)
 
 Goople (n.) - nickname for Google AI Overview / Gemini, especially when it says something dumb
 
@@ -908,7 +902,10 @@ goosh (n.) - /guʃ/ a term of endearment
 
 Goosq (n.) - male given first name
 
-grandcycle (n.) - one of your subcycles' subcycles, or your supercycles supercycle
+---------------------------------------------
+go out on a twig (expr.) - to say something extremely unpopular that is utterly defenseless to criticism.
+"I'm gonna go out on a twig here and say maybe we should just pick a random person to be our next president. Like, anyone! Let's get all the names on a wheel or something."
+---------------------------------------------
 
 --------------------------------------------- 
 Etymology: from goose, influenced onomatopoeically
@@ -918,6 +915,8 @@ göse (n.) - /'gœzɐ/ nominative/emphatic singular of goose.
 - a cry believed to ward off geese or to deter anserine aggression.
   - Synonym: hjonk
 ---------------------------------------------
+
+grandcycle (n.) - one of your subcycles' subcycles, or your supercycles supercycle
 
 ---------------------------------------------
 greecoy / greekoy (n.) - something falsely purported to be greek
@@ -970,19 +969,19 @@ henius (adj.) - megalomaniacal
 
 hibernum (n.) - early winter in a loose sense, ~ November and December
 
-hmork (inter.) - an expression of disgust or contempt
-
 hiccin' up (expr.) - having hiccups
-
-honkrs (adj.) - being in honors, but actually being dumb (like me)
 
 hipshake (n.) - a handshake varient where you grab each other's hand like a normal handshake, but you don't move your wrist, elbow, or shoulder, meaning you do the handshake by only tilting your entire torso back and forth in sync
 
 hit that hide (expr.) - slang for mounting a surfboard that is an alligator 🤙
 
+hmork (inter.) - an expression of disgust or contempt
+
 hog maze (n.) - like a corn maze, but made of an ever-shifting mass of live hogs instead of corn. good luck getting out of this one!
 
 holgunx / holgunck (n.) - a creature with a leg of fowl, two duck wings, claws of a bat, and no other external organs
+
+honkrs (adj.) - being in honors, but actually being dumb (like me)
 
 ---------------------------------------------
 hoosted (adj.) - coated or dipped in honey
@@ -994,12 +993,12 @@ horlage / orloge / orlage (n.) - the process of reading or interpreting an analo
 
 hoss (v.) - to dance and bounce about arm in arm
 
+hot cilk (n.) - /kilk/ hot chocolate mixed with milk in equal proportion.
+
 ---------------------------------------------
 H. S. C. D'Poba'Denucks (n.) - (pronunciation: aychesseedeepobadenux) the combined concept of The Depot-C Store, Q'Doba, Huskie Den, and Starbucks in the HSC as a collective food source
 - alternative: H. S. C. D'Poughba'Denucks, to include D. P. Dough
 ---------------------------------------------
-
-hot cilk (n.) - /kilk/ hot chocolate mixed with milk in equal proportion.
 
 ---------------------------------------------
 humible (adj.) - emotionally neutral (esp. suggesting that the mood could change in the near future)
@@ -1016,13 +1015,13 @@ hummucide (n.) - death by ground chickpeas
 
 hungerswärme (n.) - when you're hungry and you start to feel warm because of it. 
 
-I could care more (expr.) - I don't care much
-
-I couldn't care more (expr.) - I care a lot
-
 IANCW (adv., abbr.) - in a non-condescending way; to assure that words or actions do not denote egotism
 
 Icebrorg (n.) - Rory Iceberg
+
+I could care more (expr.) - I don't care much
+
+I couldn't care more (expr.) - I care a lot
 
 If it ain't fixed, don't break it (expr.) - a common aphorism meaning you should wait until a broken thing is fixed to break it again
 
@@ -1044,12 +1043,12 @@ Indecorous (n.) - An extreme guessing game that combines Taboo, Password, and Po
 
 ingredient (n.) - a person about whom there is gossip ('tea')
 
-in off mode (adj.) - asleep
-
 ---------------------------------------------
 inkspill (n.) - an deprecatory term for writing that's terrible
 - "Man, I'm trying to proofread his fanfic but it's a total inkspill"
 ---------------------------------------------
+
+in off mode (adj.) - asleep
 
 insubbable (adj.) - incapable of being worse than
 
@@ -1061,18 +1060,18 @@ ipelago (n.) - an island in isolation
 
 irony (adj.) - ferric
 
+itect (n.) - any of the numerous architects, draughtsmen, or artisans involved in the design and certification of a structure 
+
 ---------------------------------------------
 I will die on that train (expr.) - alt. of 'I will die on that hill'
 	*I will die on that train 'til I die*
 ---------------------------------------------
 
-itect (n.) - any of the numerous architects, draughtsmen, or artisans involved in the design and certification of a structure 
-
 jablesque (adj.) - similar in nature to Jack Black
 
-J. C. La Borgbera (n.) - Robo J. C. (The C is short for Cy) 
-
 jaduteo (n.) - a word or concept that cannot adequately be translated between two languages
+
+J. C. La Borgbera (n.) - Robo J. C. (The C is short for Cy) 
 
 jep (inter.) - alt. of "yep"
 
@@ -1103,17 +1102,17 @@ kill a fly with a gun (expr.) - (emphatically: "kill a fly with a gun, no scope"
 
 Kirby and the Forgotten World (n.) - alternate title for Kirby and the World Beyond
 
-Kit Katter (n.) - is a person who really loves cats and kit kats but don't feed it to another
-
 kitchenista (n.) - someone who is a star in the kitchen, someone who excels at cooking
 
-kreeb (Cyrilism, v.) - to first crush crackers before consumption
-
-K. K. Psider (n.) - an Animal Crossing character who meets with his acoustic frat on Saturday nights
+Kit Katter (n.) - is a person who really loves cats and kit kats but don't feed it to another
 
 KKPseine (adj.) - marked by a presence of cheese, or dairy more generally, within band service
 
+K. K. Psider (n.) - an Animal Crossing character who meets with his acoustic frat on Saturday nights
+
 Kleiborg (n.) - Robo Alex Kleiber
+
+kreeb (Cyrilism, v.) - to first crush crackers before consumption
 
 kwikwi (inter.) - onomatopoeia of something moving briskly
 
@@ -1135,9 +1134,9 @@ legsterity (n.) - skill and control of one's legs, crucial in activities such as
 
 Let's pop the stack on that one (idiom) - (when discussing coding) to return to the main subject after going on a tangent
 
-L + golden ratio (expr.) - when a reply has approximately 1.618 times more likes than the original post 
-
 lexshot (v.) - to send someone a picture of screen shot of a dictionary entry (dic pic) or definition of a word, in order to clarify it's meaning
+
+L + golden ratio (expr.) - when a reply has approximately 1.618 times more likes than the original post 
 
 lilypoid (n.) - a stylized depiction of a lilypad, especially in two dimensions.
 
@@ -1238,9 +1237,9 @@ mebander (v.) - to casually walk while playing an instrument
 
 mediacre (n.) - an acre of mostly empty, mildly fertile land
 
-Median Joe (expr.) - an ordinary guy who's not influenced by disproportionately atypical people, unlike the Average Joe
-
 medianchor (n.) - an anchor that slows a boat or holds it in place with moderate efficacy
+
+Median Joe (expr.) - an ordinary guy who's not influenced by disproportionately atypical people, unlike the Average Joe
 
 medieuchre (n.) - a slow, unexceptional game of euchre
 
@@ -1267,9 +1266,9 @@ minimun (n.) - the opposite of a challobon/gigachoodel/cinnabeast/mastobon, a sm
 
 mondent (n.) - a spear
 
-move slow and break things (expr.) - corporate motto promoting high risk and low caution while gaining no more advancement or innovation than those who are careful
-
 "The mouse who chooses the trap has no right to complain of the cheese" (expr.) - self explanatory
+
+move slow and break things (expr.) - corporate motto promoting high risk and low caution while gaining no more advancement or innovation than those who are careful
 
 Mozartrella (n.) - a musical variety of cheese
 
@@ -1390,15 +1389,17 @@ Paroosan Caroost of Noop juice (n.) - milk left behind after consuming a bowl of
 
 patiche (n.) - a small amount or quantity of something, a smidge
 
-Patter'zza (n.) - Patterson pizza
-
 Patterzone (n.) - Patterson Hall/dining
+
+Patter'zza (n.) - Patterson pizza
 
 Pauline (n.) - Katherine and Paul the goated CA's of Neptune
 
 peanoot (n.) - a symphony of gags from a victim of allergic reaction due to consumption of Arachis hypogaea 
 
 pedester (v.) - to be a pedestrian, to act as a pedestrian
+
+pencil graffiti (expr.) - a brash statement that you'll likely end up retracting later
 
 ---------------------------------------------
 penpinappapppen (n.) - shortening of Pen, Pineapple, Apple, Pen, a composite of those four objects, as dictated by Pikotaro
@@ -1408,8 +1409,6 @@ penpinappapppen (n.) - shortening of Pen, Pineapple, Apple, Pen, a composite of 
 perschbeased (adj.) - possibly having died twice
 
 perschlostumous (adj.) - possible having occurred after one's death
-
-pencil graffiti (expr.) - a brash statement that you'll likely end up retracting later
 
 pershlaponymous (adj.) - having identical meaning to "pershlaps"
 
@@ -1443,11 +1442,15 @@ Porta-Pianto (n.) - a porta-potty with a piano inside it
 
 Portillionaire (n.) - one who spends at least 80% of their income on Portillos
 
-post-perschlortem (adj.) - after death of pershlaps
-
 postdecessor (n.) - synonym of successor, someone who comes after
 
+post-perschlortem (adj.) - after death of pershlaps
+
 Postradamus (n.) - generic nickname for one who predicts events after they have happened; a historian
+
+posttoled / postwarned (adj.) - told at an inconveniently late time, or even after the fact.
+
+povving off (v.) - losing money rapidly
 
 ---------------------------------------------
 p'pmpic (adj.) - (of water) having a high concentration of particulates
@@ -1455,10 +1458,6 @@ p'pmpic (adj.) - (of water) having a high concentration of particulates
 - excited, moderately ecstatic
 (int.) an exclamation of wonder, joy, or surprise
 ---------------------------------------------
-
-povving off (v.) - losing money rapidly
-
-posttoled / postwarned (adj.) - told at an inconveniently late time, or even after the fact.
 
 pringling (v.) - act of sticking your hand into the pringles can at risk of getting your hand stuck
 
@@ -1485,11 +1484,19 @@ pussyfooted / pussytoed (adj.) - tending to euphemisms and circumlocution
 
 Q'dobn't (n.) - Chipotle 
 
-q-d up / q'd up (adj.) - high energy, bubbling with enthusiasm, hyped up
-
 Qdobowl (n.) - a Qdoba bowl
 
+q-d up / q'd up (adj.) - high energy, bubbling with enthusiasm, hyped up
+
 qi-ter (n.) - (pronounced: cheater) one who "cheats" in Scrabble by hooking a Q onto an I to make "qi",  easily removing their Q tile and garnering at least 11 points
+
+---------------------------------------------
+Etymology: from Millenium Standard Lusitanian "qomp" or Millenium Zelanes Lusitanian "qomf", both from Middle Lusitanian "qompe", from Old Lusitanian "qomplua", ultimately from Latin complūra ("many things").
+
+qõ / qõv / q̃v (inter.) - (Zelané, slang) "Chill out!"
+
+Notes: qõ carries underlying connotations that the problem at hand is too great or out of one's control, and thus you shouldn't waste effort worrying about it. 
+---------------------------------------------
 
 Qristian (n.) - Cristian that goes to Qdoba
 
@@ -1505,19 +1512,9 @@ queue-doba / doba queue (n.) - the name for the tartarus-esque being that is the
 
 queusillanimous (adj.) - experiencing timidity when encountering a long line of people, such as at a theme park or Qdoba
 
-Quis (n.) - Louis that goes to Qdoba
-
-quor (v.) - to ask or answer questions on Quora
-
 quice (adv.) - five times 
 
----------------------------------------------
-Etymology: from Millenium Standard Lusitanian "qomp" or Millenium Zelanes Lusitanian "qomf", both from Middle Lusitanian "qompe", from Old Lusitanian "qomplua", ultimately from Latin complūra ("many things").
-
-qõ / qõv / q̃v (inter.) - (Zelané, slang) "Chill out!"
-
-Notes: qõ carries underlying connotations that the problem at hand is too great or out of one's control, and thus you shouldn't waste effort worrying about it. 
----------------------------------------------
+Quis (n.) - Louis that goes to Qdoba
 
 quop (n.) - a person with no bones
 
@@ -1525,6 +1522,8 @@ quop (n.) - a person with no bones
 quopped (adj.) - boneless 
 - "Could I have the quopped wings, please?"
 ---------------------------------------------
+
+quor (v.) - to ask or answer questions on Quora
 
 racontue (n.) - to continue a story from where someone else left off, possibly without prior context; to play Raconteur
 
@@ -1668,6 +1667,12 @@ shma (n.) - pl. of smores
 
 shmapcorn (n.) - smore-flavoured popcorn
 
+---------------------------------------------
+Etymology: from German Schnecke ('snail') + Deutsch ('the German language') 
+
+Shneckedeutsch (n.) - gibberish
+---------------------------------------------
+
 shoo-out (n.) - someone who is guaranteed to lose
 
 shoob (n.) - synonym for 6
@@ -1677,12 +1682,6 @@ shoobarodoob (n.) - a parody of a song where intermittent 'shooby dooby's are ad
 shoobatidoob (n.) - the ratio of shoobs to doobs in a given text
 
 shoobie doobie (expr.) - synonym for 67
-
----------------------------------------------
-Etymology: from German Schnecke ('snail') + Deutsch ('the German language') 
-
-Shneckedeutsch (n.) - gibberish
----------------------------------------------
 
 shoreside (adj.) - alt. of seaside, applicable even to bodies of water which are not seas 
 
@@ -1904,8 +1903,6 @@ thesaurus-monger (n.) - one who habitually uses obscure synonyms for regular wor
 
 thirge (v.) - to cut into three equal pieces
 
-the 'thsma (n.) - athsma
-
 thneedy (adj.) - soft, stretchy, and useful
 
 three-eyes (expr.) - an insult of someone with a monocle
@@ -1914,11 +1911,11 @@ thropen (adj.) - with mouth agape
 
 throwing bangs (adj.) - in an angry and copralic frenzy
 
+the 'thsma (n.) - athsma
+
 thum (n.) - /thəm/ 'etymologically correct' spelling of "thumb." 
 
 to beat the cat out of the bag (expr.) - to persist in discussion about a topic for so long you accidentally let slip or reveal a major secret
-
-to put the cart before the dead horse (expr.) - to do something in the wrong order, especially while also failing to notice significant, glaring issues
 
 toikful (adj.) - thankful and full of turkey
 
@@ -1926,19 +1923,21 @@ tombplace (n.) - synonym for cemetery or graveyard
 
 tonque-trainer (n.) - a tongue twister that is semantically and grammatically coherent, or even useful
 
+to put the cart before the dead horse (expr.) - to do something in the wrong order, especially while also failing to notice significant, glaring issues
+
 torrible (adj) - requiring raised voices in order to have even basic conversation, like a loud dance floor or an indoor stadium
 
 torror (adj.) - dryness
+
+TOTLer (n.) - a person who regularly visits the Theatre on the Lake
+
+Touygee bouygee (n.) - Turkey Burger or more like Marlowe having a stroke trying to say Turkey Buger
 
 ---------------------------------------------
 to whom of which of that (expr.) - (*informal, chiefly Band Kid*) a denunciation of the absurd nature of the english language
 - (derogatory) a statement implying the listener has a poor grasp of the english language
 - a statement decrying a percieved lack of intelligence, education, or erudition in the listener
 ---------------------------------------------
-
-TOTLer (n.) - a person who regularly visits the Theatre on the Lake
-
-Touygee bouygee (n.) - Turkey Burger or more like Marlowe having a stroke trying to say Turkey Buger
 
 trev (v.) - what Trevor does
 
@@ -2047,23 +2046,23 @@ violable (adj.) - reasonably able to be accompanied by a viola
 
 Vivaldessert (n.) - a musical variety of cake
 
-v'you (v. + pron.) - contraction of "have you"
-
 voce vosta (adj.) - spoken in the accent of Damien DalVosta or (n.) a word so spoken 
+
+v'you (v. + pron.) - contraction of "have you"
 
 waffwich (n.) - a waffle sandwich
 
-Wajaw 36B (n.) - a planet of unicyclists
-
 wagiant (n.) - a coward, especially a defiant coward
+
+Wajaw 36B (n.) - a planet of unicyclists
 
 wallify (v.) - to pin, tape, or otherwise affix something to the wall 
 
 Walmeijarget (n.) - monopolistic gigastore resulting from the anti-anti-trust merger of Walmart Inc., Meijer Companies LTD., and Target Corporation.
 
-water under the bed (expr.) - it's become a big problem again
-
 waterloose (adj.) - not watertight
+
+water under the bed (expr.) - it's become a big problem again
 
 Wdoba (n.) - Qdoba when they have meal swipes
 

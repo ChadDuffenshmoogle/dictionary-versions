@@ -79,7 +79,7 @@ function partition(str, sep) {
 
 function parseCorpus(text) {
   const m = text.match(/-----CORPUS-----\s*\n([\s\S]*?)\n-----DICTIONARY PROPER-----/);
-  if (!m) return { terms: [], found: false };
+  if (!m) return { terms: [], letterGroups: [], found: false };
   const corpusText = m[1];
   const parts = corpusText.split(/\n([A-Z]):\s+/);
   const byLetter = {};
@@ -98,11 +98,25 @@ function parseCorpus(text) {
     addTerms(parts[i], parts[i + 1]);
   }
 
+  // One group per "X:" marker occurrence, in file order, keeping each
+  // occurrence's own term order intact (rather than merging same-letter
+  // occurrences together) -- used to check alphabetization both within a
+  // listing and across the letter markers themselves.
+  const letterGroups = [];
+  function pushGroup(letter, chunk) {
+    const terms = chunk.split(',').map(t => t.trim()).filter(Boolean);
+    letterGroups.push({ letter, terms });
+  }
+  if (lm) pushGroup(lm[1], lm[2]);
+  for (let i = 1; i < parts.length - 1; i += 2) {
+    pushGroup(parts[i], parts[i + 1]);
+  }
+
   const terms = [];
   Object.entries(byLetter).forEach(([letter, list]) => {
     list.forEach(term => terms.push({ term, letter }));
   });
-  return { terms, found: true };
+  return { terms, letterGroups, found: true };
 }
 
 const METADATA_LABELS = ['etymology', 'derived terms', 'synonym', 'synonyms', 'ex', 'example', 'notes', 'antonym', 'antonyms'];
@@ -345,6 +359,49 @@ function runCheck() {
       out.push(`\n\u26A0 ${misplaced.length} term(s) in CORPUS are filed under a letter that doesn't match their first letter:`);
       misplaced.forEach(({ term, letter, expected }) =>
         out.push(`   - "${term}" is under "${letter}:" but looks like it should be under "${expected}:"`));
+    }
+  }
+
+  // --- Alphabetization checks ---
+  function findOutOfOrder(termList) {
+    const issues = [];
+    for (let i = 1; i < termList.length; i++) {
+      if (sortKeyIgnorePunct(termList[i]) < sortKeyIgnorePunct(termList[i - 1])) {
+        issues.push({ prev: termList[i - 1], cur: termList[i] });
+      }
+    }
+    return issues;
+  }
+
+  if (proper.found) {
+    const properMisorder = findOutOfOrder(properEntries.map(e => e.parsed.term));
+    if (properMisorder.length) {
+      out.push(`\n\u26A0 ${properMisorder.length} place(s) in DICTIONARY PROPER are out of alphabetical order:`);
+      properMisorder.forEach(({ prev, cur }) => out.push(`   - "${cur}" comes right after "${prev}", but should come before it`));
+    }
+  }
+
+  if (corpus.found) {
+    const letterMisorder = [];
+    corpus.letterGroups.forEach(({ letter, terms }) => {
+      findOutOfOrder(terms).forEach(({ prev, cur }) => letterMisorder.push({ letter, prev, cur }));
+    });
+    if (letterMisorder.length) {
+      out.push(`\n\u26A0 ${letterMisorder.length} place(s) in the CORPUS index are out of alphabetical order within their letter section:`);
+      letterMisorder.forEach(({ letter, prev, cur }) =>
+        out.push(`   - in "${letter}:", "${cur}" comes right after "${prev}", but should come before it`));
+    }
+
+    const letterSeq = corpus.letterGroups.map(g => g.letter);
+    const letterSeqIssues = [];
+    for (let i = 1; i < letterSeq.length; i++) {
+      if (letterSeq[i] < letterSeq[i - 1]) {
+        letterSeqIssues.push({ prev: letterSeq[i - 1], cur: letterSeq[i] });
+      }
+    }
+    if (letterSeqIssues.length) {
+      out.push(`\n\u26A0 ${letterSeqIssues.length} place(s) in the CORPUS index have letter sections out of order:`);
+      letterSeqIssues.forEach(({ prev, cur }) => out.push(`   - "${cur}:" comes right after "${prev}:", but should come before it`));
     }
   }
 

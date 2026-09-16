@@ -65,6 +65,7 @@ function stripAccents(s) {
 
 function stripLeadingArticle(s) {
   let term = s.includes(' (') ? s.split(' (')[0] : s;
+  term = term.replace(/^[\s'"\-]+/, '');
   if (/^the\s/i.test(term)) term = term.slice(4);
   return term;
 }

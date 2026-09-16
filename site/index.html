@@ -138,28 +138,30 @@
     font-size: 0.8rem;
     margin-top: 6px;
   }
-  .word-cloud {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: baseline;
-    justify-content: center;
-    gap: 4px 14px;
-    padding: 12px 6px;
-    max-height: 520px;
+  .word-cloud-outer {
+    max-height: 640px;
     overflow-y: auto;
+    overflow-x: hidden;
+    border-radius: 8px;
+    margin-top: 8px;
+  }
+  .word-cloud-canvas {
+    position: relative;
+    width: 100%;
   }
   .cloud-word {
+    position: absolute;
     cursor: pointer;
     font-weight: 700;
-    line-height: 1.3;
     white-space: nowrap;
     transition: opacity 0.15s;
   }
   .cloud-word:hover {
-    opacity: 0.65;
+    opacity: 0.6;
     text-decoration: underline;
   }
 </style>
+
 </head>
 <body>
   <h1>Unicyclist Dictionary — Live Stats</h1>
@@ -285,7 +287,7 @@
 
     <div class="card wide">
       <h2>Word Cloud</h2>
-      <div id="wordCloud" class="word-cloud"></div>
+      <div class="word-cloud-outer"><div id="wordCloud" class="word-cloud-canvas"></div></div>
       <div style="color:var(--muted); font-size:0.8rem; margin-top:6px;">Every word in the dictionary. Click one to look it up.</div>
     </div>
   </div>
@@ -891,12 +893,22 @@ async function main() {
     },
   });
 
-  // Word cloud -- every term gets a span, sized inversely to its length
-  // (short words read as bold and prominent, long ones recede) since
+  // Word cloud -- every term placed via spiral collision-avoidant packing
+  // (the classic word-cloud layout), sized inversely to length since
   // there's no real "frequency" to size by -- each term is one entry.
-  // Order is shuffled once per load purely for visual variety; clicking a
-  // word jumps straight to it in the searchable dictionary.
-  const cloudPalette = ['#6ee7b7', '#7dd3fc', '#fbbf24', '#f472b6', '#a78bfa', '#fb923c', '#34d399', '#60a5fa'];
+  // Color comes from part of speech, using the exact same palette and
+  // label order as the POS pie chart above, so the colors mean the same
+  // thing in both places.
+  const termPosMap = new Map();
+  (stats.definitions_by_length_asc || []).forEach(d => {
+    if (!termPosMap.has(d.term)) termPosMap.set(d.term, d.pos || '(no pos)');
+  });
+
+  function colorForPos(pos) {
+    const idx = posLabels.indexOf(pos || '(no pos)');
+    return posColors[(idx === -1 ? posLabels.length : idx) % posColors.length];
+  }
+
   const cloudTerms = stats.words_by_length_asc || [];
 
   function visualLength(term) {
@@ -908,28 +920,81 @@ async function main() {
 
   function sizeForLength(len) {
     const t = maxLen === minLen ? 0.5 : (len - minLen) / (maxLen - minLen);
-    return Math.max(0.7, Math.min(2.6, 2.6 - t * 1.9));
+    return Math.max(11, Math.min(40, 40 - t * 27)); // px
   }
 
-  function shuffled(arr) {
-    const a = arr.slice();
-    for (let i = a.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [a[i], a[j]] = [a[j], a[i]];
-    }
-    return a;
-  }
+  // Biggest words placed first (spiraling out from the center) reads as
+  // a proper cloud; smallest-last would leave big gaps unfilled.
+  const cloudOrder = cloudTerms.slice().sort((a, b) => visualLength(b) - visualLength(a));
 
-  const cloudOrder = shuffled(cloudTerms);
   const wordCloudEl = document.getElementById('wordCloud');
-  wordCloudEl.innerHTML = cloudOrder.map(term => {
-    const size = sizeForLength(visualLength(term)).toFixed(2);
-    const color = cloudPalette[Math.floor(Math.random() * cloudPalette.length)];
-    return `<span class="cloud-word" data-term="${escapeHtml(term)}" style="font-size:${size}rem; color:${color};">${escapeHtml(term)}</span>`;
-  }).join('');
+  wordCloudEl.innerHTML = '';
 
-  wordCloudEl.querySelectorAll('.cloud-word').forEach(el => {
-    el.addEventListener('click', () => openSearchModal(el.dataset.term));
+  const cw = wordCloudEl.clientWidth || wordCloudEl.parentElement.clientWidth || 800;
+
+  // Estimate the canvas height needed from the total area of all the
+  // words (with a packing-inefficiency multiplier), rather than a fixed
+  // guess -- keeps it right-sized whether there are 50 words or 5,000.
+  const estimatedArea = cloudTerms.reduce((sum, t) => {
+    const size = sizeForLength(visualLength(t));
+    const w = t.length * size * 0.6 + 12;
+    const h = size * 1.5;
+    return sum + w * h;
+  }, 0);
+  const ch = Math.max(500, Math.ceil((estimatedArea * 1.7) / cw));
+  wordCloudEl.style.height = ch + 'px';
+
+  const placed = [];
+  function overlaps(x, y, w, h) {
+    for (const p of placed) {
+      if (Math.abs(x - p.x) * 2 < (w + p.w) && Math.abs(y - p.y) * 2 < (h + p.h)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  cloudOrder.forEach(term => {
+    const pos = termPosMap.get(term) || '(no pos)';
+    const size = sizeForLength(visualLength(term));
+    const color = colorForPos(pos);
+
+    const span = document.createElement('span');
+    span.className = 'cloud-word';
+    span.textContent = term;
+    span.style.fontSize = size + 'px';
+    span.style.color = color;
+    span.style.left = '0px';
+    span.style.top = '0px';
+    wordCloudEl.appendChild(span);
+
+    const rect = span.getBoundingClientRect();
+    const w = rect.width + 8;
+    const h = rect.height + 4;
+
+    let x = cw / 2, y = ch / 2;
+    let angle = Math.random() * Math.PI * 2;
+    let radius = 0;
+    let tries = 0;
+    const maxTries = 6000;
+
+    while (overlaps(x, y, w, h) && tries < maxTries) {
+      angle += 0.35;
+      radius += 2.4;
+      x = cw / 2 + radius * Math.cos(angle);
+      y = ch / 2 + radius * Math.sin(angle) * 0.72; // flatten vertically for a wide card
+      tries++;
+    }
+
+    x = Math.max(w / 2, Math.min(cw - w / 2, x));
+    y = Math.max(h / 2, Math.min(ch - h / 2, y));
+
+    span.style.left = (x - w / 2 + 4) + 'px';
+    span.style.top = (y - h / 2 + 2) + 'px';
+
+    placed.push({ x, y, w, h });
+
+    span.addEventListener('click', () => openSearchModal(term));
   });
 
   const fillList = (id, items, render) => {

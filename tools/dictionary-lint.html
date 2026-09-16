@@ -284,11 +284,18 @@ function runCheck() {
   const properEntries = proper.entries.filter(e => e.parsed);
   const unparseable = proper.entries.filter(e => !e.parsed);
 
+  const normalizePosKey = pos => (pos || '').replace(/[.,\s]/g, '').toLowerCase();
+
   const properNorm = new Map();
   properEntries.forEach(e => {
-    const norm = e.parsed.term.toLowerCase().trim();
-    if (!properNorm.has(norm)) properNorm.set(norm, []);
-    properNorm.get(norm).push(e);
+    // Case-sensitive on purpose: a capitalized form and a lowercase form
+    // of the same spelling are how this dictionary tells a proper-noun
+    // sense apart from a common-noun sense (they're often tagged with
+    // the exact same pos, e.g. both "(n.)"), so folding case away here
+    // would wrongly merge two distinct entries into one.
+    const key = `${e.parsed.term.trim()}::${normalizePosKey(e.parsed.pos)}`;
+    if (!properNorm.has(key)) properNorm.set(key, []);
+    properNorm.get(key).push(e);
   });
 
   if (unparseable.length) {
@@ -310,8 +317,8 @@ function runCheck() {
 
   const properDupes = [...properNorm.entries()].filter(([, v]) => v.length > 1);
   if (properDupes.length) {
-    out.push(`\n\u26A0 ${properDupes.length} term(s) appear more than once:`);
-    properDupes.forEach(([, list]) => out.push(`   - "${list[0].parsed.term}" (${list.length}x)`));
+    out.push(`\n\u26A0 ${properDupes.length} term(s) appear more than once with the same part of speech (spelled the same and tagged as the same kind of word isn't usually two separate senses -- likely a real duplicate):`);
+    properDupes.forEach(([, list]) => out.push(`   - "${list[0].parsed.term}" (${list[0].parsed.pos || 'no pos'}) (${list.length}x)`));
   }
 
   // --- Alphabetization check ---

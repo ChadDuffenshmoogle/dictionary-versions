@@ -940,13 +940,10 @@ async function main() {
     return sum + w * h;
   }, 0);
   const neededArea = rawArea / 0.5; // packing-inefficiency margin
-  let cssWidth = Math.round(Math.sqrt(neededArea * (16 / 9)));
-  cssWidth = Math.min(canvas.parentElement.clientWidth || 1200, cssWidth);
-  const cssHeight = Math.round(cssWidth * 9 / 16);
-  const dbg = document.createElement('div');
-  dbg.style.color = '#fbbf24';
-  dbg.textContent = `DEBUG: parentWidth=${canvas.parentElement.clientWidth} cssWidth=${cssWidth} cssHeight=${cssHeight} neededArea=${Math.round(neededArea)} words=${allCloudTerms.length}`;
-  canvas.parentElement.insertBefore(dbg, canvas);
+  const cssWidth = canvas.parentElement.clientWidth || 1200;
+  const min169Height = Math.round(cssWidth * 9 / 16);
+  const neededHeight = Math.ceil(neededArea / cssWidth);
+  const cssHeight = Math.max(min169Height, neededHeight);
 
   // A term whose natural size would still be wider than the canvas gets
   // shrunk further (down to a 6px floor) before placement is attempted,

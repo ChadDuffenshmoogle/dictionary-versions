@@ -1009,13 +1009,25 @@ async function main() {
   canvas.height = Math.round(cssHeight * dpr);
   setTimeout(() => {
     const r = canvas.getBoundingClientRect();
+    const usedArea = placedBoxes.reduce((s, p) => s + p.w * p.h, 0);
+    const maxRightEdge = placedBoxes.length ? Math.max(...placedBoxes.map(p => p.x + p.w / 2)) : 0;
+    const maxBottomEdge = placedBoxes.length ? Math.max(...placedBoxes.map(p => p.y + p.h / 2)) : 0;
+    const overflowingRight = placedBoxes.filter(p => p.x + p.w / 2 > cssWidth);
+    const canvasArea = cssWidth * cssHeight;
     console.log('CLOUD DEBUG', {
       parentClientWidth: canvas.parentElement.clientWidth,
-      cssWidth, cssHeight, neededArea: Math.round(neededArea),
+      cssWidth, cssHeight, canvasArea,
+      neededArea: Math.round(neededArea),
+      usedArea: Math.round(usedArea),
+      packingEfficiency: (usedArea / canvasArea).toFixed(3) + ' (fraction of canvas actually covered by word boxes)',
+      wastedAreaFraction: (1 - usedArea / canvasArea).toFixed(3),
+      maxRightEdge: Math.round(maxRightEdge), maxBottomEdge: Math.round(maxBottomEdge),
+      overflowingRightCount: overflowingRight.length,
+      overflowingRightSample: overflowingRight.slice(0, 5).map(p => ({ term: p.term, edge: Math.round(p.x + p.w / 2) })),
       dpr, canvasBufferW: canvas.width, canvasBufferH: canvas.height,
       canvasStyleW: canvas.style.width, canvasStyleH: canvas.style.height,
       actualRenderedW: r.width, actualRenderedH: r.height,
-      words: allCloudTerms.length,
+      placed: placedBoxes.length, dropped, words: allCloudTerms.length,
     });
   }, 0);
   ctx.scale(dpr, dpr);

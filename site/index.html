@@ -943,8 +943,10 @@ async function main() {
   let cssWidth = Math.round(Math.sqrt(neededArea * (16 / 9)));
   cssWidth = Math.min(canvas.parentElement.clientWidth || 1200, cssWidth);
   const cssHeight = Math.round(cssWidth * 9 / 16);
-  document.getElementById('wordCloudCaption').textContent =
-    `DEBUG: parentWidth=${canvas.parentElement.clientWidth} cssWidth=${cssWidth} cssHeight=${cssHeight} neededArea=${Math.round(neededArea)} words=${allCloudTerms.length}`;
+  const dbg = document.createElement('div');
+  dbg.style.color = '#fbbf24';
+  dbg.textContent = `DEBUG: parentWidth=${canvas.parentElement.clientWidth} cssWidth=${cssWidth} cssHeight=${cssHeight} neededArea=${Math.round(neededArea)} words=${allCloudTerms.length}`;
+  canvas.parentElement.insertBefore(dbg, canvas);
 
   // A term whose natural size would still be wider than the canvas gets
   // shrunk further (down to a 6px floor) before placement is attempted,

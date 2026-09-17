@@ -139,9 +139,6 @@
     margin-top: 6px;
   }
   .word-cloud-outer {
-    max-height: 640px;
-    overflow-y: auto;
-    overflow-x: auto;
     border-radius: 8px;
     margin-top: 8px;
   }
@@ -177,6 +174,12 @@
   .phrase-word:hover {
     opacity: 0.6;
     text-decoration: underline;
+  }  .cloud-breakout {
+    width: 96vw;
+    max-width: 96vw;
+    margin-left: calc(-48vw + 50%);
+    margin-right: calc(-48vw + 50%);
+    box-sizing: border-box;
   }
 </style>
 
@@ -303,7 +306,7 @@
       <div style="color:var(--muted); font-size:0.8rem; margin-top:6px;">Click a slice to see all words of that type.</div>
     </div>
 
-    <div class="card wide">
+    <div class="card wide cloud-breakout">
       <h2>Word Cloud</h2>
       <div class="word-cloud-outer"><div id="wordCloud" class="word-cloud-canvas"></div></div>
       <div id="phraseList" class="word-cloud-phrases"></div>
@@ -959,12 +962,12 @@ async function main() {
   function baseSizeForLength(len) {
     const clipped = Math.max(lenFloor, Math.min(lenCeil, len));
     const t = (clipped - lenFloor) / (lenCeil - lenFloor);
-    return Math.max(11, Math.min(40, 40 - t * 27)); // px
+    return Math.max(7, Math.min(20, 20 - t * 13)); // px
   }
 
   const wordCloudEl = document.getElementById('wordCloud');
   wordCloudEl.innerHTML = '';
-  const cw = wordCloudEl.parentElement.clientWidth || 800;
+  const cw = wordCloudEl.parentElement.clientWidth || Math.floor(window.innerWidth * 0.9);
 
   function estWidth(term, size) {
     return term.length * size * 0.58 + 10;
@@ -1035,11 +1038,11 @@ async function main() {
     while (overlaps(x, y, w, h) && tries < maxTries) {
       angle += 0.35;
       radius += 2.4;
-      // Compressed horizontally relative to vertically, so the natural
-      // shape is a tall column rather than a wide ellipse -- this card
-      // has much more room to scroll down than sideways.
-      x = radius * Math.cos(angle) * 0.55;
-      y = radius * Math.sin(angle);
+      // The card now spans most of the viewport width, so let the shape
+      // spread wide (flatten vertically instead) to fill it -- minimizes
+      // how much extra height/scrolling hundreds of words actually need.
+      x = radius * Math.cos(angle);
+      y = radius * Math.sin(angle) * 0.75;
       tries++;
     }
 

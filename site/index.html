@@ -141,13 +141,12 @@
   .word-cloud-outer {
     max-height: 640px;
     overflow-y: auto;
-    overflow-x: hidden;
+    overflow-x: auto;
     border-radius: 8px;
     margin-top: 8px;
   }
   .word-cloud-canvas {
     position: relative;
-    width: 100%;
   }
   .cloud-word {
     position: absolute;
@@ -157,6 +156,25 @@
     transition: opacity 0.15s;
   }
   .cloud-word:hover {
+    opacity: 0.6;
+    text-decoration: underline;
+  }
+  .word-cloud-phrases {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 18px;
+    padding: 12px 4px 0 4px;
+    margin-top: 10px;
+    border-top: 1px solid #262a33;
+  }
+  .phrase-word {
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 0.95rem;
+    line-height: 1.4;
+    transition: opacity 0.15s;
+  }
+  .phrase-word:hover {
     opacity: 0.6;
     text-decoration: underline;
   }
@@ -288,7 +306,8 @@
     <div class="card wide">
       <h2>Word Cloud</h2>
       <div class="word-cloud-outer"><div id="wordCloud" class="word-cloud-canvas"></div></div>
-      <div style="color:var(--muted); font-size:0.8rem; margin-top:6px;">Every word in the dictionary. Click one to look it up.</div>
+      <div id="phraseList" class="word-cloud-phrases"></div>
+      <div id="wordCloudCaption" style="color:var(--muted); font-size:0.8rem; margin-top:6px;">Every word in the dictionary, colored by part of speech. Click one to look it up.</div>
     </div>
   </div>
 
@@ -893,12 +912,20 @@ async function main() {
     },
   });
 
-  // Word cloud -- every term placed via spiral collision-avoidant packing
-  // (the classic word-cloud layout), sized inversely to length since
-  // there's no real "frequency" to size by -- each term is one entry.
+  // Word cloud -- split into single words (get a real spiral-packed
+  // spatial cloud) and multi-word phrase/idiom entries (a simple wrapped
+  // list underneath instead). Packing a full idiom like "better a bird
+  // in the hand than a dead horse in the bush" into the same spatial
+  // layout as a single word is what was forcing the whole cloud far
+  // wider than the card -- a handful of long phrases dominated the
+  // layout for every other word. Splitting them out fixes that at the
+  // root rather than just compressing everything to compensate.
+  //
   // Color comes from part of speech, using the exact same palette and
   // label order as the POS pie chart above, so the colors mean the same
-  // thing in both places.
+  // thing in both places. Size (for single words) is inversely related
+  // to length since there's no real "frequency" to size by -- each term
+  // is one entry.
   const termPosMap = new Map();
   (stats.definitions_by_length_asc || []).forEach(d => {
     if (!termPosMap.has(d.term)) termPosMap.set(d.term, d.pos || '(no pos)');
@@ -909,40 +936,59 @@ async function main() {
     return posColors[(idx === -1 ? posLabels.length : idx) % posColors.length];
   }
 
-  const cloudTerms = stats.words_by_length_asc || [];
+  const allCloudTerms = stats.words_by_length_asc || [];
+  const singleWordTerms = allCloudTerms.filter(t => !t.includes(' '));
+  const phraseTerms = allCloudTerms.filter(t => t.includes(' '));
 
   function visualLength(term) {
     return term.replace(/[^a-zA-Z0-9]/g, '').length || 1;
   }
-  const cloudLens = cloudTerms.map(visualLength);
-  const minLen = cloudLens.length ? Math.min(...cloudLens) : 1;
-  const maxLen = cloudLens.length ? Math.max(...cloudLens) : 1;
 
-  function sizeForLength(len) {
-    const t = maxLen === minLen ? 0.5 : (len - minLen) / (maxLen - minLen);
+  // Percentile clipping instead of raw min/max: a single unusually long
+  // entry would otherwise compress every normal-length word's size into
+  // a narrow band.
+  const sortedLens = singleWordTerms.map(visualLength).slice().sort((a, b) => a - b);
+  function percentile(p) {
+    if (!sortedLens.length) return 1;
+    const idx = Math.min(sortedLens.length - 1, Math.floor(p * sortedLens.length));
+    return sortedLens[idx];
+  }
+  const lenFloor = percentile(0.02);
+  const lenCeil = Math.max(lenFloor + 1, percentile(0.9));
+
+  function baseSizeForLength(len) {
+    const clipped = Math.max(lenFloor, Math.min(lenCeil, len));
+    const t = (clipped - lenFloor) / (lenCeil - lenFloor);
     return Math.max(11, Math.min(40, 40 - t * 27)); // px
   }
 
-  // Biggest words placed first (spiraling out from the center) reads as
-  // a proper cloud; smallest-last would leave big gaps unfilled.
-  const cloudOrder = cloudTerms.slice().sort((a, b) => visualLength(b) - visualLength(a));
-
   const wordCloudEl = document.getElementById('wordCloud');
   wordCloudEl.innerHTML = '';
+  const cw = wordCloudEl.parentElement.clientWidth || 800;
 
-  const cw = wordCloudEl.clientWidth || wordCloudEl.parentElement.clientWidth || 800;
+  function estWidth(term, size) {
+    return term.length * size * 0.58 + 10;
+  }
 
-  // Estimate the canvas height needed from the total area of all the
-  // words (with a packing-inefficiency multiplier), rather than a fixed
-  // guess -- keeps it right-sized whether there are 50 words or 5,000.
-  const estimatedArea = cloudTerms.reduce((sum, t) => {
-    const size = sizeForLength(visualLength(t));
-    const w = t.length * size * 0.6 + 12;
-    const h = size * 1.5;
-    return sum + w * h;
-  }, 0);
-  const ch = Math.max(500, Math.ceil((estimatedArea * 1.7) / cw));
-  wordCloudEl.style.height = ch + 'px';
+  // A word whose natural size would make it wider than the container
+  // gets its own font shrunk further (down to an 8px floor) so no single
+  // word can blow out the whole layout's width by itself.
+  const sizeCache = new Map();
+  function sizeForTerm(term) {
+    if (sizeCache.has(term)) return sizeCache.get(term);
+    let size = baseSizeForLength(visualLength(term));
+    const maxAllowedWidth = cw * 0.9;
+    let w = estWidth(term, size);
+    if (w > maxAllowedWidth) {
+      size = Math.max(8, size * (maxAllowedWidth / w));
+    }
+    sizeCache.set(term, size);
+    return size;
+  }
+
+  // Biggest font size placed first (spiraling out from the center) is
+  // the standard word-cloud convention.
+  const cloudOrder = singleWordTerms.slice().sort((a, b) => sizeForTerm(b) - sizeForTerm(a));
 
   const placed = [];
   function overlaps(x, y, w, h) {
@@ -954,9 +1000,12 @@ async function main() {
     return false;
   }
 
+  let dropped = 0;
+  const spans = [];
+
   cloudOrder.forEach(term => {
     const pos = termPosMap.get(term) || '(no pos)';
-    const size = sizeForLength(visualLength(term));
+    const size = sizeForTerm(term);
     const color = colorForPos(pos);
 
     const span = document.createElement('span');
@@ -964,37 +1013,86 @@ async function main() {
     span.textContent = term;
     span.style.fontSize = size + 'px';
     span.style.color = color;
-    span.style.left = '0px';
-    span.style.top = '0px';
     wordCloudEl.appendChild(span);
 
     const rect = span.getBoundingClientRect();
     const w = rect.width + 8;
     const h = rect.height + 4;
 
-    let x = cw / 2, y = ch / 2;
+    // The spiral searches freely from the center with NO bound and NO
+    // clamp -- clamping a found position back inside a pre-guessed
+    // canvas size (a previous version of this did) can silently shove a
+    // word into a spot that overlaps something else, which is exactly
+    // what produced an unreadable pileup before this fix. The actual
+    // bounding box of everything placed is measured afterward instead,
+    // and the container is sized to fit that.
+    let x = 0, y = 0;
     let angle = Math.random() * Math.PI * 2;
     let radius = 0;
     let tries = 0;
-    const maxTries = 6000;
+    const maxTries = 10000;
 
     while (overlaps(x, y, w, h) && tries < maxTries) {
       angle += 0.35;
       radius += 2.4;
-      x = cw / 2 + radius * Math.cos(angle);
-      y = ch / 2 + radius * Math.sin(angle) * 0.72; // flatten vertically for a wide card
+      // Compressed horizontally relative to vertically, so the natural
+      // shape is a tall column rather than a wide ellipse -- this card
+      // has much more room to scroll down than sideways.
+      x = radius * Math.cos(angle) * 0.55;
+      y = radius * Math.sin(angle);
       tries++;
     }
 
-    x = Math.max(w / 2, Math.min(cw - w / 2, x));
-    y = Math.max(h / 2, Math.min(ch - h / 2, y));
+    if (tries >= maxTries) {
+      // Standard word-cloud behavior (matches d3-cloud): a word that
+      // can't find a non-overlapping spot is skipped, never forced into
+      // a collision.
+      wordCloudEl.removeChild(span);
+      dropped++;
+      return;
+    }
 
-    span.style.left = (x - w / 2 + 4) + 'px';
-    span.style.top = (y - h / 2 + 2) + 'px';
+    placed.push({ x, y, w, h, span, term });
+  });
 
-    placed.push({ x, y, w, h });
+  // Normalize: shift everything so the leftmost/topmost edge sits at 0,
+  // then size the container to fit the actual bounding box (plus a
+  // margin), rather than guessing a size up front and clamping into it.
+  if (placed.length) {
+    const pad = 16;
+    const minX = Math.min(...placed.map(p => p.x - p.w / 2));
+    const maxX = Math.max(...placed.map(p => p.x + p.w / 2));
+    const minY = Math.min(...placed.map(p => p.y - p.h / 2));
+    const maxY = Math.max(...placed.map(p => p.y + p.h / 2));
 
-    span.addEventListener('click', () => openSearchModal(term));
+    wordCloudEl.style.width = Math.max(cw, Math.ceil(maxX - minX) + pad * 2) + 'px';
+    wordCloudEl.style.height = (Math.ceil(maxY - minY) + pad * 2) + 'px';
+
+    const offsetX = -minX + pad;
+    const offsetY = -minY + pad;
+    placed.forEach(p => {
+      p.span.style.left = (p.x - p.w / 2 + offsetX) + 'px';
+      p.span.style.top = (p.y - p.h / 2 + offsetY) + 'px';
+      p.span.addEventListener('click', () => openSearchModal(p.term));
+    });
+  }
+
+  if (dropped > 0) {
+    document.getElementById('wordCloudCaption').textContent =
+      `Every word in the dictionary, colored by part of speech (${dropped} extremely long ` +
+      `${dropped === 1 ? 'entry' : 'entries'} couldn't fit and ${dropped === 1 ? 'was' : 'were'} skipped). Click one to look it up.`;
+  }
+
+  // Multi-word phrase/idiom entries: a plain wrapped list rather than
+  // spatial packing.
+  const phraseListEl = document.getElementById('phraseList');
+  phraseListEl.innerHTML = phraseTerms.map(term => {
+    const pos = termPosMap.get(term) || '(no pos)';
+    const color = colorForPos(pos);
+    return `<span class="phrase-word" data-term="${escapeHtml(term)}" style="color:${color};">${escapeHtml(term)}</span>`;
+  }).join('');
+  phraseListEl.querySelectorAll('.phrase-word').forEach(el => {
+    el.addEventListener('click', () => openSearchModal(el.dataset.term));
   });
 
   const fillList = (id, items, render) => {

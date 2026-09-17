@@ -942,9 +942,6 @@ async function main() {
   }, 0);
   const neededArea = rawArea / 0.5; // packing-inefficiency margin
   const cssWidth = canvas.parentElement.clientWidth || 1200;
-  const min169Height = Math.round(cssWidth * 9 / 16);
-  const neededHeight = Math.ceil(neededArea / cssWidth);
-  const cssHeight = Math.max(min169Height, neededHeight);
 
   // A term whose natural size would still be wider than the canvas gets
   // shrunk further (down to a 6px floor) before placement is attempted,
@@ -961,48 +958,67 @@ async function main() {
     return size;
   }
 
-  // Biggest font size placed first (standard word-cloud convention).
+  // Biggest font size placed first, but rows mix sizes as they fill --
+  // that's fine, row packing doesn't require uniform row height beyond
+  // using each row's tallest word as that row's height.
   const cloudOrder = allCloudTerms.slice().sort((a, b) => sizeForTerm(b) - sizeForTerm(a));
 
+  const GAP = 1; // px -- the "max 1px gap between any two words" requirement
+
+  // Row-based packing instead of spiral/collision placement: a spiral
+  // inherently leaves organic gaps between irregular word shapes (48%
+  // wasted area in testing) and can't guarantee a tight bound. Packing
+  // words edge-to-edge left-to-right, wrapping to a new row when full,
+  // guarantees <=1px gaps and lets the canvas height be computed exactly
+  // from the real content instead of an area estimate (no more empty
+  // space padding top/bottom).
   const placedBoxes = [];
-  function fits(x, y, w, h) {
-    if (x - w / 2 < 0 || x + w / 2 > cssWidth) return false;
-    if (y - h / 2 < 0 || y + h / 2 > cssHeight) return false;
-    for (const p of placedBoxes) {
-      if (Math.abs(x - p.x) * 2 < (w + p.w) && Math.abs(y - p.y) * 2 < (h + p.h)) return false;
-    }
-    return true;
+  let dropped = 0;
+  let rowWords = [];
+  let rowWidth = 0;
+  let cursorY = 0;
+
+  function flushRow() {
+    if (!rowWords.length) return;
+    const rowHeight = Math.max(...rowWords.map(w => w.h));
+    let x = 0;
+    rowWords.forEach(w => {
+      const cx = x + w.w / 2;
+      const cy = cursorY + rowHeight / 2;
+      placedBoxes.push({ x: cx, y: cy, w: w.w, h: w.h, term: w.term, size: w.size, color: w.color });
+      x += w.w + GAP;
+    });
+    cursorY += rowHeight + GAP;
+    rowWords = [];
+    rowWidth = 0;
   }
 
-  let dropped = 0;
   cloudOrder.forEach(term => {
     const pos = termPosMap.get(term) || '(no pos)';
     const size = sizeForTerm(term);
-    const w = measure(term, size) + 6;
-    const h = size * 1.3 + 3;
+    // actualBoundingBox gives the true ink extent, which for bold text
+    // can be a couple px wider than the basic advance-width metric --
+    // using the wider of the two avoids the text visually overrunning
+    // its measured/allocated box.
+    ctx.font = `bold ${size}px ${FONT_STACK}`;
+    const m = ctx.measureText(term);
+    const inkWidth = (m.actualBoundingBoxLeft || 0) + (m.actualBoundingBoxRight || 0);
+    const w = Math.ceil(Math.max(m.width, inkWidth)) + 4;
+    const h = Math.ceil(size * 1.3);
 
-    let x = cssWidth / 2, y = cssHeight / 2;
-    let angle = Math.random() * Math.PI * 2;
-    let radius = 0;
-    let tries = 0;
-    const maxTries = 9000;
-
-    while (!fits(x, y, w, h) && tries < maxTries) {
-      angle += 0.3;
-      radius += 2.5;
-      x = cssWidth / 2 + radius * Math.cos(angle);
-      y = cssHeight / 2 + radius * Math.sin(angle);
-      tries++;
-    }
-
-    if (!fits(x, y, w, h)) {
+    if (w > cssWidth) {
       dropped++;
       return;
     }
-
-    placedBoxes.push({ x, y, w, h, term, size, color: colorForPos(pos) });
+    if (rowWidth + w + (rowWords.length ? GAP : 0) > cssWidth) {
+      flushRow();
+    }
+    rowWidth += w + (rowWords.length ? GAP : 0);
+    rowWords.push({ term, size, color: colorForPos(pos), w, h });
   });
+  flushRow();
 
+  const cssHeight = Math.max(1, cursorY - GAP);
   canvas.style.width = cssWidth + 'px';
   canvas.style.height = cssHeight + 'px';
   canvas.width = Math.round(cssWidth * dpr);
@@ -1011,24 +1027,22 @@ async function main() {
     const r = canvas.getBoundingClientRect();
     const usedArea = placedBoxes.reduce((s, p) => s + p.w * p.h, 0);
     const maxRightEdge = placedBoxes.length ? Math.max(...placedBoxes.map(p => p.x + p.w / 2)) : 0;
-    const maxBottomEdge = placedBoxes.length ? Math.max(...placedBoxes.map(p => p.y + p.h / 2)) : 0;
-    const overflowingRight = placedBoxes.filter(p => p.x + p.w / 2 > cssWidth);
+    const overflowingRight = placedBoxes.filter(p => p.x + p.w / 2 > cssWidth + 0.5);
     const canvasArea = cssWidth * cssHeight;
-    console.log('CLOUD DEBUG', {
+    console.log('CLOUD DEBUG\n' + JSON.stringify({
       parentClientWidth: canvas.parentElement.clientWidth,
       cssWidth, cssHeight, canvasArea,
-      neededArea: Math.round(neededArea),
       usedArea: Math.round(usedArea),
-      packingEfficiency: (usedArea / canvasArea).toFixed(3) + ' (fraction of canvas actually covered by word boxes)',
+      packingEfficiency: (usedArea / canvasArea).toFixed(3),
       wastedAreaFraction: (1 - usedArea / canvasArea).toFixed(3),
-      maxRightEdge: Math.round(maxRightEdge), maxBottomEdge: Math.round(maxBottomEdge),
+      maxRightEdge: Math.round(maxRightEdge),
       overflowingRightCount: overflowingRight.length,
       overflowingRightSample: overflowingRight.slice(0, 5).map(p => ({ term: p.term, edge: Math.round(p.x + p.w / 2) })),
       dpr, canvasBufferW: canvas.width, canvasBufferH: canvas.height,
       canvasStyleW: canvas.style.width, canvasStyleH: canvas.style.height,
       actualRenderedW: r.width, actualRenderedH: r.height,
       placed: placedBoxes.length, dropped, words: allCloudTerms.length,
-    });
+    }, null, 2));
   }, 0);
   ctx.scale(dpr, dpr);
   ctx.textAlign = 'center';

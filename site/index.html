@@ -941,8 +941,10 @@ async function main() {
   }, 0);
   const neededArea = rawArea / 0.5; // packing-inefficiency margin
   let cssWidth = Math.round(Math.sqrt(neededArea * (16 / 9)));
-  cssWidth = Math.max(canvas.parentElement.clientWidth || 1200, Math.min(2600, cssWidth));
+  cssWidth = Math.min(canvas.parentElement.clientWidth || 1200, cssWidth);
   const cssHeight = Math.round(cssWidth * 9 / 16);
+  document.getElementById('wordCloudCaption').textContent =
+    `DEBUG: parentWidth=${canvas.parentElement.clientWidth} cssWidth=${cssWidth} cssHeight=${cssHeight} neededArea=${Math.round(neededArea)} words=${allCloudTerms.length}`;
 
   // A term whose natural size would still be wider than the canvas gets
   // shrunk further (down to a 6px floor) before placement is attempted,

@@ -1006,6 +1006,17 @@ async function main() {
   canvas.style.height = cssHeight + 'px';
   canvas.width = Math.round(cssWidth * dpr);
   canvas.height = Math.round(cssHeight * dpr);
+  setTimeout(() => {
+    const r = canvas.getBoundingClientRect();
+    console.log('CLOUD DEBUG', {
+      parentClientWidth: canvas.parentElement.clientWidth,
+      cssWidth, cssHeight, neededArea: Math.round(neededArea),
+      dpr, canvasBufferW: canvas.width, canvasBufferH: canvas.height,
+      canvasStyleW: canvas.style.width, canvasStyleH: canvas.style.height,
+      actualRenderedW: r.width, actualRenderedH: r.height,
+      words: allCloudTerms.length,
+    });
+  }, 0);
   ctx.scale(dpr, dpr);
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';

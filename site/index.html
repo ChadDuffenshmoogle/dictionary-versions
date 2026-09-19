@@ -93,6 +93,12 @@
     color: var(--accent);
     font-weight: 700;
   }
+  .dict-entry .pos {
+    color: #6b7280;
+    font-size: 0.75rem;
+    font-weight: 400;
+    font-style: italic;
+  }
   .dict-entry .def {
     color: var(--muted);
     margin-top: 2px;
@@ -279,7 +285,24 @@
     </div>
 
     <div class="card wide cloud-breakout">
-      <h2>Word Cloud</h2>
+      <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px 16px;">
+        <h2 style="margin:0;">Word Cloud</h2>
+        <div style="display:flex; align-items:center; gap:14px; flex-wrap:wrap; font-size:0.8rem; color:var(--muted);">
+          <label style="display:flex; align-items:center; gap:5px; cursor:pointer;">
+            <input type="checkbox" id="cloudMixedOrder"> Mixed order
+          </label>
+          <label style="display:flex; align-items:center; gap:5px; cursor:pointer;">
+            <input type="checkbox" id="cloudRandomSize"> Random sizes
+          </label>
+          <label style="display:flex; align-items:center; gap:5px;">
+            Min <input type="number" id="cloudMinSize" value="9" min="3" max="100" style="width:48px; background:#0f1115; color:var(--accent); border:1px solid #262a33; border-radius:6px; padding:2px 4px;">
+          </label>
+          <label style="display:flex; align-items:center; gap:5px;">
+            Max <input type="number" id="cloudMaxSize" value="38" min="3" max="120" style="width:48px; background:#0f1115; color:var(--accent); border:1px solid #262a33; border-radius:6px; padding:2px 4px;">
+          </label>
+          <button id="cloudRebuild" style="background:var(--accent); color:#0f1115; border:none; border-radius:6px; padding:5px 12px; font-weight:700; cursor:pointer; font-size:0.8rem;">Apply</button>
+        </div>
+      </div>
       <canvas id="wordCloudCanvas"></canvas>
       <div id="wordCloudCaption" style="color:var(--muted); font-size:0.8rem; margin-top:6px;"></div>
     </div>
@@ -438,7 +461,10 @@ async function main() {
 
   dictEntryList.innerHTML = dictEntries.map((e, i) => `
     <div class="dict-entry" data-i="${i}">
-      <div class="term" data-term="${escapeHtml(e.term)}"></div>
+      <div style="display:flex; align-items:baseline; gap:8px; flex-wrap:wrap;">
+        <span class="term" data-term="${escapeHtml(e.term)}"></span>
+        <span class="pos">${escapeHtml(e.pos || '')}</span>
+      </div>
       <div class="def" data-def="${escapeHtml(e.definition)}"></div>
     </div>
   `).join('');
@@ -887,93 +913,66 @@ async function main() {
   });
 
   // Word cloud -- pixel-mask collision (real glyph ink, not bounding
-  // boxes) combined with a skyline placement search. A single spiral
-  // from one fixed center point (a previous version of this) wastes
-  // search budget radiating through already-full space once the center
-  // fills up, and since width is capped but height isn't, that pushes
-  // later words far below the cluster with a big empty gap in between.
-  // Skyline packing instead always places each word wherever the
-  // shortest "stack so far" is, guaranteeing no such gaps, while the
-  // mask collision still lets words nestle into each other's negative
-  // space for an organic (not blocky) look.
-  const termPosMap = new Map();
+  // boxes) combined with skyline placement, wrapped in a rebuildable
+  // function so the controls (order, sizing mode, min/max size) can
+  // regenerate it without a page reload.
+  const cloudTermPosMap = new Map();
   (stats.definitions_by_length_asc || []).forEach(d => {
-    if (!termPosMap.has(d.term)) termPosMap.set(d.term, d.pos || '(no pos)');
+    if (!cloudTermPosMap.has(d.term)) cloudTermPosMap.set(d.term, d.pos || '(no pos)');
   });
-  function colorForPos(pos) {
+  function cloudColorForPos(pos) {
     const idx = posLabels.indexOf(pos || '(no pos)');
     return posColors[(idx === -1 ? posLabels.length : idx) % posColors.length];
   }
 
   const allCloudTerms = stats.words_by_length_asc || [];
-
-  function visualLength(term) {
+  function cloudVisualLength(term) {
     return term.replace(/[^a-zA-Z0-9]/g, '').length || 1;
   }
-  const sortedLens = allCloudTerms.map(visualLength).slice().sort((a, b) => a - b);
-  function percentile(p) {
-    if (!sortedLens.length) return 1;
-    const idx = Math.min(sortedLens.length - 1, Math.floor(p * sortedLens.length));
-    return sortedLens[idx];
+  const cloudSortedLens = allCloudTerms.map(cloudVisualLength).slice().sort((a, b) => a - b);
+  function cloudPercentile(p) {
+    if (!cloudSortedLens.length) return 1;
+    const idx = Math.min(cloudSortedLens.length - 1, Math.floor(p * cloudSortedLens.length));
+    return cloudSortedLens[idx];
   }
-  const lenFloor = percentile(0.02);
-  const lenCeil = Math.max(lenFloor + 1, percentile(0.85));
-  function baseSizeForLength(len) {
-    const clipped = Math.max(lenFloor, Math.min(lenCeil, len));
-    const t = (clipped - lenFloor) / (lenCeil - lenFloor);
-    return Math.max(9, Math.min(38, 38 - t * 29)); // px
-  }
+  const cloudLenFloor = cloudPercentile(0.02);
+  const cloudLenCeil = Math.max(cloudLenFloor + 1, cloudPercentile(0.85));
 
-  const canvas = document.getElementById('wordCloudCanvas');
-  const ctx = canvas.getContext('2d');
-  const dpr = window.devicePixelRatio || 1;
-  const FONT_STACK = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-  const cssWidth = canvas.parentElement.clientWidth || 1200;
+  const cloudCanvas = document.getElementById('wordCloudCanvas');
+  const cloudCtx = cloudCanvas.getContext('2d');
+  const cloudDpr = window.devicePixelRatio || 1;
+  const CLOUD_FONT_STACK = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
 
-  const maskCanvas = document.createElement('canvas');
-  const maskCtx = maskCanvas.getContext('2d');
-  const GRID = 3; // px per collision cell
+  const cloudMaskCanvas = document.createElement('canvas');
+  const cloudMaskCtx = cloudMaskCanvas.getContext('2d');
+  const CLOUD_GRID = 2; // px per collision cell
+  const CLOUD_BUFFER_CELLS = 1; // dilate the occupied set by this many cells so words never touch
 
-  const sizeCache = new Map();
-  function sizeForTerm(term) {
-    if (sizeCache.has(term)) return sizeCache.get(term);
-    let size = baseSizeForLength(visualLength(term));
-    maskCtx.font = `bold ${size}px ${FONT_STACK}`;
-    const w = maskCtx.measureText(term).width;
-    const maxAllowedWidth = cssWidth * 0.94;
-    if (w > maxAllowedWidth) size = Math.max(6, size * (maxAllowedWidth / w));
-    sizeCache.set(term, size);
-    return size;
-  }
-
-  // Biggest font size placed first (standard word-cloud convention).
-  const cloudOrder = allCloudTerms.slice().sort((a, b) => sizeForTerm(b) - sizeForTerm(a));
-
-  function buildMask(term, size) {
-    maskCtx.font = `bold ${size}px ${FONT_STACK}`;
-    const metrics = maskCtx.measureText(term);
+  function buildCloudMask(term, size) {
+    cloudMaskCtx.font = `bold ${size}px ${CLOUD_FONT_STACK}`;
+    const metrics = cloudMaskCtx.measureText(term);
     const padding = 2;
     const w = Math.max(1, Math.ceil(metrics.width) + padding * 2);
     const h = Math.max(1, Math.ceil(size * 1.3) + padding * 2);
-    maskCanvas.width = w;
-    maskCanvas.height = h;
-    maskCtx.clearRect(0, 0, w, h);
-    maskCtx.font = `bold ${size}px ${FONT_STACK}`;
-    maskCtx.fillStyle = '#fff';
-    maskCtx.textAlign = 'left';
-    maskCtx.textBaseline = 'top';
-    maskCtx.fillText(term, padding, padding);
-    const data = maskCtx.getImageData(0, 0, w, h).data;
+    cloudMaskCanvas.width = w;
+    cloudMaskCanvas.height = h;
+    cloudMaskCtx.clearRect(0, 0, w, h);
+    cloudMaskCtx.font = `bold ${size}px ${CLOUD_FONT_STACK}`;
+    cloudMaskCtx.fillStyle = '#fff';
+    cloudMaskCtx.textAlign = 'left';
+    cloudMaskCtx.textBaseline = 'top';
+    cloudMaskCtx.fillText(term, padding, padding);
+    const data = cloudMaskCtx.getImageData(0, 0, w, h).data;
 
-    const gridCols = Math.ceil(w / GRID);
-    const gridRows = Math.ceil(h / GRID);
+    const gridCols = Math.ceil(w / CLOUD_GRID);
+    const gridRows = Math.ceil(h / CLOUD_GRID);
     const cells = [];
-    const colMaxDepth = new Array(gridCols).fill(-1); // deepest ink row per column, for skyline updates
+    const colMaxDepth = new Array(gridCols).fill(-1);
     for (let gj = 0; gj < gridRows; gj++) {
       for (let gi = 0; gi < gridCols; gi++) {
         let hasInk = false;
-        const px0 = gi * GRID, px1 = Math.min(w, px0 + GRID);
-        const py0 = gj * GRID, py1 = Math.min(h, py0 + GRID);
+        const px0 = gi * CLOUD_GRID, px1 = Math.min(w, px0 + CLOUD_GRID);
+        const py0 = gj * CLOUD_GRID, py1 = Math.min(h, py0 + CLOUD_GRID);
         for (let py = py0; py < py1 && !hasInk; py++) {
           for (let px = px0; px < px1 && !hasInk; px++) {
             if (data[(py * w + px) * 4 + 3] > 40) hasInk = true;
@@ -985,127 +984,185 @@ async function main() {
         }
       }
     }
-    return { w, h, cells, gridCols, colMaxDepth };
+    // A dilated version of the cell list, used only when marking cells
+    // occupied (not for the incoming word's own placement test) -- this
+    // is what guarantees a real gap between words instead of them
+    // touching edge-to-edge.
+    const dilated = new Set();
+    cells.forEach(([gi, gj]) => {
+      for (let dj = -CLOUD_BUFFER_CELLS; dj <= CLOUD_BUFFER_CELLS; dj++) {
+        for (let di = -CLOUD_BUFFER_CELLS; di <= CLOUD_BUFFER_CELLS; di++) {
+          dilated.add((gi + di) + '_' + (gj + dj));
+        }
+      }
+    });
+    return { w, h, cells, gridCols, colMaxDepth, dilatedKeys: [...dilated] };
   }
 
-  const occupied = new Set();
-  function cellKey(gi, gj) { return gi + '_' + gj; }
-  function collidesAt(mask, gLeft, gTop) {
-    for (let k = 0; k < mask.cells.length; k++) {
-      if (occupied.has(cellKey(gLeft + mask.cells[k][0], gTop + mask.cells[k][1]))) return true;
+  function buildWordCloud() {
+    const mixedOrder = document.getElementById('cloudMixedOrder').checked;
+    const randomSize = document.getElementById('cloudRandomSize').checked;
+    const minSize = Math.max(3, parseFloat(document.getElementById('cloudMinSize').value) || 9);
+    const maxSize = Math.max(minSize + 1, parseFloat(document.getElementById('cloudMaxSize').value) || 38);
+
+    // A couple px of safety margin against layout-measurement rounding,
+    // so nothing sits flush against (or past) the true right edge.
+    const cssWidth = (cloudCanvas.parentElement.clientWidth || 1200) - 4;
+
+    function baseSizeForLength(len) {
+      const clipped = Math.max(cloudLenFloor, Math.min(cloudLenCeil, len));
+      const t = (clipped - cloudLenFloor) / (cloudLenCeil - cloudLenFloor);
+      return Math.max(minSize, Math.min(maxSize, maxSize - t * (maxSize - minSize)));
     }
-    return false;
-  }
 
-  const gridColsTotal = Math.max(1, Math.floor(cssWidth / GRID));
-  const skyline = new Array(gridColsTotal).fill(0);
+    const sizeCache = new Map();
+    function sizeForTerm(term) {
+      if (sizeCache.has(term)) return sizeCache.get(term);
+      let size = randomSize
+        ? minSize + Math.random() * (maxSize - minSize)
+        : baseSizeForLength(cloudVisualLength(term));
+      cloudMaskCtx.font = `bold ${size}px ${CLOUD_FONT_STACK}`;
+      const w = cloudMaskCtx.measureText(term).width;
+      const maxAllowedWidth = cssWidth * 0.94;
+      if (w > maxAllowedWidth) size = Math.max(6, size * (maxAllowedWidth / w));
+      sizeCache.set(term, size);
+      return size;
+    }
 
-  const placedBoxes = [];
-  let dropped = 0;
-  let maxY = 0;
+    let cloudOrder;
+    if (mixedOrder) {
+      cloudOrder = allCloudTerms.slice();
+      for (let i = cloudOrder.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [cloudOrder[i], cloudOrder[j]] = [cloudOrder[j], cloudOrder[i]];
+      }
+    } else {
+      cloudOrder = allCloudTerms.slice().sort((a, b) => sizeForTerm(b) - sizeForTerm(a));
+    }
 
-  cloudOrder.forEach(term => {
-    const pos = termPosMap.get(term) || '(no pos)';
-    const size = sizeForTerm(term);
-    const mask = buildMask(term, size);
-    if (mask.gridCols > gridColsTotal) { dropped++; return; }
+    const occupied = new Set();
+    function cellKey(gi, gj) { return gi + '_' + gj; }
+    function collidesAt(mask, gLeft, gTop) {
+      for (let k = 0; k < mask.cells.length; k++) {
+        if (occupied.has(cellKey(gLeft + mask.cells[k][0], gTop + mask.cells[k][1]))) return true;
+      }
+      return false;
+    }
 
-    // Slide across every valid column offset, find the one where the
-    // tallest existing stack (skyline) under this word is lowest.
-    let bestGLeft = 0;
-    let bestHeight = Infinity;
-    for (let gLeft = 0; gLeft <= gridColsTotal - mask.gridCols; gLeft++) {
-      let maxH = 0;
+    const gridColsTotal = Math.max(1, Math.floor(cssWidth / CLOUD_GRID));
+    const skyline = new Array(gridColsTotal).fill(0);
+
+    const placedBoxes = [];
+    let dropped = 0;
+    let maxY = 0;
+
+    cloudOrder.forEach(term => {
+      const pos = cloudTermPosMap.get(term) || '(no pos)';
+      const size = sizeForTerm(term);
+      const mask = buildCloudMask(term, size);
+      if (mask.gridCols > gridColsTotal) { dropped++; return; }
+
+      let bestGLeft = 0;
+      let bestHeight = Infinity;
+      for (let gLeft = 0; gLeft <= gridColsTotal - mask.gridCols; gLeft++) {
+        let maxH = 0;
+        for (let gi = 0; gi < mask.gridCols; gi++) {
+          const h = skyline[gLeft + gi];
+          if (h > maxH) maxH = h;
+        }
+        if (maxH < bestHeight) {
+          bestHeight = maxH;
+          bestGLeft = gLeft;
+        }
+      }
+
+      let gTop = bestHeight;
+      let guard = 4000;
+      while (gTop > 0 && !collidesAt(mask, bestGLeft, gTop - 1) && guard-- > 0) {
+        gTop--;
+      }
+      guard = 4000;
+      while (collidesAt(mask, bestGLeft, gTop) && guard-- > 0) {
+        gTop++;
+      }
+
+      mask.dilatedKeys.forEach(key => {
+        const [gi, gj] = key.split('_').map(Number);
+        occupied.add(cellKey(bestGLeft + gi, gTop + gj));
+      });
       for (let gi = 0; gi < mask.gridCols; gi++) {
-        const h = skyline[gLeft + gi];
-        if (h > maxH) maxH = h;
+        if (mask.colMaxDepth[gi] >= 0) {
+          const newHeight = gTop + mask.colMaxDepth[gi] + 1 + CLOUD_BUFFER_CELLS;
+          if (newHeight > skyline[bestGLeft + gi]) skyline[bestGLeft + gi] = newHeight;
+        }
       }
-      if (maxH < bestHeight) {
-        bestHeight = maxH;
-        bestGLeft = gLeft;
-      }
-    }
 
-    let gTop = bestHeight;
-    // The skyline estimate can be conservative (it's a per-column max,
-    // not the word's actual ink shape), so nudge upward through real
-    // mask collision checks to let the word nestle into any true gap the
-    // coarse skyline missed -- this is what makes it look organic rather
-    // than shelved into flat rows.
-    let guard = 4000;
-    while (gTop > 0 && !collidesAt(mask, bestGLeft, gTop - 1) && guard-- > 0) {
-      gTop--;
-    }
-    // Safety: if the skyline estimate was somehow wrong and this spot
-    // does collide, push back down until it doesn't.
-    guard = 4000;
-    while (collidesAt(mask, bestGLeft, gTop) && guard-- > 0) {
-      gTop++;
-    }
-
-    mask.cells.forEach(([gi, gj]) => occupied.add(cellKey(bestGLeft + gi, gTop + gj)));
-    for (let gi = 0; gi < mask.gridCols; gi++) {
-      if (mask.colMaxDepth[gi] >= 0) {
-        const newHeight = gTop + mask.colMaxDepth[gi] + 1;
-        if (newHeight > skyline[bestGLeft + gi]) skyline[bestGLeft + gi] = newHeight;
-      }
-    }
-
-    const left = bestGLeft * GRID;
-    const top = gTop * GRID;
-    maxY = Math.max(maxY, top + mask.h);
-    placedBoxes.push({
-      term, size, color: colorForPos(pos),
-      x: left + mask.w / 2,
-      y: top + mask.h / 2,
+      const left = bestGLeft * CLOUD_GRID;
+      const top = gTop * CLOUD_GRID;
+      maxY = Math.max(maxY, top + mask.h);
+      placedBoxes.push({
+        term, size, color: cloudColorForPos(pos),
+        x: left + mask.w / 2,
+        y: top + mask.h / 2,
+      });
     });
-  });
 
-  const cssHeight = Math.max(100, maxY + 20);
+    const cssHeight = Math.max(100, maxY + 20);
 
-  canvas.style.width = cssWidth + 'px';
-  canvas.style.height = cssHeight + 'px';
-  canvas.width = Math.round(cssWidth * dpr);
-  canvas.height = Math.round(cssHeight * dpr);
-  ctx.scale(dpr, dpr);
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  placedBoxes.forEach(p => {
-    ctx.font = `bold ${p.size}px ${FONT_STACK}`;
-    ctx.fillStyle = p.color;
-    ctx.fillText(p.term, p.x, p.y);
-  });
-
-  canvas.addEventListener('click', (e) => {
-    const rect = canvas.getBoundingClientRect();
-    const scaleX = cssWidth / rect.width;
-    const scaleY = cssHeight / rect.height;
-    const clickX = (e.clientX - rect.left) * scaleX;
-    const clickY = (e.clientY - rect.top) * scaleY;
-    for (let i = placedBoxes.length - 1; i >= 0; i--) {
-      const p = placedBoxes[i];
-      ctx.font = `bold ${p.size}px ${FONT_STACK}`;
-      const tw = ctx.measureText(p.term).width;
-      const th = p.size * 1.3;
-      if (Math.abs(clickX - p.x) * 2 < tw + 6 && Math.abs(clickY - p.y) * 2 < th + 4) {
-        openSearchModal(p.term);
-        return;
-      }
-    }
-  });
-
-  const wordCloudCaption = document.getElementById('wordCloudCaption');
-  if (dropped > 0) {
-    wordCloudCaption.innerHTML =
-      `Showing ${placedBoxes.length} of ${allCloudTerms.length} words, colored by part of speech. ` +
-      `Click a word to look it up, or <a href="#" id="wordCloudSeeAll" style="color:var(--accent);">see all ${allCloudTerms.length} in the searchable dictionary</a>.`;
-    document.getElementById('wordCloudSeeAll').addEventListener('click', (e) => {
-      e.preventDefault();
-      openSearchModal('');
+    cloudCanvas.style.width = cssWidth + 'px';
+    cloudCanvas.style.height = cssHeight + 'px';
+    cloudCanvas.width = Math.round(cssWidth * cloudDpr);
+    cloudCanvas.height = Math.round(cssHeight * cloudDpr);
+    cloudCtx.setTransform(1, 0, 0, 1, 0, 0);
+    cloudCtx.scale(cloudDpr, cloudDpr);
+    cloudCtx.clearRect(0, 0, cssWidth, cssHeight);
+    cloudCtx.textAlign = 'center';
+    cloudCtx.textBaseline = 'middle';
+    placedBoxes.forEach(p => {
+      cloudCtx.font = `bold ${p.size}px ${CLOUD_FONT_STACK}`;
+      cloudCtx.fillStyle = p.color;
+      cloudCtx.fillText(p.term, p.x, p.y);
     });
-  } else {
-    wordCloudCaption.textContent = 'Every word in the dictionary, colored by part of speech. Click one to look it up.';
+
+    cloudCanvas.onclick = (e) => {
+      const rect = cloudCanvas.getBoundingClientRect();
+      const scaleX = cssWidth / rect.width;
+      const scaleY = cssHeight / rect.height;
+      const clickX = (e.clientX - rect.left) * scaleX;
+      const clickY = (e.clientY - rect.top) * scaleY;
+      for (let i = placedBoxes.length - 1; i >= 0; i--) {
+        const p = placedBoxes[i];
+        cloudCtx.font = `bold ${p.size}px ${CLOUD_FONT_STACK}`;
+        const tw = cloudCtx.measureText(p.term).width;
+        const th = p.size * 1.3;
+        if (Math.abs(clickX - p.x) * 2 < tw + 6 && Math.abs(clickY - p.y) * 2 < th + 4) {
+          openSearchModal(p.term);
+          return;
+        }
+      }
+    };
+
+    const wordCloudCaption = document.getElementById('wordCloudCaption');
+    if (dropped > 0) {
+      wordCloudCaption.innerHTML =
+        `Showing ${placedBoxes.length} of ${allCloudTerms.length} words, colored by part of speech. ` +
+        `Click a word to look it up, or <a href="#" id="wordCloudSeeAll" style="color:var(--accent);">see all ${allCloudTerms.length} in the searchable dictionary</a>.`;
+      const seeAllLink = document.getElementById('wordCloudSeeAll');
+      if (seeAllLink) {
+        seeAllLink.addEventListener('click', (e) => {
+          e.preventDefault();
+          openSearchModal('');
+        });
+      }
+    } else {
+      wordCloudCaption.textContent = 'Every word in the dictionary, colored by part of speech. Click one to look it up.';
+    }
   }
+
+  buildWordCloud();
+  document.getElementById('cloudRebuild').addEventListener('click', buildWordCloud);
+  document.getElementById('cloudMixedOrder').addEventListener('change', buildWordCloud);
+  document.getElementById('cloudRandomSize').addEventListener('change', buildWordCloud);
 
   const fillList = (id, items, render) => {
     const el = document.getElementById(id);

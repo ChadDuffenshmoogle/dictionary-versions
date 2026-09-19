@@ -886,14 +886,16 @@ async function main() {
     },
   });
 
-  // Word cloud -- true pixel-mask collision, the same technique real word
-  // cloud generators (Wordle, d3-cloud, etc) use: each word is rendered
-  // once to an offscreen canvas so the actual glyph ink pixels are known,
-  // and placement checks collide against those real shapes instead of a
-  // rectangular bounding box. That's what lets words nest into each
-  // other's negative space (tuck under a "Y", between an "M"'s legs) and
-  // read as an organically tight cloud instead of gappy rectangles or a
-  // flat justified block.
+  // Word cloud -- pixel-mask collision (real glyph ink, not bounding
+  // boxes) combined with a skyline placement search. A single spiral
+  // from one fixed center point (a previous version of this) wastes
+  // search budget radiating through already-full space once the center
+  // fills up, and since width is capped but height isn't, that pushes
+  // later words far below the cluster with a big empty gap in between.
+  // Skyline packing instead always places each word wherever the
+  // shortest "stack so far" is, guaranteeing no such gaps, while the
+  // mask collision still lets words nestle into each other's negative
+  // space for an organic (not blocky) look.
   const termPosMap = new Map();
   (stats.definitions_by_length_asc || []).forEach(d => {
     if (!termPosMap.has(d.term)) termPosMap.set(d.term, d.pos || '(no pos)');
@@ -928,11 +930,9 @@ async function main() {
   const FONT_STACK = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
   const cssWidth = canvas.parentElement.clientWidth || 1200;
 
-  // Offscreen canvas used only to render each word once and read back its
-  // actual ink pixels.
   const maskCanvas = document.createElement('canvas');
   const maskCtx = maskCanvas.getContext('2d');
-  const GRID = 3; // px per collision cell -- coarser = faster, less precise
+  const GRID = 3; // px per collision cell
 
   const sizeCache = new Map();
   function sizeForTerm(term) {
@@ -968,6 +968,7 @@ async function main() {
     const gridCols = Math.ceil(w / GRID);
     const gridRows = Math.ceil(h / GRID);
     const cells = [];
+    const colMaxDepth = new Array(gridCols).fill(-1); // deepest ink row per column, for skyline updates
     for (let gj = 0; gj < gridRows; gj++) {
       for (let gi = 0; gi < gridCols; gi++) {
         let hasInk = false;
@@ -978,14 +979,26 @@ async function main() {
             if (data[(py * w + px) * 4 + 3] > 40) hasInk = true;
           }
         }
-        if (hasInk) cells.push([gi, gj]);
+        if (hasInk) {
+          cells.push([gi, gj]);
+          if (gj > colMaxDepth[gi]) colMaxDepth[gi] = gj;
+        }
       }
     }
-    return { w, h, cells };
+    return { w, h, cells, gridCols, colMaxDepth };
   }
 
   const occupied = new Set();
   function cellKey(gi, gj) { return gi + '_' + gj; }
+  function collidesAt(mask, gLeft, gTop) {
+    for (let k = 0; k < mask.cells.length; k++) {
+      if (occupied.has(cellKey(gLeft + mask.cells[k][0], gTop + mask.cells[k][1]))) return true;
+    }
+    return false;
+  }
+
+  const gridColsTotal = Math.max(1, Math.floor(cssWidth / GRID));
+  const skyline = new Array(gridColsTotal).fill(0);
 
   const placedBoxes = [];
   let dropped = 0;
@@ -995,48 +1008,56 @@ async function main() {
     const pos = termPosMap.get(term) || '(no pos)';
     const size = sizeForTerm(term);
     const mask = buildMask(term, size);
-    if (mask.w > cssWidth) { dropped++; return; }
+    if (mask.gridCols > gridColsTotal) { dropped++; return; }
 
-    const centerX = cssWidth / 2;
-    const centerY = 40;
-    let angle = Math.random() * Math.PI * 2;
-    let radius = 0;
-    let tries = 0;
-    const maxTries = 1500;
-    let placedAt = null;
-
-    while (tries < maxTries && !placedAt) {
-      const cx = centerX + radius * Math.cos(angle);
-      const cy = centerY + radius * Math.sin(angle);
-      const left = Math.round(cx - mask.w / 2);
-      const top = Math.round(cy - mask.h / 2);
-
-      if (left >= 0 && left + mask.w <= cssWidth && top >= 0) {
-        const gLeft = Math.floor(left / GRID);
-        const gTop = Math.floor(top / GRID);
-        let collide = false;
-        for (let k = 0; k < mask.cells.length && !collide; k++) {
-          if (occupied.has(cellKey(gLeft + mask.cells[k][0], gTop + mask.cells[k][1]))) collide = true;
-        }
-        if (!collide) placedAt = { left, top };
+    // Slide across every valid column offset, find the one where the
+    // tallest existing stack (skyline) under this word is lowest.
+    let bestGLeft = 0;
+    let bestHeight = Infinity;
+    for (let gLeft = 0; gLeft <= gridColsTotal - mask.gridCols; gLeft++) {
+      let maxH = 0;
+      for (let gi = 0; gi < mask.gridCols; gi++) {
+        const h = skyline[gLeft + gi];
+        if (h > maxH) maxH = h;
       }
-
-      angle += 0.4;
-      radius += 3;
-      tries++;
+      if (maxH < bestHeight) {
+        bestHeight = maxH;
+        bestGLeft = gLeft;
+      }
     }
 
-    if (!placedAt) { dropped++; return; }
+    let gTop = bestHeight;
+    // The skyline estimate can be conservative (it's a per-column max,
+    // not the word's actual ink shape), so nudge upward through real
+    // mask collision checks to let the word nestle into any true gap the
+    // coarse skyline missed -- this is what makes it look organic rather
+    // than shelved into flat rows.
+    let guard = 4000;
+    while (gTop > 0 && !collidesAt(mask, bestGLeft, gTop - 1) && guard-- > 0) {
+      gTop--;
+    }
+    // Safety: if the skyline estimate was somehow wrong and this spot
+    // does collide, push back down until it doesn't.
+    guard = 4000;
+    while (collidesAt(mask, bestGLeft, gTop) && guard-- > 0) {
+      gTop++;
+    }
 
-    const gLeft = Math.floor(placedAt.left / GRID);
-    const gTop = Math.floor(placedAt.top / GRID);
-    mask.cells.forEach(([gi, gj]) => occupied.add(cellKey(gLeft + gi, gTop + gj)));
+    mask.cells.forEach(([gi, gj]) => occupied.add(cellKey(bestGLeft + gi, gTop + gj)));
+    for (let gi = 0; gi < mask.gridCols; gi++) {
+      if (mask.colMaxDepth[gi] >= 0) {
+        const newHeight = gTop + mask.colMaxDepth[gi] + 1;
+        if (newHeight > skyline[bestGLeft + gi]) skyline[bestGLeft + gi] = newHeight;
+      }
+    }
 
-    maxY = Math.max(maxY, placedAt.top + mask.h);
+    const left = bestGLeft * GRID;
+    const top = gTop * GRID;
+    maxY = Math.max(maxY, top + mask.h);
     placedBoxes.push({
       term, size, color: colorForPos(pos),
-      x: placedAt.left + mask.w / 2,
-      y: placedAt.top + mask.h / 2,
+      x: left + mask.w / 2,
+      y: top + mask.h / 2,
     });
   });
 
@@ -1085,7 +1106,6 @@ async function main() {
   } else {
     wordCloudCaption.textContent = 'Every word in the dictionary, colored by part of speech. Click one to look it up.';
   }
-
 
   const fillList = (id, items, render) => {
     const el = document.getElementById(id);

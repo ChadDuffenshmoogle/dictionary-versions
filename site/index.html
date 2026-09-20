@@ -185,6 +185,9 @@
       <button id="viewSearchBtn" style="background:#7dd3fc; color:#0f1115; border:none; border-radius:8px; padding:12px 20px; font-weight:700; font-size:0.95rem; cursor:pointer;">
         View Searchable Dictionary
       </button>
+      <button id="viewZoogBtn" style="background:#a78bfa; color:#0f1115; border:none; border-radius:8px; padding:12px 20px; font-weight:700; font-size:0.95rem; cursor:pointer;">
+        View Zoogliography
+      </button>
     </div>
 
     <div class="card wide">
@@ -324,6 +327,19 @@
     </div>
   </div>
 
+  <div id="zoogModalOverlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:100; align-items:center; justify-content:center; padding:20px;">
+    <div style="background:var(--card); border:1px solid #262a33; border-radius:12px; max-width:800px; width:100%; max-height:85vh; display:flex; flex-direction:column;">
+      <div style="display:flex; justify-content:space-between; align-items:center; padding:14px 18px; border-bottom:1px solid #262a33; gap:12px; flex-wrap:wrap;">
+        <a id="zoogModalTitle" href="https://github.com/ChadDuffenshmoogle/dictionary-versions/blob/main/Zoogliography.txt" target="_blank" rel="noopener" style="color:#a78bfa; text-decoration:none; font-weight:700;">Zoogliography</a>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <button id="zoogDownloadBtn" style="background:#0f1115; color:var(--text); border:1px solid #262a33; border-radius:6px; padding:6px 12px; font-size:0.8rem; cursor:pointer;">⬇ .txt</button>
+          <button id="zoogModalClose" style="background:none; border:none; color:var(--muted); font-size:1.4rem; cursor:pointer; line-height:1;">&times;</button>
+        </div>
+      </div>
+      <pre id="zoogModalContent" style="margin:0; padding:16px 18px; overflow:auto; white-space:pre-wrap; word-break:break-word; color:var(--text); font-size:0.85rem; font-family: ui-monospace, Menlo, monospace;">Loading…</pre>
+    </div>
+  </div>
+
   <div id="searchModalOverlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:100; align-items:center; justify-content:center; padding:20px;">
     <div style="background:var(--card); border:1px solid #262a33; border-radius:12px; max-width:800px; width:100%; max-height:85vh; display:flex; flex-direction:column;">
       <div style="display:flex; justify-content:space-between; align-items:center; padding:14px 18px; border-bottom:1px solid #262a33;">
@@ -403,6 +419,49 @@ async function main() {
     if (e.target === fileModalOverlay) fileModalOverlay.style.display = 'none';
   });
 
+  // Zoogliography -- not preloaded in stats.json (it's a separate,
+  // unversioned file), so it's fetched on demand the first time the
+  // button is clicked and cached after that.
+  const zoogModalOverlay = document.getElementById('zoogModalOverlay');
+  const zoogModalContent = document.getElementById('zoogModalContent');
+  let zoogContent = null;
+  let zoogFetchPromise = null;
+
+  function fetchZoogliography() {
+    if (zoogFetchPromise) return zoogFetchPromise;
+    zoogFetchPromise = fetch('https://raw.githubusercontent.com/ChadDuffenshmoogle/dictionary-versions/main/Zoogliography.txt', { cache: 'no-store' })
+      .then(res => {
+        if (!res.ok) throw new Error('Zoogliography.txt not found (' + res.status + ')');
+        return res.text();
+      })
+      .then(text => {
+        zoogContent = text;
+        zoogModalContent.textContent = text || '(empty)';
+      })
+      .catch(err => {
+        zoogModalContent.textContent = 'Could not load Zoogliography: ' + err.message;
+        zoogFetchPromise = null; // allow retry on next open
+      });
+    return zoogFetchPromise;
+  }
+
+  document.getElementById('viewZoogBtn').addEventListener('click', () => {
+    zoogModalOverlay.style.display = 'flex';
+    if (!zoogContent) {
+      zoogModalContent.textContent = 'Loading…';
+      fetchZoogliography();
+    }
+  });
+  document.getElementById('zoogModalClose').addEventListener('click', () => {
+    zoogModalOverlay.style.display = 'none';
+  });
+  zoogModalOverlay.addEventListener('click', (e) => {
+    if (e.target === zoogModalOverlay) zoogModalOverlay.style.display = 'none';
+  });
+  document.getElementById('zoogDownloadBtn').addEventListener('click', () => {
+    if (zoogContent) downloadBlob(zoogContent, 'Zoogliography.txt', 'text/plain');
+  });
+
   function downloadBlob(text, filename, mimeType) {
     const blob = new Blob([text], { type: mimeType });
     const url = URL.createObjectURL(blob);
@@ -434,6 +493,20 @@ async function main() {
   const dictResultCount = document.getElementById('dictResultCount');
   const scopeButtons = Array.from(document.querySelectorAll('.scope-toggle button'));
   let searchScope = 'both';
+
+  // Defined early (not just down near the pie chart) so the searchable
+  // dictionary list below can color terms by part of speech too.
+  const posEntries = Object.entries(stats.pos_counts || {}).sort((a, b) => b[1] - a[1]);
+  const posLabels = posEntries.map(([label]) => label);
+  const posColors = [
+    '#6ee7b7', '#7dd3fc', '#fbbf24', '#f472b6', '#a78bfa',
+    '#fb923c', '#34d399', '#60a5fa', '#f87171', '#c084fc',
+    '#9a9fab',
+  ];
+  function colorForPos(pos) {
+    const idx = posLabels.indexOf(pos || '(no pos)');
+    return posColors[(idx === -1 ? posLabels.length : idx) % posColors.length];
+  }
 
   const dictEntries = (stats.definitions_by_length_asc || [])
     .slice()
@@ -876,14 +949,7 @@ async function main() {
     buildLetterChart(parseInt(letterGroupModeSelect.value, 10));
   });
 
-  // Parts of speech
-  const posEntries = Object.entries(stats.pos_counts || {}).sort((a, b) => b[1] - a[1]);
-  const posLabels = posEntries.map(([label]) => label);
-  const posColors = [
-    '#6ee7b7', '#7dd3fc', '#fbbf24', '#f472b6', '#a78bfa',
-    '#fb923c', '#34d399', '#60a5fa', '#f87171', '#c084fc',
-    '#9a9fab',
-  ];
+  // Parts of speech (posEntries/posLabels/posColors already declared earlier)
   new Chart(document.getElementById('posChart'), {
     type: 'pie',
     data: {

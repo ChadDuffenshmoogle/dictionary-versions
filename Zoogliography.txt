@@ -25,6 +25,7 @@ raspy rebirth
 rhetre
 scorp
 scrubull
+shmirp
 snar
 speer
 spleptitude - crongful

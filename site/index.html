@@ -191,9 +191,35 @@
     </div>
 
     <div class="card wide">
-      <h2>Total Word Count Over Time (+ <input type="number" id="projMonths" value="6" min="1" step="1"
-        style="width:56px; padding:2px 4px; border-radius:6px; border:1px solid #262a33; background:#0f1115; color:var(--accent); font:inherit; font-weight:700;">
-        Month Projection)</h2>
+      <div style="display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:14px;">
+        <h2 style="margin:0;">Total Word Count Over Time (+ <input type="number" id="projMonths" value="6" min="1" step="1"
+          style="width:56px; padding:2px 4px; border-radius:6px; border:1px solid #262a33; background:#0f1115; color:var(--accent); font:inherit; font-weight:700;">
+          Month Projection)</h2>
+        <div style="display:flex; flex-direction:column; gap:6px; font-size:0.8rem; color:var(--muted); text-align:right;">
+          <div>Current rate: <strong id="currentRateDisplay" style="color:var(--accent);">—</strong></div>
+          <div style="display:flex; align-items:center; gap:4px; flex-wrap:wrap; justify-content:flex-end;">
+            Rate needed for
+            <input type="number" id="goalWords" value="1000" min="1" style="width:64px; padding:2px 4px; border-radius:6px; border:1px solid #262a33; background:#0f1115; color:var(--accent); font:inherit; font-weight:700;">
+            words by
+            <select id="goalMonth" style="padding:2px 4px; border-radius:6px; border:1px solid #262a33; background:#0f1115; color:var(--accent); font:inherit; font-weight:700;">
+              <option value="0">Jan</option>
+              <option value="1">Feb</option>
+              <option value="2">Mar</option>
+              <option value="3">Apr</option>
+              <option value="4" selected>May</option>
+              <option value="5">Jun</option>
+              <option value="6">Jul</option>
+              <option value="7">Aug</option>
+              <option value="8">Sep</option>
+              <option value="9">Oct</option>
+              <option value="10">Nov</option>
+              <option value="11">Dec</option>
+            </select>
+            <input type="number" id="goalYear" value="2027" min="2026" style="width:70px; padding:2px 4px; border-radius:6px; border:1px solid #262a33; background:#0f1115; color:var(--accent); font:inherit; font-weight:700;">
+            : <strong id="goalRateDisplay" style="color:var(--accent);">—</strong>
+          </div>
+        </div>
+      </div>
       <canvas id="growthChart"></canvas>
     </div>
 
@@ -608,6 +634,41 @@ async function main() {
 
   // Total word count over time, with an editable-length linear projection
   let growthChartInstance = null;
+  let currentDailyRate = null;
+  let latestPointDate = null;
+  let latestPointTotal = null;
+
+  function updateRateDisplays() {
+    const currentRateEl = document.getElementById('currentRateDisplay');
+    const goalRateEl = document.getElementById('goalRateDisplay');
+    if (currentDailyRate === null || latestPointDate === null) return;
+
+    currentRateEl.textContent = `${currentDailyRate.toFixed(2)} words/day`;
+
+    const goalWords = Math.max(1, parseInt(document.getElementById('goalWords').value, 10) || 1000);
+    const goalMonth = parseInt(document.getElementById('goalMonth').value, 10);
+    const goalYear = parseInt(document.getElementById('goalYear').value, 10) || 2027;
+
+    // Last day of the target month, in UTC, so "by May 2027" means
+    // anywhere up through the end of May.
+    const goalDate = new Date(Date.UTC(goalYear, goalMonth + 1, 0));
+    const daysRemaining = (goalDate - latestPointDate) / 86400000;
+    const wordsNeeded = goalWords - latestPointTotal;
+
+    if (wordsNeeded <= 0) {
+      goalRateEl.textContent = 'goal already reached';
+    } else if (daysRemaining <= 0) {
+      goalRateEl.textContent = 'date already passed';
+    } else {
+      goalRateEl.textContent = `${(wordsNeeded / daysRemaining).toFixed(2)} words/day`;
+    }
+  }
+
+  ['goalWords', 'goalMonth', 'goalYear'].forEach(id => {
+    document.getElementById(id).addEventListener('input', updateRateDisplays);
+    document.getElementById(id).addEventListener('change', updateRateDisplays);
+  });
+
   function buildGrowthChart(cumulative, projectionMonths) {
     if (!cumulative || cumulative.length < 2) return;
 
@@ -626,6 +687,13 @@ async function main() {
     const sumXX = points.reduce((s, p) => s + p.x * p.x, 0);
     const b = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
     const a = (sumY - b * sumX) / n;
+
+    // Exposed for the "current rate" / "rate needed for goal" displays
+    // in the card header.
+    currentDailyRate = b;
+    latestPointDate = new Date(firstDate.getTime() + points[points.length - 1].x * dayMs);
+    latestPointTotal = points[points.length - 1].y;
+    updateRateDisplays();
 
     const lastPoint = points[points.length - 1];
     const projectionDays = Math.round(projectionMonths * 30.4);

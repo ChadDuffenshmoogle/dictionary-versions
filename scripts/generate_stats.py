@@ -25,7 +25,9 @@ from zoneinfo import ZoneInfo
 import requests
 
 CENTRAL = ZoneInfo("America/Chicago")
-
+SCRABBLE_FILE = "178,691 Scrabble Legal Words.txt"
+SCRABBLE_SOURCE_URL = "https://github.com/redbo/scrabble/blob/master/dictionary.txt"
+SCRABBLE_SOURCE_LABEL = "Scrabble word list source"
 
 def to_central_date(iso_timestamp):
     """GitHub commit timestamps come back in UTC (Z-suffixed). Convert to
@@ -469,6 +471,23 @@ def _normalize_pos(raw_pos):
         return POS_NORMALIZATION[key[:-2]]
     return raw
 
+def fetch_scrabble_words():
+    """Load the Scrabble word list into a set of uppercase words."""
+    text = fetch_raw(SCRABBLE_FILE)
+    return {line.strip().upper() for line in text.splitlines() if line.strip()}
+
+
+def is_scrabble_legal(term, scrabble_set):
+    """A dictionary term is Scrabble-legal only if it's a single unbroken
+    word. Anything containing a space, hyphen, apostrophe, digit, etc. can't
+    be played as one tile-run, so it counts as illegal.
+
+    To be more forgiving (treat 'wheel-lock' as 'WHEELLOCK'), replace the
+    first check with:  letters = re.sub(r"[^A-Za-z]", "", term).upper()
+    """
+    if not re.fullmatch(r"[A-Za-z]+", term.strip()):
+        return False
+    return term.strip().upper() in scrabble_set
 
 def main():
     commits = get_all_commits()
@@ -585,6 +604,13 @@ def main():
         key=lambda td: len(td["definition"]),
     )
 
+    # --- Scrabble legality ---
+    scrabble_set = fetch_scrabble_words()
+    scrabble_legal_terms = [t for t in all_terms if is_scrabble_legal(t, scrabble_set)]
+    scrabble_legal_lower = {t.lower() for t in scrabble_legal_terms}
+    for row in definitions_by_length_asc:
+        row["scrabble"] = row["term"].lower() in scrabble_legal_lower
+
     stats = {
         "latest_version": latest_name,
         "latest_word_term": latest_word_term,
@@ -598,6 +624,10 @@ def main():
         "added_terms_timeline": added_terms_timeline,
         "words_by_length_asc": words_by_length_asc,
         "definitions_by_length_asc": definitions_by_length_asc,
+        "scrabble_legal_count": len(scrabble_legal_terms),
+        "scrabble_illegal_count": total_entries - len(scrabble_legal_terms),
+        "scrabble_source_url": SCRABBLE_SOURCE_URL,
+        "scrabble_source_label": SCRABBLE_SOURCE_LABEL
     }
 
     out_path = os.path.join(os.path.dirname(__file__), "..", "site", "stats.json")

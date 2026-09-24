@@ -159,6 +159,14 @@
     margin-right: calc(-48vw + 50%);
     box-sizing: border-box;
   }
+  .pie-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  @media (max-width: 700px) {
+    .pie-row { grid-template-columns: 1fr; }
+  }
 </style>
 
 </head>
@@ -307,10 +315,21 @@
       </div>
     </div>
 
-    <div class="card wide">
-      <h2>Parts of Speech</h2>
-      <canvas id="posChart"></canvas>
-      <div style="color:var(--muted); font-size:0.8rem; margin-top:6px;">Click a slice to see all words of that type.</div>
+    <div class="wide pie-row">
+      <div class="card">
+        <h2>Parts of Speech</h2>
+        <canvas id="posChart"></canvas>
+        <div style="color:var(--muted); font-size:0.8rem; margin-top:6px;">Click a slice to see all words of that type.</div>
+      </div>
+
+      <div class="card">
+        <h2>Scrabble Legality</h2>
+        <canvas id="scrabbleChart"></canvas>
+        <div style="color:var(--muted); font-size:0.8rem; margin-top:6px;">
+          Click a slice to see those words. Multi-word, hyphenated, and apostrophe terms count as illegal.
+        </div>
+        <div id="scrabbleCredit" style="color:var(--muted); font-size:0.75rem; margin-top:4px;"></div>
+      </div>
     </div>
 
     <div class="card wide cloud-breakout">
@@ -574,10 +593,17 @@ async function main() {
     const startsWithMatch = raw.match(/^startswith:\s*(.*)$/);
     const posMatch = raw.match(/^pos:\s*(.*)$/);
     const dateMatch = raw.match(/^date:\s*(.*)$/);
-    const q = startsWithMatch ? startsWithMatch[1] : (posMatch ? posMatch[1] : (dateMatch ? dateMatch[1] : raw));
+    const scrabbleMatch = raw.match(/^scrabble(legal|illegal):?\s*(.*)$/);
+    const q = startsWithMatch ? startsWithMatch[1]
+            : posMatch ? posMatch[1]
+            : dateMatch ? dateMatch[1]
+            : scrabbleMatch ? scrabbleMatch[2]
+            : raw;
     const isPrefix = !!startsWithMatch;
     const isPos = !!posMatch;
     const isDate = !!dateMatch;
+    const isScrabble = !!scrabbleMatch;
+    const wantScrabbleLegal = isScrabble && scrabbleMatch[1] === 'legal';
     const dateTerms = isDate ? (termsByDate.get(q) || new Set()) : null;
 
     let visible = 0;
@@ -586,10 +612,11 @@ async function main() {
       const def = e.definition.toLowerCase();
       const pos = (e.pos || '').toLowerCase() || '(no pos)';
       let match;
-      if (!q) match = true;
+      if (isScrabble) match = !!e.scrabble === wantScrabbleLegal && (!q || term.includes(q));
+      else if (!q) match = true;
       else if (isDate) match = dateTerms.has(term);
       else if (isPos) match = pos === q;
-      else if (isPrefix) match = term.startsWith(q); // prefix search is term-only
+      else if (isPrefix) match = term.startsWith(q);
       else if (searchScope === 'term') match = term.includes(q);
       else if (searchScope === 'definition') match = def.includes(q);
       else match = term.includes(q) || def.includes(q);
@@ -597,8 +624,9 @@ async function main() {
       entryEls[i].style.display = match ? '' : 'none';
       if (match) {
         visible++;
-        const highlightTerm = (isPos || isDate) ? false : (q && (isPrefix || searchScope !== 'definition'));
-        const highlightDef = (isPos || isDate) ? false : (q && !isPrefix && searchScope !== 'term');
+        const noHighlight = isPos || isDate || isScrabble;
+        const highlightTerm = noHighlight ? false : (q && (isPrefix || searchScope !== 'definition'));
+        const highlightDef = noHighlight ? false : (q && !isPrefix && searchScope !== 'term');
         entryEls[i].querySelector('.term').innerHTML = highlight(e.term, highlightTerm ? q : '');
         entryEls[i].querySelector('.def').innerHTML = highlight(e.definition, highlightDef ? q : '');
       }
@@ -784,6 +812,58 @@ async function main() {
         },
       },
     });
+  }
+
+  // Scrabble legality pie
+  const scrabbleLegal = stats.scrabble_legal_count || 0;
+  const scrabbleIllegal = stats.scrabble_illegal_count || 0;
+  const scrabbleTotal = scrabbleLegal + scrabbleIllegal;
+  const scrabbleLabels = ['Scrabble legal', 'Not Scrabble legal'];
+  const scrabblePrefixes = ['scrabblelegal:', 'scrabbleillegal:'];
+
+  new Chart(document.getElementById('scrabbleChart'), {
+    type: 'pie',
+    data: {
+      labels: scrabbleLabels,
+      datasets: [{
+        data: [scrabbleLegal, scrabbleIllegal],
+        backgroundColor: ['#6ee7b7', '#f87171'],
+        borderColor: '#171a21',
+        borderWidth: 2,
+      }],
+    },
+    options: {
+      responsive: true,
+      onHover: (event, elements) => {
+        event.native.target.style.cursor = elements.length ? 'pointer' : 'default';
+      },
+      onClick: (event, elements) => {
+        if (!elements.length) return;
+        openSearchModal(scrabblePrefixes[elements[0].index]);
+      },
+      plugins: {
+        legend: { position: 'bottom', labels: { color: '#e8e8ec', boxWidth: 12, font: { size: 11 } } },
+        tooltip: {
+          callbacks: {
+            label: (item) => {
+              const pct = scrabbleTotal ? ((item.parsed / scrabbleTotal) * 100).toFixed(1) : '0.0';
+              return `${item.label}: ${item.parsed} (${pct}%)`;
+            },
+          },
+        },
+      },
+    },
+  });
+
+  if (stats.scrabble_source_url && !stats.scrabble_source_url.includes('REPLACE-ME')) {
+    const credit = document.getElementById('scrabbleCredit');
+    const a = document.createElement('a');
+    a.href = stats.scrabble_source_url;
+    a.target = '_blank';
+    a.rel = 'noopener';
+    a.style.color = 'var(--accent)';
+    a.textContent = stats.scrabble_source_label || 'Source';
+    credit.append('Word list source: ', a);
   }
 
   function clampMonths(v) {

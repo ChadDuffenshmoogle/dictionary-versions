@@ -23,6 +23,7 @@ from datetime import datetime
 from zoneinfo import ZoneInfo
 
 import requests
+import unicodedata
 
 CENTRAL = ZoneInfo("America/Chicago")
 SCRABBLE_FILE = "178,691 Scrabble Legal Words.txt"
@@ -477,17 +478,36 @@ def fetch_scrabble_words():
     return {line.strip().upper() for line in text.splitlines() if line.strip()}
 
 
-def is_scrabble_legal(term, scrabble_set):
-    """A dictionary term is Scrabble-legal only if it's a single unbroken
-    word. Anything containing a space, hyphen, apostrophe, digit, etc. can't
-    be played as one tile-run, so it counts as illegal.
+def strip_accents(s):
+    """Fold accented characters to their plain ASCII equivalent, e.g.
+    café -> cafe, naïve -> naive."""
+    return "".join(
+        c for c in unicodedata.normalize("NFKD", s)
+        if not unicodedata.combining(c)
+    )
 
-    To be more forgiving (treat 'wheel-lock' as 'WHEELLOCK'), replace the
-    first check with:  letters = re.sub(r"[^A-Za-z]", "", term).upper()
+
+def scrabble_status(term, scrabble_set):
+    """Returns 'legal', 'normalized', or 'illegal'.
+
+    'legal'      -- the term, letters-only, is a single unbroken word in
+                     the list exactly as typed (no spaces/hyphens/accents
+                     to begin with, or they just happen not to matter).
+    'normalized' -- only legal after stripping spaces, hyphens,
+                     apostrophes, and accents -- i.e. it needed help to
+                     qualify.
+    'illegal'    -- not in the list either way.
     """
-    if not re.fullmatch(r"[A-Za-z]+", term.strip()):
-        return False
-    return term.strip().upper() in scrabble_set
+    stripped_raw = term.strip()
+    if re.fullmatch(r"[A-Za-z]+", stripped_raw) and stripped_raw.upper() in scrabble_set:
+        return "legal"
+
+    normalized = strip_accents(stripped_raw)
+    normalized = re.sub(r"[^A-Za-z]", "", normalized)
+    if normalized and normalized.upper() in scrabble_set:
+        return "normalized"
+
+    return "illegal"
 
 def main():
     commits = get_all_commits()
@@ -606,10 +626,10 @@ def main():
 
     # --- Scrabble legality ---
     scrabble_set = fetch_scrabble_words()
-    scrabble_legal_terms = [t for t in all_terms if is_scrabble_legal(t, scrabble_set)]
-    scrabble_legal_lower = {t.lower() for t in scrabble_legal_terms}
+    scrabble_statuses = {t: scrabble_status(t, scrabble_set) for t in all_terms}
+    scrabble_counts = Counter(scrabble_statuses.values())
     for row in definitions_by_length_asc:
-        row["scrabble"] = row["term"].lower() in scrabble_legal_lower
+        row["scrabble"] = scrabble_statuses.get(row["term"], "illegal")
 
     stats = {
         "latest_version": latest_name,
@@ -624,10 +644,11 @@ def main():
         "added_terms_timeline": added_terms_timeline,
         "words_by_length_asc": words_by_length_asc,
         "definitions_by_length_asc": definitions_by_length_asc,
-        "scrabble_legal_count": len(scrabble_legal_terms),
-        "scrabble_illegal_count": total_entries - len(scrabble_legal_terms),
+        "scrabble_legal_count": scrabble_counts.get("legal", 0),
+        "scrabble_normalized_count": scrabble_counts.get("normalized", 0),
+        "scrabble_illegal_count": scrabble_counts.get("illegal", 0),
         "scrabble_source_url": SCRABBLE_SOURCE_URL,
-        "scrabble_source_label": SCRABBLE_SOURCE_LABEL
+        "scrabble_source_label": SCRABBLE_SOURCE_LABEL,
     }
 
     out_path = os.path.join(os.path.dirname(__file__), "..", "site", "stats.json")

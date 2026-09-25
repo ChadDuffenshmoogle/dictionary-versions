@@ -593,7 +593,7 @@ async function main() {
     const startsWithMatch = raw.match(/^startswith:\s*(.*)$/);
     const posMatch = raw.match(/^pos:\s*(.*)$/);
     const dateMatch = raw.match(/^date:\s*(.*)$/);
-    const scrabbleMatch = raw.match(/^scrabble(legal|illegal):?\s*(.*)$/);
+    const scrabbleMatch = raw.match(/^scrabble(legal|normalized|illegal):?\s*(.*)$/);
     const q = startsWithMatch ? startsWithMatch[1]
             : posMatch ? posMatch[1]
             : dateMatch ? dateMatch[1]
@@ -612,7 +612,7 @@ async function main() {
       const def = e.definition.toLowerCase();
       const pos = (e.pos || '').toLowerCase() || '(no pos)';
       let match;
-      if (isScrabble) match = !!e.scrabble === wantScrabbleLegal && (!q || term.includes(q));
+      if (isScrabble) match = e.scrabble === scrabbleMatch[1] && (!q || term.includes(q));
       else if (!q) match = true;
       else if (isDate) match = dateTerms.has(term);
       else if (isPos) match = pos === q;
@@ -814,20 +814,20 @@ async function main() {
     });
   }
 
-  // Scrabble legality pie
   const scrabbleLegal = stats.scrabble_legal_count || 0;
+  const scrabbleNormalized = stats.scrabble_normalized_count || 0;
   const scrabbleIllegal = stats.scrabble_illegal_count || 0;
-  const scrabbleTotal = scrabbleLegal + scrabbleIllegal;
-  const scrabbleLabels = ['Scrabble legal', 'Not Scrabble legal'];
-  const scrabblePrefixes = ['scrabblelegal:', 'scrabbleillegal:'];
+  const scrabbleTotal = scrabbleLegal + scrabbleNormalized + scrabbleIllegal;
+  const scrabbleLabels = ['Scrabble legal', 'Legal without spacing/punctuation/accents', 'Not Scrabble legal'];
+  const scrabblePrefixes = ['scrabblelegal:', 'scrabblenormalized:', 'scrabbleillegal:'];
 
   new Chart(document.getElementById('scrabbleChart'), {
     type: 'pie',
     data: {
       labels: scrabbleLabels,
       datasets: [{
-        data: [scrabbleLegal, scrabbleIllegal],
-        backgroundColor: ['#6ee7b7', '#f87171'],
+        data: [scrabbleLegal, scrabbleNormalized, scrabbleIllegal],
+        backgroundColor: ['#6ee7b7', '#fbbf24', '#f87171'],
         borderColor: '#171a21',
         borderWidth: 2,
       }],

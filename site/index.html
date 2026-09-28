@@ -41,6 +41,8 @@
   ol { margin: 0; padding-left: 20px; }
   li { margin-bottom: 6px; overflow-wrap: anywhere; word-break: break-word; }
   .def-term { color: var(--accent); font-weight: 600; }
+  .def-term[data-term] { cursor: pointer; }
+  .def-term[data-term]:hover { text-decoration: underline; }
   .def-text { color: var(--muted); }
   canvas { max-height: 320px; }
   .loading, .error { color: var(--muted); padding: 40px; text-align: center; }
@@ -1392,23 +1394,32 @@ async function main() {
   function renderShortestWords() {
     const n = clampN(document.getElementById('nShortestWords').value);
     fillList('shortestWords', stats.words_by_length_asc.slice(0, n),
-      w => `<span class="def-term">${w}</span>`);
+      w => `<span class="def-term" data-term="${escapeHtml(w)}">${escapeHtml(w)}</span>`);
   }
   function renderLongestWords() {
     const n = clampN(document.getElementById('nLongestWords').value);
     fillList('longestWords', stats.words_by_length_asc.slice(-n).reverse(),
-      w => `<span class="def-term">${w}</span>`);
+      w => `<span class="def-term" data-term="${escapeHtml(w)}">${escapeHtml(w)}</span>`);
   }
   function renderShortestDefs() {
     const n = clampN(document.getElementById('nShortestDefs').value);
     fillList('shortestDefs', stats.definitions_by_length_asc.slice(0, n),
-      d => `<span class="def-term">${d.term}</span> — <span class="def-text">${d.definition}</span>`);
+      d => `<span class="def-term" data-term="${escapeHtml(d.term)}">${escapeHtml(d.term)}</span> — <span class="def-text">${escapeHtml(d.definition)}</span>`);
   }
   function renderLongestDefs() {
     const n = clampN(document.getElementById('nLongestDefs').value);
     fillList('longestDefs', stats.definitions_by_length_asc.slice(-n).reverse(),
-      d => `<span class="def-term">${d.term}</span> — <span class="def-text">${d.definition}</span>`);
+      d => `<span class="def-term" data-term="${escapeHtml(d.term)}">${escapeHtml(d.term)}</span> — <span class="def-text">${escapeHtml(d.definition)}</span>`);
   }
+
+  // Clicking a term in any of the shortest/longest lists opens the
+  // searchable dictionary for it.
+  ['shortestWords', 'longestWords', 'shortestDefs', 'longestDefs'].forEach(id => {
+    document.getElementById(id).addEventListener('click', (e) => {
+      const el = e.target.closest('[data-term]');
+      if (el) openSearchModal(el.dataset.term);
+    });
+  });
 
   renderShortestWords();
   renderLongestWords();

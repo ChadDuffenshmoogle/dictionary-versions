@@ -2,8 +2,6 @@ UNICYCLIST DICTIONARY v1.2.497 - September 30, 2026 06:47 PM CDT
 
 -----DICTIONARY PROPER-----
 
-(v.) (n.) - a tag for verps
-
 abgde (n.) - /aβ̞ɣð̠e/ an earlier form of something
 
 Abnormal Road (n.) - the section of Normal Road that's blocked off
@@ -305,7 +303,7 @@ cachew (n.) - a cache of cashews
 
 caic (n.) - alt. of "cake"
 
-Cake-Pop Demon Hunters (n.) - a popular film about a group of trendy bakers who protect the world from demons with their culinary prowess.
+Cake-Pop Demon Hunters (n.) - a popular film about a group of trendy bakers who protect the world from demons with their culinary prowess, featuring the hit song "Golden-Brown."
 
 calander (n.) - a mythical bowl with holes in it, used to separate time into units (such as minutes, days, etc.) Not to be confused with "calendar." 
 

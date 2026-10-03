@@ -43,6 +43,21 @@
   .edit-box button { margin:10px 8px 0 0; padding:6px 14px; font-size:0.95rem; cursor:pointer; }
   .edit-error { color:#b32424; }
   .edit-ok { color:#14866d; }
+  .wotd-def { white-space:pre-line; }
+  .pron { color:var(--muted); margin:2px 0 6px 0; }
+  h3.sub { font-size:1.05rem; margin:1rem 0 0.2rem 0; }
+  .example { color:var(--muted); font-style:italic; }
+  .edit-box select { padding:5px 6px; font-size:0.95rem; }
+  .sec { border:1px solid var(--line); background:#fff; padding:8px 12px; margin-top:12px; }
+  .sec-head { display:flex; gap:10px; align-items:center; justify-content:space-between; }
+  ol.defs-edit { padding-left:26px; margin:8px 0 0 0; }
+  ol.defs-edit li { margin-bottom:10px; }
+  ol.defs-edit li input, ol.defs-edit li textarea { margin-top:4px; }
+  .btn-row { display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; }
+  .btn-row button, .edit-box .add-pos button, .sec button { margin:0; }
+  .edit-box .add-pos { margin-top:12px; }
+  .edit-box textarea.dText, .edit-box #fEty { min-height:3rem; }
+  .edit-box .danger { margin-left:auto; color:#b32424; border-color:#b32424; }
 </style>
 </head>
 <body>
@@ -131,6 +146,19 @@ function showLetter(letter) {
     <ul class="word-list">${list.map(e => `<li>${wordLink(e.term)}</li>`).join('')}</ul>`;
 }
 
+function entryBodyHtml(e) {
+  const secs = e.senses && e.senses.length ? e.senses : [{ pos: e.pos, defs: [{ text: e.definition, example: '' }] }];
+  let html = '';
+  if (e.pronunciation) html += `<div class="pron">${esc(e.pronunciation)}</div>`;
+  if (e.etymology) html += `<h3 class="sub">Etymology</h3><p>${esc(e.etymology)}</p>`;
+  secs.forEach(sec => {
+    if (sec.pos && sec.pos !== '(no pos)') html += `<div class="pos-heading">${esc(sec.pos)}</div>`;
+    html += '<ol class="defs">' + sec.defs.map(d =>
+      `<li>${esc(d.text)}${d.example ? `<div class="example">${esc(d.example)}</div>` : ''}</li>`).join('') + '</ol>';
+  });
+  return html;
+}
+
 function showEntry(term) {
   const idx = entries.findIndex(e => e.term === term);
   if (idx === -1) {
@@ -144,8 +172,7 @@ function showEntry(term) {
     <h1>${esc(e.term)}</h1>
     <div class="from">From the Unicyclist Dictionary</div>
     <h2>English <a href="#" class="edit-link" id="editLink">[edit]</a></h2>
-    ${e.pos && e.pos !== '(no pos)' ? `<div class="pos-heading">${esc(e.pos)}</div>` : ''}
-    <ol class="defs"><li>${esc(e.definition)}</li></ol>
+    ${entryBodyHtml(e)}
     <div id="editPanel"></div>
     <div class="nav">
       <span>${prev ? '← ' + wordLink(prev.term) : ''}</span>
@@ -175,20 +202,29 @@ function showSearch(q) {
     </ol>`;
 }
 
-// ===== Editing (saves a new version file in the dictionary-versions repo) =====
+// ===== Editing (word-processor style form; saves a new commit onto the newest dictionary file) =====
 const OWNER = 'ChadDuffenshmoogle';
 const REPO = 'dictionary-versions';
 const BRANCH = 'main';
 const API = `https://api.github.com/repos/${OWNER}/${REPO}`;
 const NAME_PATTERN = /^UNICYCLIST DICTIONARY v1\.2\.(\d+)\.txt$/;
 const DIVIDER = /^-{20,}\s*$/;
+const DIV45 = '-'.repeat(45);
 
 // Paste the output of lock-token.html in place of "null" below (keep the semicolon).
 const LOCKED_TOKEN = null;
 
-function fromBase64(s) {
-  return Uint8Array.from(atob(s), c => c.charCodeAt(0));
-}
+const POS_OPTIONS = [
+  ['n.', 'noun'], ['v.', 'verb'], ['adj.', 'adjective'], ['adv.', 'adverb'], ['expr.', 'expression'],
+  ['inter.', 'interjection'], ['pron.', 'pronoun'], ['prep.', 'preposition'], ['conj.', 'conjunction'],
+  ['acr.', 'acronym'], ['abbr.', 'abbreviation'], ['ono.', 'onomatopoeia'], ['suff.', 'suffix'],
+  ['pref.', 'prefix'], ['part.', 'particle'], ['alt.', 'alternate form'], ['p.n.', 'proper noun'], ['mass n.', 'mass noun'],
+];
+const POS_NAMES = { n: 'Noun', v: 'Verb', adj: 'Adjective', adv: 'Adverb', expr: 'Expression', inter: 'Interjection',
+  pron: 'Pronoun', prep: 'Preposition', conj: 'Conjunction', acr: 'Acronym', abbr: 'Abbreviation', ono: 'Onomatopoeia',
+  suff: 'Suffix', pref: 'Prefix', part: 'Particle', alt: 'Alternate Form', pn: 'Proper Noun', massn: 'Mass Noun' };
+
+function fromBase64(s) { return Uint8Array.from(atob(s), c => c.charCodeAt(0)); }
 
 async function unlockToken(password) {
   const baseKey = await crypto.subtle.importKey('raw', new TextEncoder().encode(password), 'PBKDF2', false, ['deriveKey']);
@@ -204,9 +240,7 @@ async function unlockToken(password) {
   }
 }
 
-function fileNameFor(number) {
-  return `UNICYCLIST DICTIONARY v1.2.${number}.txt`;
-}
+function fileNameFor(number) { return `UNICYCLIST DICTIONARY v1.2.${number}.txt`; }
 
 function ghHeaders(token, raw) {
   const h = { Accept: raw ? 'application/vnd.github.raw+json' : 'application/vnd.github+json' };
@@ -217,9 +251,7 @@ function ghHeaders(token, raw) {
 function toBase64(text) {
   const bytes = new TextEncoder().encode(text);
   let binary = '';
-  for (let i = 0; i < bytes.length; i += 8192) {
-    binary += String.fromCharCode.apply(null, bytes.subarray(i, i + 8192));
-  }
+  for (let i = 0; i < bytes.length; i += 8192) binary += String.fromCharCode.apply(null, bytes.subarray(i, i + 8192));
   return btoa(binary);
 }
 
@@ -227,14 +259,10 @@ async function fetchLiveFile(token) {
   const treeRes = await fetch(`${API}/git/trees/${BRANCH}`, { headers: ghHeaders(token), cache: 'no-store' });
   if (!treeRes.ok) throw new Error('Could not list the repo files (' + treeRes.status + ').');
   const tree = (await treeRes.json()).tree;
-  let number = 0;
-  let sha = '';
+  let number = 0, sha = '';
   tree.forEach(f => {
     const m = NAME_PATTERN.exec(f.path);
-    if (m && parseInt(m[1], 10) > number) {
-      number = parseInt(m[1], 10);
-      sha = f.sha;
-    }
+    if (m && parseInt(m[1], 10) > number) { number = parseInt(m[1], 10); sha = f.sha; }
   });
   if (!number) throw new Error('No dictionary file found in the repo.');
   const res = await fetch(`${API}/contents/${encodeURIComponent(fileNameFor(number))}?ref=${BRANCH}`, { headers: ghHeaders(token, true), cache: 'no-store' });
@@ -242,26 +270,217 @@ async function fetchLiveFile(token) {
   return { number, sha, text: await res.text() };
 }
 
-function locateBlock(text, entry) {
-  const lines = text.split('\n');
-  const bare = lines.map(l => l.replace(/\r$/, ''));
-  const start = bare.findIndex(l => l.trim() === '-----DICTIONARY PROPER-----');
-  const term = entry.term;
-  let hits = [];
-  for (let i = start + 1; i < bare.length; i++) {
-    const l = bare[i];
-    if (l.startsWith(term) && (l.length === term.length || /[\s(]/.test(l.charAt(term.length)))) hits.push(i);
+// ---- reading the file the same way the bot and generate_stats.py do ----
+function fileSortKey(s) {   // same rule as sort_key_ignore_punct
+  let t = s.includes(' (') ? s.split(' (')[0] : s;
+  t = t.replace(/^[ '\-"]+/, '');
+  if (t.toLowerCase().startsWith('the ')) t = t.slice(4) + ', the';
+  return t.toLowerCase();
+}
+function cleanTerm(t) { return t.replace(/\(pronounced:\s*[^)]+\)/ig, '').replace(/\[[^\]]+\]/g, '').trim(); }
+function parseEntryLine(line) {   // -> {term, pos, def} or null
+  line = line.replace(/\)-/g, ') -');
+  let m = /^(.+?) \((.+?)\) - (.+)$/.exec(line);
+  if (m) return { term: cleanTerm(m[1]), pos: m[2].trim(), def: m[3].trim() };
+  if (line.includes('(') && line.includes(')') && line.includes(' - ')) {
+    const i = line.indexOf(' - ');
+    const left = line.slice(0, i), def = line.slice(i + 3);
+    const ms = [...left.matchAll(/\(([^)]+)\)/g)];
+    if (ms.length && def.trim()) {
+      const last = ms[ms.length - 1];
+      const term = left.slice(0, last.index).trim();
+      if (term) return { term: cleanTerm(term), pos: last[1].trim(), def: def.trim() };
+    }
   }
+  return null;
+}
+function isSkipLine(t) {
+  return /^(etymology|derived terms|notes|ex|examples?|pronunciation|synonyms?|antonyms?)\s*:/i.test(t) || /^-\s/.test(t) || /^\d+\.\s/.test(t);
+}
+function stripCR(l) { return l.replace(/\r$/, ''); }
+
+function findUnits(lines) {   // every entry = a hyphen block or a single line
+  const bare = lines.map(stripCR);
+  const start = bare.findIndex(l => l.trim() === '-----DICTIONARY PROPER-----');
+  const units = [];
+  let i = start + 1;
+  while (i < bare.length) {
+    const t = bare[i].trim();
+    if (DIVIDER.test(t)) {
+      let j = i + 1, term = null;
+      while (j < bare.length && !DIVIDER.test(bare[j].trim())) {
+        const tj = bare[j].trim();
+        if (term === null && tj && !isSkipLine(tj)) { const p = parseEntryLine(tj); term = p ? p.term : null; }
+        j++;
+      }
+      if (j >= bare.length) { i++; continue; }
+      units.push({ start: i, end: j, block: true, term });
+      i = j + 1;
+    } else if (t && !isSkipLine(t)) {
+      const p = parseEntryLine(t);
+      if (p) {
+        let end = i;
+        while (end + 1 < bare.length && bare[end + 1].trim() && !DIVIDER.test(bare[end + 1].trim()) && !parseEntryLine(bare[end + 1].trim())) end++;
+        units.push({ start: i, end, block: false, term: p.term });
+        i = end + 1;
+      } else i++;
+    } else i++;
+  }
+  return units;
+}
+
+function findUnitFor(entry, units, lines) {
+  let hits = units.filter(u => u.term === entry.term);
   if (hits.length > 1) {
-    const snippet = entry.definition.slice(0, 25);
-    const narrowed = hits.filter(i => bare[i].includes(snippet));
+    const first = entry.senses && entry.senses[0] && entry.senses[0].defs[0] ? entry.senses[0].defs[0].text : entry.definition;
+    const snippet = (first || '').slice(0, 25);
+    const narrowed = hits.filter(u => lines.slice(u.start, u.end + 1).map(stripCR).join('\n').includes(snippet));
     if (narrowed.length) hits = narrowed;
   }
-  if (hits.length !== 1) return null;
-  const startIdx = hits[0];
-  let endIdx = startIdx + 1;
-  while (endIdx < bare.length && bare[endIdx].trim() !== '' && !DIVIDER.test(bare[endIdx])) endIdx++;
-  return { lines, start: startIdx, end: endIdx, blockText: bare.slice(startIdx, endIdx).join('\n') };
+  return hits.length === 1 ? hits[0] : null;
+}
+
+// ---- entry <-> form model ----
+// model = { term, pron, ety, sections: [{ pos, defs: [{ text, example }] }] }
+function parseBlock(rawLines) {
+  const lines = rawLines.map(l => l.trim());
+  let term = null, pron = '', cur = null, sense = null, last = null, bad = false;
+  const sections = [], ety = [];
+  for (const line of lines) {
+    if (!line) continue;
+    let m;
+    if ((m = /^etymology:\s*(.*)$/i.exec(line))) { ety.push(m[1].trim()); last = 'ety'; continue; }
+    if ((m = /^pronunciation:\s*(.*)$/i.exec(line))) { pron = m[1].trim(); last = 'pron'; continue; }
+    if ((m = /^(?:-\s*)?(?:examples?|ex):\s*(.*)$/i.exec(line))) {
+      if (sense) { sense.example = (sense.example ? sense.example + '; ' : '') + m[1].trim(); last = 'ex'; } else bad = true;
+      continue;
+    }
+    if (/^(?:-\s*)?(derived terms|synonyms?|antonyms?|notes)\s*:/i.test(line)) { bad = true; continue; }
+    if (cur && (m = /^(\d+)\.\s+(.*)$/.exec(line))) {
+      sense = { text: m[2].trim(), example: '' }; cur.defs.push(sense); last = 'def'; continue;
+    }
+    const p = parseEntryLine(line);
+    if (p && (term === null || p.term.toLowerCase() === term.toLowerCase())) {
+      if (term === null) {
+        term = p.term;
+        const raw = (/^(.+?) \(/.exec(line) || [])[1] || '';
+        const ph = /\/[^/]+\//.exec(raw);
+        if (ph) { pron = pron || ph[0]; term = cleanTerm(term.replace(ph[0], '')); }
+      }
+      cur = { pos: p.pos, defs: [] }; sections.push(cur);
+      sense = { text: p.def.replace(/^1\.\s+/, ''), example: '' }; cur.defs.push(sense); last = 'def';
+      continue;
+    }
+    if (p) { bad = true; continue; }   // a different word lives in this block
+    if (/^\([^)]{1,12}\)\.?$/.test(line)) { bad = true; continue; }
+    const text = line.replace(/^-\s*/, '');
+    if (term === null) {
+      const pm = /^(.+?)\s*\(([^)]{1,20})\)\.?\s*$/.exec(line);
+      if (!pm) { bad = true; continue; }
+      term = cleanTerm(pm[1]); cur = { pos: pm[2].trim(), defs: [] }; sections.push(cur); sense = null; last = 'need';
+    } else if (last === 'need') {
+      sense = { text, example: '' }; cur.defs.push(sense); last = 'def';
+    } else if (last === 'ety' && ety.length) ety[ety.length - 1] += ' ' + text;
+    else if (last === 'ex' && sense) sense.example += '; ' + text;
+    else if (last === 'def' && sense) {
+      if (/^["“'‘]/.test(text) && !sense.example) { sense.example = text; last = 'ex'; } else sense.text += '; ' + text;
+    } else bad = true;
+  }
+  const secs = sections.filter(s => s.defs.some(d => d.text));
+  if (!term || !secs.length) return { ok: false };
+  if (!pron && secs[0].defs[0]) {
+    const m = /^(\/[^/]+\/)\s*(\S.*)$/.exec(secs[0].defs[0].text);
+    if (m) { pron = m[1]; secs[0].defs[0].text = m[2]; }
+  }
+  return { ok: !bad, model: { term, pron, ety: ety.join(' ').trim(), sections: secs } };
+}
+
+function oneLine(s) { return String(s || '').replace(/\s+/g, ' ').trim(); }
+
+function formatEntry(model) {   // -> { lines, block }  (same on-disk format the bot writes)
+  const term = oneLine(model.term);
+  const secs = model.sections.map(s => ({
+    pos: oneLine(s.pos) || 'n.',
+    defs: s.defs.filter(d => oneLine(d.text)).map(d => ({ text: oneLine(d.text), example: oneLine(d.example) })),
+  })).filter(s => s.defs.length);
+  const ety = oneLine(model.ety);
+  let pron = oneLine(model.pron);
+  if (pron && !(pron.startsWith('/') && pron.endsWith('/'))) pron = '/' + pron.replace(/^\/+|\/+$/g, '') + '/';
+  if (secs.length === 1 && secs[0].defs.length === 1 && !secs[0].defs[0].example && !ety && !pron) {
+    return { lines: [`${term} (${secs[0].pos}) - ${secs[0].defs[0].text}`], block: false };
+  }
+  const out = [];
+  secs.forEach(s => {
+    const numbered = s.defs.length > 1;
+    s.defs.forEach((d, i) => {
+      out.push(i === 0 ? `${term} (${s.pos}) - ${numbered ? '1. ' : ''}${d.text}` : `${i + 1}. ${d.text}`);
+      if (d.example) out.push(`- Example: ${d.example}`);
+    });
+  });
+  if (ety) out.push(`Etymology: ${ety}`);
+  if (pron) out.push(`Pronunciation: ${pron}`);
+  return { lines: out, block: true };
+}
+
+// ---- changing the file text ----
+function tidyBlank(lines, s) {
+  if (s > 0 && s < lines.length && lines[s - 1].trim() === '' && lines[s].trim() === '') lines.splice(s, 1);
+}
+
+function placeEntry(lines, u, inner, block, move) {
+  const eol = lines[u.start].endsWith('\r') ? '\r' : '';
+  const out = (block ? [DIV45, ...inner, DIV45] : inner).map(l => l + eol);
+  if (!move) { lines.splice(u.start, u.end - u.start + 1, ...out); return; }
+  lines.splice(u.start, u.end - u.start + 1);
+  tidyBlank(lines, u.start);
+  const key = fileSortKey(move);
+  let at = null;
+  for (const x of findUnits(lines)) {
+    if (x.term && key < fileSortKey(x.term)) { at = x.start; break; }
+  }
+  if (at === null) { at = lines.length; while (at > 0 && lines[at - 1].trim() === '') at--; }
+  if (at > 0 && lines[at - 1].trim() !== '') out.unshift(eol);
+  if (at < lines.length && lines[at].trim() !== '') out.push(eol);
+  lines.splice(at, 0, ...out);
+}
+
+function removeEntry(lines, u) {
+  lines.splice(u.start, u.end - u.start + 1);
+  tidyBlank(lines, u.start);
+}
+
+// ---- display helpers for the page after a save ----
+function applyModelToEntry(entry, model) {
+  const secs = model.sections.map(s => ({ pos: oneLine(s.pos), defs: s.defs.filter(d => oneLine(d.text)).map(d => ({ text: oneLine(d.text), example: oneLine(d.example) })) })).filter(s => s.defs.length);
+  const senses = secs.map(s => ({ pos: POS_NAMES[s.pos.toLowerCase().replace(/[.\s]/g, '')] || s.pos, defs: s.defs }));
+  const posList = [...new Set(senses.map(s => s.pos))];
+  const lines = [];
+  senses.forEach(s => {
+    if (senses.length > 1) lines.push(`[${s.pos}]`);
+    if (s.defs.length > 1) s.defs.forEach((d, i) => lines.push(`${i + 1}. ${d.text}`)); else lines.push(s.defs[0].text);
+  });
+  entry.term = oneLine(model.term);
+  entry.senses = senses;
+  entry.pos_list = posList;
+  entry.pos = posList.join(' / ');
+  entry.definition = lines.join('\n');
+  entry.pronunciation = oneLine(model.pron);
+  entry.etymology = oneLine(model.ety);
+}
+
+function resortEntries() {
+  entries.sort((a, b) => sortKey(a.term).localeCompare(sortKey(b.term)));
+  byTerm = new Map();
+  entries.forEach(e => byTerm.set(e.term.toLowerCase(), e));
+}
+
+// ---- the editor ----
+function posSelectHtml(current) {
+  const known = POS_OPTIONS.some(o => o[0] === current);
+  return '<select class="posSel">' +
+    (known ? '' : `<option value="${esc(current)}" selected>${esc(current || '(none)')}</option>`) +
+    POS_OPTIONS.map(o => `<option value="${esc(o[0])}"${o[0] === current ? ' selected' : ''}>${esc(o[1])} (${esc(o[0])})</option>`).join('') +
+    '</select>';
 }
 
 async function openEditor(entry) {
@@ -270,102 +489,230 @@ async function openEditor(entry) {
   let savedToken = '';
   try { savedToken = localStorage.getItem('ghToken') || ''; } catch (e) {}
 
-  let found;
+  let unit, loadedFull, innerLines;
   try {
     const live = await fetchLiveFile(savedToken);
-    found = locateBlock(live.text, entry);
-    if (!found) throw new Error('This entry could not be located in the file, so it cannot be edited here.');
+    const lines = live.text.split('\n');
+    unit = findUnitFor(entry, findUnits(lines), lines);
+    if (!unit) throw new Error('This entry could not be located in the file, so it cannot be edited here.');
+    const bare = lines.map(stripCR);
+    loadedFull = bare.slice(unit.start, unit.end + 1).join('\n');
+    innerLines = unit.block ? bare.slice(unit.start + 1, unit.end) : bare.slice(unit.start, unit.end + 1);
   } catch (err) {
     panel.innerHTML = `<p class="edit-error">${esc(err.message)}</p>`;
     return;
   }
+
+  const parsed = parseBlock(innerLines);
+  let model = parsed.ok ? parsed.model : { term: entry.term, pron: '', ety: '', sections: [{ pos: 'n.', defs: [{ text: '', example: '' }] }] };
+  let mode = parsed.ok ? 'form' : 'raw';
+  let rawText = innerLines.filter(l => l.trim()).join('\n');
 
   panel.innerHTML = `
     <div class="edit-box">
       ${savedToken
         ? '<p class="muted">Signed in on this browser. <a href="#" id="editSignOut">Sign out</a></p>'
         : '<label for="editPassword">Password</label><input type="password" id="editPassword" autocomplete="off">'}
-      <label for="editText">Entry text</label>
-      <textarea id="editText"></textarea>
-      <button id="editSave">Save edit</button>
-      <button id="editCancel">Cancel</button>
+      <p class="muted" id="modeNote"></p>
+      <div id="formView"></div>
+      <div id="rawView"><label for="rawText">Raw text</label><textarea id="rawText"></textarea></div>
+      <div class="btn-row">
+        <button id="editSave">Save</button>
+        <button id="editCancel">Cancel</button>
+        <button id="modeToggle" type="button"></button>
+        <button id="editDelete" type="button" class="danger">Delete whole word</button>
+      </div>
       <div id="editStatus"></div>
     </div>`;
-  const textArea = document.getElementById('editText');
   const status = document.getElementById('editStatus');
+  const formView = document.getElementById('formView');
+  const rawView = document.getElementById('rawView');
+  const rawArea = document.getElementById('rawText');
   const signOut = document.getElementById('editSignOut');
-  if (signOut) {
-    signOut.onclick = (ev) => {
-      ev.preventDefault();
-      try { localStorage.removeItem('ghToken'); } catch (e) {}
-      openEditor(entry);
-    };
-  }
-  textArea.value = found.blockText;
-  textArea.rows = Math.max(4, found.blockText.split('\n').length + 1);
+  if (signOut) signOut.onclick = (ev) => { ev.preventDefault(); try { localStorage.removeItem('ghToken'); } catch (e) {} openEditor(entry); };
 
   function setStatus(message, kind) {
     status.className = kind === 'error' ? 'edit-error' : kind === 'ok' ? 'edit-ok' : 'muted';
     status.textContent = message;
   }
 
+  function renderForm() {
+    formView.innerHTML = `
+      <label>Headword</label><input id="fTerm" value="${esc(model.term)}">
+      <label>Pronunciation <span class="muted">(optional)</span></label><input id="fPron" value="${esc(model.pron)}" placeholder="/…/">
+      <label>Etymology <span class="muted">(optional)</span></label><textarea id="fEty" rows="2">${esc(model.ety)}</textarea>
+      ${model.sections.map((s, si) => `
+        <div class="sec" data-s="${si}">
+          <div class="sec-head">${posSelectHtml(s.pos)}<button type="button" class="delSec">Delete part of speech</button></div>
+          <ol class="defs-edit">
+            ${s.defs.map((d, di) => `
+              <li data-d="${di}">
+                <textarea class="dText" rows="2" placeholder="Definition">${esc(d.text)}</textarea>
+                <input class="dEx" value="${esc(d.example)}" placeholder="Example sentence (optional)">
+                ${s.defs.length > 1 ? '<button type="button" class="delDef">Delete definition</button>' : ''}
+              </li>`).join('')}
+          </ol>
+          <button type="button" class="addDef">+ add definition</button>
+        </div>`).join('')}
+      <div class="add-pos">
+        <button type="button" id="addPos">+ add part of speech</button>
+        <span id="posPicker" style="display:none">${posSelectHtml('n.').replace('class="posSel"', 'id="newPos"')} <button type="button" id="posOk">Add</button></span>
+      </div>`;
+  }
+
+  function collect() {
+    if (!document.getElementById('fTerm')) return;
+    model.term = document.getElementById('fTerm').value;
+    model.pron = document.getElementById('fPron').value;
+    model.ety = document.getElementById('fEty').value;
+    formView.querySelectorAll('.sec').forEach(secEl => {
+      const s = model.sections[+secEl.dataset.s];
+      s.pos = secEl.querySelector('.posSel').value;
+      secEl.querySelectorAll('li').forEach(li => {
+        const d = s.defs[+li.dataset.d];
+        d.text = li.querySelector('.dText').value;
+        d.example = li.querySelector('.dEx').value;
+      });
+    });
+  }
+
+  formView.addEventListener('click', (ev) => {
+    const t = ev.target;
+    const secEl = t.closest('.sec');
+    if (t.id === 'addPos') { document.getElementById('posPicker').style.display = ''; t.style.display = 'none'; return; }
+    if (t.id === 'posOk') {
+      collect();
+      model.sections.push({ pos: document.getElementById('newPos').value, defs: [{ text: '', example: '' }] });
+      renderForm(); return;
+    }
+    if (!secEl) return;
+    collect();
+    const s = model.sections[+secEl.dataset.s];
+    if (t.classList.contains('addDef')) s.defs.push({ text: '', example: '' });
+    else if (t.classList.contains('delDef')) s.defs.splice(+t.closest('li').dataset.d, 1);
+    else if (t.classList.contains('delSec')) model.sections.splice(+secEl.dataset.s, 1);
+    else return;
+    renderForm();
+  });
+
+  function showMode() {
+    formView.style.display = mode === 'form' ? '' : 'none';
+    rawView.style.display = mode === 'raw' ? '' : 'none';
+    document.getElementById('modeToggle').textContent = mode === 'form' ? 'Raw text' : 'Back to form';
+    document.getElementById('modeNote').textContent = mode === 'raw' && !parsed.ok && innerLines.length
+      ? 'The form could not read this older entry, so it opens as raw text.' : '';
+  }
+
+  document.getElementById('modeToggle').onclick = () => {
+    if (mode === 'form') {
+      collect();
+      const f = formatEntry(model);
+      rawArea.value = f.lines.length && model.sections.some(s => s.defs.some(d => d.text.trim())) ? f.lines.join('\n') : rawText;
+      mode = 'raw';
+    } else {
+      const p = parseBlock(rawArea.value.split('\n'));
+      if (!p.ok) return setStatus('The form cannot read this text, so it stays as raw text.', 'error');
+      model = p.model; renderForm(); mode = 'form';
+    }
+    setStatus('');
+    showMode();
+  };
+
+  renderForm();
+  rawArea.value = rawText;
+  rawArea.rows = Math.max(4, rawText.split('\n').length + 1);
+  showMode();
+
   document.getElementById('editCancel').onclick = () => { panel.innerHTML = ''; };
 
+  async function ensureToken() {
+    if (savedToken) return savedToken;
+    if (!LOCKED_TOKEN) throw new Error('Editing is not set up yet.');
+    const password = document.getElementById('editPassword').value;
+    if (!password) throw new Error('Enter the password first.');
+    setStatus('Unlocking…');
+    const token = await unlockToken(password);
+    try { localStorage.setItem('ghToken', token); } catch (e) {}
+    savedToken = token;
+    return token;
+  }
+
+  // Re-reads the live file, checks the entry did not change, applies `change`, saves.
+  async function pushChange(change, message) {
+    const token = await ensureToken();
+    setStatus('Saving…');
+    const live = await fetchLiveFile(token);
+    const lines = live.text.split('\n');
+    const u = findUnitFor(entry, findUnits(lines), lines);
+    if (!u || lines.slice(u.start, u.end + 1).map(stripCR).join('\n') !== loadedFull) {
+      throw new Error('This entry changed since it was loaded. Close the editor and try again.');
+    }
+    change(lines, u);
+    const res = await fetch(`${API}/contents/${encodeURIComponent(fileNameFor(live.number))}`, {
+      method: 'PUT',
+      headers: { ...ghHeaders(token), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: message(live.number), content: toBase64(lines.join('\n')), sha: live.sha, branch: BRANCH }),
+    });
+    if (res.status === 409 || res.status === 422) throw new Error('The file changed while saving. Close the editor and try again.');
+    if (res.status === 401 || res.status === 403 || res.status === 404) {
+      try { localStorage.removeItem('ghToken'); } catch (e) {}
+      throw new Error('GitHub rejected the token. It may have expired. Close the editor and reopen it to sign in again.');
+    }
+    if (!res.ok) throw new Error('Save failed (' + res.status + ').');
+    return live.number;
+  }
+
   document.getElementById('editSave').onclick = async () => {
-    const newText = textArea.value.replace(/\r/g, '').replace(/\n+$/, '');
-    if (!newText.trim()) return setStatus('The entry cannot be empty.', 'error');
-    if (/\n\s*\n/.test(newText)) return setStatus('Blank lines are not allowed inside an entry.', 'error');
-    if (newText === found.blockText) return setStatus('Nothing was changed.', 'error');
-
     try {
-      let token = savedToken;
-      if (!token) {
-        if (!LOCKED_TOKEN) throw new Error('Editing is not set up yet.');
-        const password = document.getElementById('editPassword').value;
-        if (!password) throw new Error('Enter the password first.');
-        setStatus('Unlocking…');
-        token = await unlockToken(password);
-        try { localStorage.setItem('ghToken', token); } catch (e) {}
-        savedToken = token;
+      let inner, block, newTerm, newModel = null;
+      if (mode === 'form') {
+        collect();
+        newTerm = oneLine(model.term);
+        if (!newTerm) throw new Error('The headword cannot be empty.');
+        if (!model.sections.some(s => s.defs.some(d => oneLine(d.text)))) throw new Error('Add at least one definition.');
+        if (model.sections.some(s => !oneLine(s.pos))) throw new Error('Every part of speech needs a label.');
+        const f = formatEntry(model);
+        inner = f.lines; block = f.block; newModel = model;
+      } else {
+        inner = rawArea.value.split('\n').map(l => l.replace(/\r/g, '').trimEnd()).filter(l => l.trim());
+        if (!inner.length) throw new Error('The entry cannot be empty.');
+        const mainLine = inner.find(l => !isSkipLine(l.trim()) && parseEntryLine(l.trim()));
+        if (!mainLine) throw new Error('Keep one line shaped like: word (pos) - definition');
+        newTerm = parseEntryLine(mainLine.trim()).term;
+        block = unit.block || inner.length > 1;
+        const p = parseBlock(inner);
+        if (p.ok) newModel = p.model;
       }
-      setStatus('Saving…');
-      const live = await fetchLiveFile(token);
-      const again = locateBlock(live.text, entry);
-      if (!again || again.blockText !== found.blockText) {
-        throw new Error('This entry changed since it was loaded. Close the editor and try again.');
+      const newFull = block ? [DIV45, ...inner, DIV45].join('\n') : inner.join('\n');
+      if (newFull === loadedFull) throw new Error('Nothing was changed.');
+      const renamed = newTerm !== unit.term;
+      if (renamed && newTerm.toLowerCase() !== entry.term.toLowerCase() && byTerm.has(newTerm.toLowerCase())) {
+        throw new Error(`There is already an entry called "${newTerm}".`);
       }
-      const eol = again.lines[again.start].endsWith('\r') ? '\r' : '';
-      const replacement = newText.split('\n').map(l => l + eol);
-      again.lines.splice(again.start, again.end - again.start, ...replacement);
+      const oldTerm = entry.term;
+      const number = await pushChange(
+        (lines, u) => placeEntry(lines, u, inner, block, renamed ? newTerm : null),
+        n => renamed ? `Edit dictionary v1.2.${n}: rename '${oldTerm}' to '${newTerm}'` : `Edit dictionary v1.2.${n}: update '${oldTerm}'`
+      );
+      if (newModel) applyModelToEntry(entry, newModel);
+      else { entry.term = newTerm; }
+      resortEntries();
+      location.hash = 'w=' + encodeURIComponent(entry.term);
+      if (location.hash === '#w=' + encodeURIComponent(entry.term)) showEntry(entry.term);
+    } catch (err) {
+      setStatus(err.message, 'error');
+    }
+  };
 
-      const res = await fetch(`${API}/contents/${encodeURIComponent(fileNameFor(live.number))}`, {
-        method: 'PUT',
-        headers: { ...ghHeaders(token), 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          message: `Edit dictionary v1.2.${live.number}: update '${entry.term}'`,
-          content: toBase64(again.lines.join('\n')),
-          sha: live.sha,
-          branch: BRANCH,
-        }),
-      });
-      if (res.status === 409 || res.status === 422) {
-        throw new Error('The file changed while saving. Close the editor and try again.');
-      }
-      if (res.status === 401 || res.status === 403 || res.status === 404) {
-        try { localStorage.removeItem('ghToken'); } catch (e) {}
-        throw new Error('GitHub rejected the token. It may have expired. Close the editor and reopen it to sign in again.');
-      }
-      if (!res.ok) throw new Error('Save failed (' + res.status + ').');
-      found.blockText = newText;
-      const parsed = /^(.+?) \((.+?)\) - (.+)$/.exec(newText.split('\n')[0]);
-      if (parsed) {
-        entry.term = parsed[1].trim();
-        entry.pos = parsed[2].trim();
-        entry.definition = parsed[3].trim();
-        const shown = document.querySelector('ol.defs li');
-        if (shown) shown.textContent = entry.definition;
-      }
-      setStatus(`Saved to v1.2.${live.number}. Other visitors see the change after the next stats rebuild.`, 'ok');
+  document.getElementById('editDelete').onclick = async () => {
+    if (!confirm(`Are you sure you want to delete "${entry.term}" from the dictionary?`)) return;
+    try {
+      const oldTerm = entry.term;
+      await pushChange((lines, u) => removeEntry(lines, u), n => `Edit dictionary v1.2.${n}: remove '${oldTerm}'`);
+      entries = entries.filter(e => e !== entry);
+      resortEntries();
+      location.hash = '';
+      route();
     } catch (err) {
       setStatus(err.message, 'error');
     }

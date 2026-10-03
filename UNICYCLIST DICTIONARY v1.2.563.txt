@@ -2,16 +2,6 @@ UNICYCLIST DICTIONARY v1.2.563 - October 02, 2026 11:32 PM CDT
 
 -----DICTIONARY PROPER-----
 
----------------------------------------------
-(v.) (n.) - 1. a tag for verps
-2. a verp for tags
-(v.) (adj.) - 1. an adj for verps
-2. a verp for adj's
-- Example: "I verped"
-Etymology: comes from the latin "verpus" meaning "to verp"
-Pronunciation: /ver-epp/
----------------------------------------------
-
 abgde (n.) - /aβ̞ɣð̠e/ an earlier form of something
 
 Abnormal Road (n.) - the section of Normal Road that's blocked off

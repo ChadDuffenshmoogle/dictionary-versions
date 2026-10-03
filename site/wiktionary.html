@@ -61,6 +61,18 @@
   .edit-box .add-pos { margin-top:12px; }
   .edit-box textarea.dText, .edit-box #fEty { min-height:3rem; }
   .edit-box .danger { margin-left:auto; color:#b32424; border-color:#b32424; }
+  .layout { display:flex; align-items:flex-start; max-width:1100px; margin:0 auto; }
+  .layout main { flex:1; min-width:0; max-width:none; margin:0; }
+  #sidebar { flex:none; width:170px; padding:20px 0 20px 20px; position:sticky; top:0; font-size:0.92rem; }
+  #sidebar .side-title { font-weight:bold; border-bottom:1px solid var(--line); margin-bottom:6px; }
+  #sidebar ul { list-style:none; margin:0; padding:0; }
+  #sidebar li { margin-bottom:5px; }
+  .cat-box { border:1px solid var(--line); background:var(--panel); margin-top:20px; padding:6px 12px; font-size:0.9rem; }
+  @media (max-width:700px) {
+    .layout { flex-direction:column; align-items:stretch; }
+    #sidebar { width:auto; padding:10px 20px 0 20px; position:static; }
+    #sidebar ul { display:flex; flex-wrap:wrap; gap:6px 16px; }
+  }
 </style>
 </head>
 <body>
@@ -69,7 +81,17 @@
   <input id="search" type="search" placeholder="Search words or definitions" autocomplete="off">
   <a class="back" href="index.html">Back to stats</a>
 </header>
-<main id="view"><p class="muted">Loading…</p></main>
+<div class="layout">
+  <aside id="sidebar">
+    <div class="side-title">Navigation</div>
+    <ul>
+      <li><a href="#">Main page</a></li>
+      <li><a href="#" id="randomLink">Random word</a></li>
+      <li><a href="index.html">Back to stats</a></li>
+    </ul>
+  </aside>
+  <main id="view"><p class="muted">Loading…</p></main>
+</div>
 
 <script>
 let entries = [];
@@ -138,10 +160,9 @@ function showHome() {
   const latest = stats.latest_word_term;
   view.innerHTML = `
     <h1>Unicyclist Wiktionary</h1>
-    <p>${entries.length} entries. Pick a letter, search above, or try a random word.</p>
+    <p>${entries.length} entries. Pick a letter or search above.</p>
     ${lettersBar('')}
-    <p><a href="#" id="randomLink">Random word</a>
-    ${latest && byTerm.has(latest.toLowerCase()) ? ` · Newest word: ${wordLink(byTerm.get(latest.toLowerCase()).term)}` : ''}</p>
+    ${latest && byTerm.has(latest.toLowerCase()) ? `<p>Newest word: ${wordLink(byTerm.get(latest.toLowerCase()).term)}</p>` : ''}
     ${wordOfTheDayHtml()}
     ${'#ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').map(letter => {
       const list = entries.filter(e => letterOf(e.term) === letter);
@@ -149,12 +170,14 @@ function showHome() {
       return `<h2>${letter}</h2>
         <ul class="word-list">${list.map(e => `<li>${wordLink(e.term)}</li>`).join('')}</ul>`;
     }).join('')}`;
-  document.getElementById('randomLink').onclick = (e) => {
-    e.preventDefault();
-    const pick = entries[Math.floor(Math.random() * entries.length)];
-    location.hash = 'w=' + encodeURIComponent(pick.term);
-  };
 }
+
+document.getElementById('randomLink').onclick = (e) => {
+  e.preventDefault();
+  if (!entries.length) return;
+  const pick = entries[Math.floor(Math.random() * entries.length)];
+  location.hash = 'w=' + encodeURIComponent(pick.term);
+};
 
 function showLetter(letter) {
   const list = entries.filter(e => letterOf(e.term) === letter);
@@ -196,6 +219,9 @@ function showEntry(term) {
     <div class="nav">
       <span>${prev ? '← ' + wordLink(prev.term) : ''}</span>
       <span>${next ? wordLink(next.term) + ' →' : ''}</span>
+    </div>
+    <div class="cat-box"><b>Categories:</b>
+      <a href="#l=${encodeURIComponent(letterOf(e.term))}">${letterOf(e.term) === '#' ? 'Symbol and number words' : letterOf(e.term) + ' words'}</a>
     </div>`;
   document.getElementById('editLink').onclick = (ev) => {
     ev.preventDefault();

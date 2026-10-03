@@ -95,11 +95,12 @@ def get_all_commits():
 
 def get_dictionary_filenames():
     """List every dictionary version file in the repo root."""
-    resp = api_get(f"{API_ROOT}/contents/", params={"ref": GITHUB_BRANCH})
-    files = resp.json()
+    resp = api_get(f"{API_ROOT}/git/trees/{GITHUB_BRANCH}")
+    files = resp.json()["tree"]
     names = [
-        f["name"] for f in files
-        if f["name"].startswith(FILE_PREFIX) and f["name"].endswith(FILE_EXTENSION)
+        f["path"] for f in files
+        if f["type"] == "blob"
+        and f["path"].startswith(FILE_PREFIX) and f["path"].endswith(FILE_EXTENSION)
     ]
     return names
 

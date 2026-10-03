@@ -95,6 +95,7 @@
     color: var(--accent);
     font-weight: 700;
   }
+  .dict-entry .def { white-space: pre-line; }
   .dict-entry .pos {
     color: #6b7280;
     font-size: 0.75rem;
@@ -586,7 +587,7 @@ async function main() {
     <div class="dict-entry" data-i="${i}">
       <div style="display:flex; align-items:baseline; gap:8px; flex-wrap:wrap;">
         <span class="term" data-term="${escapeHtml(e.term)}"></span>
-        <span class="pos">${escapeHtml(e.pos || '')}</span>
+        <span class="pos">${escapeHtml(e.pos || '')}</span>${e.pronunciation ? `<span class="pos">${escapeHtml(e.pronunciation)}</span>` : ''}
       </div>
       <div class="def" data-def="${escapeHtml(e.definition)}"></div>
     </div>
@@ -620,7 +621,7 @@ async function main() {
       if (isScrabble) match = e.scrabble === scrabbleMatch[1] && (!q || term.includes(q));
       else if (!q) match = true;
       else if (isDate) match = dateTerms.has(term);
-      else if (isPos) match = pos === q;
+      else if (isPos) match = (e.pos_list || [e.pos || '']).some(p => (p || '(no pos)').toLowerCase() === q);
       else if (isPrefix) match = term.startsWith(q);
       else if (searchScope === 'term') match = term.includes(q);
       else if (searchScope === 'definition') match = def.includes(q);
@@ -1137,7 +1138,7 @@ async function main() {
   // regenerate it without a page reload.
   const cloudTermPosMap = new Map();
   (stats.definitions_by_length_asc || []).forEach(d => {
-    if (!cloudTermPosMap.has(d.term)) cloudTermPosMap.set(d.term, d.pos || '(no pos)');
+    if (!cloudTermPosMap.has(d.term)) cloudTermPosMap.set(d.term, (d.pos_list && d.pos_list[0]) || d.pos || '(no pos)');
   });
   function cloudColorForPos(pos) {
     const idx = posLabels.indexOf(pos || '(no pos)');

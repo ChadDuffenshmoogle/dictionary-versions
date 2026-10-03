@@ -106,7 +106,23 @@ function lettersBar(active) {
 function wordOfTheDayHtml() {
   const now = new Date();
   const dayNumber = Math.floor(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()) / 86400000);
-  const e = entries[(Math.imul(dayNumber, 2654435761) >>> 0) % entries.length];
+  // Each word gets a fixed score for today; the lowest score wins. Adding or editing
+  // other words almost never changes the winner (unlike picking by position in the list).
+  const score = (t) => {
+    let h = 2166136261;
+    const str = dayNumber + '|' + t.toLowerCase();
+    for (let i = 0; i < str.length; i++) h = Math.imul(h ^ str.charCodeAt(i), 16777619);
+    return h >>> 0;
+  };
+  let e = null;
+  try {   // this browser remembers today's pick so it never flips during the day
+    const saved = JSON.parse(localStorage.getItem('wotd') || 'null');
+    if (saved && saved.day === dayNumber) e = entries.find(x => x.term === saved.term) || null;
+  } catch (err) {}
+  if (!e) {
+    e = entries.reduce((best, x) => (best === null || score(x.term) < score(best.term)) ? x : best, null);
+    try { localStorage.setItem('wotd', JSON.stringify({ day: dayNumber, term: e.term })); } catch (err) {}
+  }
   const dateText = now.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
   return `
     <div class="wotd">

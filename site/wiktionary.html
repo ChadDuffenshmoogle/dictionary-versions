@@ -75,6 +75,7 @@
     #sidebar { width:auto; padding:10px 20px 0 20px; position:static; }
     #sidebar ul { display:flex; flex-wrap:wrap; gap:6px 16px; }
   }
+  .cat-index { line-height:1.9; }
 </style>
 </head>
 <body>
@@ -89,6 +90,7 @@
     <ul>
       <li><a href="#">Main page</a></li>
       <li><a href="#" id="randomLink">Random word</a></li>
+      <li><a href="#c=">Categories</a></li>
       <li><a href="index.html">Back to stats</a></li>
     </ul>
   </aside>
@@ -181,6 +183,50 @@ document.getElementById('randomLink').onclick = (e) => {
   location.hash = 'w=' + encodeURIComponent(pick.term);
 };
 
+// ---- categories (worked out from the data, so they update on their own) ----
+function exampleCount(e) {
+  return (e.senses || []).reduce((n, s) => n + s.defs.reduce((m, d) => m + (d.examples ? d.examples.length : (d.example ? 1 : 0)), 0), 0);
+}
+function senseCount(e) { return (e.senses || []).reduce((n, s) => n + s.defs.length, 0); }
+
+const CATEGORIES = [
+  { key: 'etym', label: 'Words with etymology', test: e => !!e.etymology },
+  { key: 'no-etym', label: 'Words without etymology', test: e => !e.etymology },
+  { key: 'ex', label: 'Words with example sentences', test: e => exampleCount(e) > 0 },
+  { key: 'no-ex', label: 'Words without example sentences', test: e => exampleCount(e) === 0 },
+  { key: 'multi-ex', label: 'Words with several example sentences', test: e => exampleCount(e) > 1 },
+  { key: 'pron', label: 'Words with pronunciation', test: e => !!e.pronunciation },
+  { key: 'no-pron', label: 'Words without pronunciation', test: e => !e.pronunciation },
+  { key: 'multi-pos', label: 'Words with several parts of speech', test: e => (e.pos_list || []).length > 1 },
+  { key: 'multi-def', label: 'Words with several definitions', test: e => senseCount(e) > 1 },
+];
+
+function allCategories() {
+  const posSet = [...new Set(entries.flatMap(e => e.pos_list || []))].filter(p => p && p !== '(no pos)').sort();
+  return CATEGORIES.concat(posSet.map(p => ({ key: 'pos:' + p, label: p + ' entries', test: e => (e.pos_list || []).includes(p) })));
+}
+
+function categoriesOf(e) {
+  return allCategories().filter(c => c.test(e));
+}
+
+function showCategoryIndex() {
+  view.innerHTML = `
+    <h1>Categories</h1>
+    <ul class="cat-index">${allCategories().map(c =>
+      `<li><a href="#c=${encodeURIComponent(c.key)}">${esc(c.label)}</a> <span class="muted">(${entries.filter(c.test).length})</span></li>`).join('')}</ul>`;
+}
+
+function showCategory(key) {
+  const c = allCategories().find(x => x.key === key);
+  if (!c) { view.innerHTML = '<h1>Category</h1><p>No category with this name.</p>'; return; }
+  const list = entries.filter(c.test);
+  view.innerHTML = `
+    <h1>${esc(c.label)}</h1>
+    <p class="muted">${list.length} entries · <a href="#c=">All categories</a></p>
+    <ul class="word-list">${list.map(e => `<li>${wordLink(e.term)}</li>`).join('')}</ul>`;
+}
+
 function showLetter(letter) {
   const list = entries.filter(e => letterOf(e.term) === letter);
   view.innerHTML = `
@@ -224,6 +270,7 @@ function showEntry(term) {
     </div>
     <div class="cat-box"><b>Categories:</b>
       <a href="#l=${encodeURIComponent(letterOf(e.term))}">${letterOf(e.term) === '#' ? 'Symbol and number words' : letterOf(e.term) + ' words'}</a>
+      ${categoriesOf(e).map(c => ` · <a href="#c=${encodeURIComponent(c.key)}">${esc(c.label)}</a>`).join('')}
     </div>`;
   document.getElementById('editLink').onclick = (ev) => {
     ev.preventDefault();
@@ -775,6 +822,7 @@ async function openEditor(entry) {
 function route() {
   const hash = location.hash.replace(/^#/, '');
   if (hash.startsWith('w=')) return showEntry(decodeURIComponent(hash.slice(2)));
+  if (hash.startsWith('c=')) { const k = decodeURIComponent(hash.slice(2)); return k ? showCategory(k) : showCategoryIndex(); }
   if (hash.startsWith('l=')) return showLetter(decodeURIComponent(hash.slice(2)));
   if (hash.startsWith('q=')) return showSearch(decodeURIComponent(hash.slice(2)));
   showHome();

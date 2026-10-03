@@ -116,6 +116,20 @@ def get_latest_filename(filenames):
     return max(filenames, key=parse_version_tuple)
 
 
+def fetch_dictionary_file(filename):
+    """Read the dictionary file through the API instead of raw.githubusercontent.com,
+    whose cache can serve a version that is several minutes old."""
+    resp = requests.get(
+        f"{API_ROOT}/contents/{requests.utils.quote(filename)}",
+        headers={**HEADERS, "Accept": "application/vnd.github.raw+json"},
+        params={"ref": GITHUB_BRANCH},
+        timeout=30,
+    )
+    resp.raise_for_status()
+    resp.encoding = "utf-8"
+    return resp.text
+
+
 def sort_key_ignore_punct(s):
     term = s.split(" (")[0] if " (" in s else s
     term = term.lstrip(" '-\"")
@@ -545,7 +559,7 @@ def main():
     # --- Latest file: entries, letter breakdown, word/definition extremes ---
     filenames = get_dictionary_filenames()
     latest_name = get_latest_filename(filenames)
-    content = fetch_raw(latest_name)
+    content = fetch_dictionary_file(latest_name)
 
     # The CORPUS block is just a comma-joined index and can't reliably be
     # split back into terms -- a term that itself contains a comma (e.g.

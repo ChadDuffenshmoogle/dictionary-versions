@@ -183,7 +183,8 @@ const API = `https://api.github.com/repos/${OWNER}/${REPO}`;
 const NAME_PATTERN = /^UNICYCLIST DICTIONARY v1\.2\.(\d+)\.txt$/;
 const DIVIDER = /^-{20,}\s*$/;
 
-const LOCKED_TOKEN = {"salt":"zeTKRLyjbrN5aFMP1bShFw==","iv":"/UBwf83fx4ax1Z8Y","iterations":600000,"data":"6Eb4edlzhSUtxecd35oSCK4A28Ic0jSRKNRhbEIxJXmuh2pbPtr2BQ0XAiTDOp4Aay0KZr7m/pHzYJZTFtg2QpMjebcHLF9OCLxIlkEopNPNV8rHwWkday1GfyycFWLmiAvmg6iSE1m7xRgUFg=="};
+// Paste the output of lock-token.html in place of "null" below (keep the semicolon).
+const LOCKED_TOKEN = null;
 
 function fromBase64(s) {
   return Uint8Array.from(atob(s), c => c.charCodeAt(0));
@@ -223,7 +224,7 @@ function toBase64(text) {
 }
 
 async function fetchLiveFile(token) {
-  const treeRes = await fetch(`${API}/git/trees/${BRANCH}`, { headers: ghHeaders(token) });
+  const treeRes = await fetch(`${API}/git/trees/${BRANCH}`, { headers: ghHeaders(token), cache: 'no-store' });
   if (!treeRes.ok) throw new Error('Could not list the repo files (' + treeRes.status + ').');
   const tree = (await treeRes.json()).tree;
   let number = 0;
@@ -236,7 +237,7 @@ async function fetchLiveFile(token) {
     }
   });
   if (!number) throw new Error('No dictionary file found in the repo.');
-  const res = await fetch(`${API}/contents/${encodeURIComponent(fileNameFor(number))}?ref=${BRANCH}`, { headers: ghHeaders(token, true) });
+  const res = await fetch(`${API}/contents/${encodeURIComponent(fileNameFor(number))}?ref=${BRANCH}`, { headers: ghHeaders(token, true), cache: 'no-store' });
   if (!res.ok) throw new Error('Could not load v1.2.' + number + ' (' + res.status + ').');
   return { number, sha, text: await res.text() };
 }
@@ -355,7 +356,16 @@ async function openEditor(entry) {
         throw new Error('GitHub rejected the token. It may have expired. Close the editor and reopen it to sign in again.');
       }
       if (!res.ok) throw new Error('Save failed (' + res.status + ').');
-      setStatus(`Saved to v1.2.${live.number}. The page shows the change after the next stats rebuild.`, 'ok');
+      found.blockText = newText;
+      const parsed = /^(.+?) \((.+?)\) - (.+)$/.exec(newText.split('\n')[0]);
+      if (parsed) {
+        entry.term = parsed[1].trim();
+        entry.pos = parsed[2].trim();
+        entry.definition = parsed[3].trim();
+        const shown = document.querySelector('ol.defs li');
+        if (shown) shown.textContent = entry.definition;
+      }
+      setStatus(`Saved to v1.2.${live.number}. Other visitors see the change after the next stats rebuild.`, 'ok');
     } catch (err) {
       setStatus(err.message, 'error');
     }

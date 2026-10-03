@@ -183,8 +183,7 @@ const API = `https://api.github.com/repos/${OWNER}/${REPO}`;
 const NAME_PATTERN = /^UNICYCLIST DICTIONARY v1\.2\.(\d+)\.txt$/;
 const DIVIDER = /^-{20,}\s*$/;
 
-// Paste the output of lock-token.html in place of "null" below (keep the semicolon).
-const LOCKED_TOKEN = null;
+const LOCKED_TOKEN = {"salt":"zeTKRLyjbrN5aFMP1bShFw==","iv":"/UBwf83fx4ax1Z8Y","iterations":600000,"data":"6Eb4edlzhSUtxecd35oSCK4A28Ic0jSRKNRhbEIxJXmuh2pbPtr2BQ0XAiTDOp4Aay0KZr7m/pHzYJZTFtg2QpMjebcHLF9OCLxIlkEopNPNV8rHwWkday1GfyycFWLmiAvmg6iSE1m7xRgUFg=="};
 
 function fromBase64(s) {
   return Uint8Array.from(atob(s), c => c.charCodeAt(0));

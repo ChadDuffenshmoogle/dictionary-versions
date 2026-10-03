@@ -29,6 +29,12 @@
   .nav { display:flex; justify-content:space-between; gap:10px; margin-top:28px; padding-top:10px; border-top:1px solid var(--line); font-size:0.9rem; }
   .muted { color:var(--muted); }
   mark { background:#fef6c7; }
+  .wotd { border:1px solid #cedff2; background:#f5faff; margin:16px 0 20px 0; }
+  .wotd-head { background:#cedff2; padding:4px 12px; font-weight:bold; font-size:1.05rem; }
+  .wotd-body { padding:10px 14px; }
+  .wotd-word { font-family: Georgia, serif; font-size:1.6rem; font-weight:bold; overflow-wrap:anywhere; }
+  .wotd-pos { font-style:italic; color:var(--muted); margin-left:6px; }
+  .wotd-def { margin-top:4px; overflow-wrap:anywhere; }
 </style>
 </head>
 <body>
@@ -71,6 +77,21 @@ function lettersBar(active) {
   ).join('') + '</div>';
 }
 
+function wordOfTheDayHtml() {
+  const now = new Date();
+  const dayNumber = Math.floor(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()) / 86400000);
+  const e = entries[(Math.imul(dayNumber, 2654435761) >>> 0) % entries.length];
+  const dateText = now.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+  return `
+    <div class="wotd">
+      <div class="wotd-head">Word of the day for ${esc(dateText)}</div>
+      <div class="wotd-body">
+        <div><span class="wotd-word">${wordLink(e.term)}</span>${e.pos && e.pos !== '(no pos)' ? `<span class="wotd-pos">${esc(e.pos)}</span>` : ''}</div>
+        <div class="wotd-def">${esc(e.definition)}</div>
+      </div>
+    </div>`;
+}
+
 function showHome() {
   const latest = stats.latest_word_term;
   view.innerHTML = `
@@ -79,6 +100,7 @@ function showHome() {
     ${lettersBar('')}
     <p><a href="#" id="randomLink">Random word</a>
     ${latest && byTerm.has(latest.toLowerCase()) ? ` · Newest word: ${wordLink(byTerm.get(latest.toLowerCase()).term)}` : ''}</p>
+    ${wordOfTheDayHtml()}
     ${'#ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').map(letter => {
       const list = entries.filter(e => letterOf(e.term) === letter);
       if (list.length === 0) return '';

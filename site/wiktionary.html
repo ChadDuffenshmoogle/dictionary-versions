@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Unicyclist Wiktionary</title>
+<style>
+  :root { --bg:#fff; --text:#202122; --muted:#54595d; --link:#0645ad; --line:#a2a9b1; --panel:#f8f9fa; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); font-family: sans-serif; line-height:1.6; }
+  a { color:var(--link); text-decoration:none; }
+  a:hover { text-decoration:underline; }
+  header { background:var(--panel); border-bottom:1px solid var(--line); padding:12px 20px; display:flex; flex-wrap:wrap; gap:12px; align-items:center; }
+  header .brand { font-family: Georgia, serif; font-size:1.4rem; font-weight:bold; color:var(--text); }
+  header input { flex:1; min-width:180px; max-width:420px; padding:7px 10px; font-size:1rem; border:1px solid var(--line); border-radius:2px; }
+  header .back { margin-left:auto; font-size:0.9rem; }
+  main { max-width:820px; margin:0 auto; padding:20px; }
+  h1 { font-family: Georgia, serif; font-weight:normal; font-size:2rem; border-bottom:1px solid var(--line); margin:0 0 4px 0; overflow-wrap:anywhere; }
+  h2 { font-family: Georgia, serif; font-weight:normal; font-size:1.4rem; border-bottom:1px solid var(--line); margin:1.2rem 0 0.4rem 0; }
+  .from { color:var(--muted); font-size:0.85rem; margin-bottom:12px; }
+  .pos-heading { font-size:1.1rem; font-weight:bold; margin:1rem 0 0.3rem 0; }
+  ol.defs { margin:0; padding-left:28px; }
+  ol.defs li { overflow-wrap:anywhere; }
+  .letters { display:flex; flex-wrap:wrap; gap:6px; margin:12px 0; }
+  .letters a { border:1px solid var(--line); background:var(--panel); padding:2px 9px; border-radius:2px; }
+  .letters a.on { background:var(--link); color:#fff; border-color:var(--link); }
+  .word-list { columns:2 260px; padding-left:0; list-style:none; margin:0; }
+  .word-list li { margin-bottom:3px; overflow-wrap:anywhere; }
+  .nav { display:flex; justify-content:space-between; gap:10px; margin-top:28px; padding-top:10px; border-top:1px solid var(--line); font-size:0.9rem; }
+  .muted { color:var(--muted); }
+  mark { background:#fef6c7; }
+</style>
+</head>
+<body>
+<header>
+  <a class="brand" href="#">Unicyclist Wiktionary</a>
+  <input id="search" type="search" placeholder="Search words or definitions" autocomplete="off">
+  <a class="back" href="index.html">Back to stats</a>
+</header>
+<main id="view"><p class="muted">Loading…</p></main>
+
+<script>
+let entries = [];
+let byTerm = new Map();
+let stats = null;
+
+const view = document.getElementById('view');
+const searchBox = document.getElementById('search');
+
+function esc(s) {
+  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function sortKey(term) {
+  return term.toLowerCase().replace(/^[^a-z0-9]+/i, '');
+}
+
+function letterOf(term) {
+  const c = sortKey(term).charAt(0).toUpperCase();
+  return /[A-Z]/.test(c) ? c : '#';
+}
+
+function wordLink(term) {
+  return `<a href="#w=${encodeURIComponent(term)}">${esc(term)}</a>`;
+}
+
+function lettersBar(active) {
+  const all = '#ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+  return '<div class="letters">' + all.map(l =>
+    `<a href="#l=${encodeURIComponent(l)}" class="${l === active ? 'on' : ''}">${l}</a>`
+  ).join('') + '</div>';
+}
+
+function showHome() {
+  const latest = stats.latest_word_term;
+  view.innerHTML = `
+    <h1>Unicyclist Wiktionary</h1>
+    <p>${entries.length} entries. Pick a letter, search above, or try a random word.</p>
+    ${lettersBar('')}
+    <p><a href="#" id="randomLink">Random word</a>
+    ${latest && byTerm.has(latest.toLowerCase()) ? ` · Newest word: ${wordLink(byTerm.get(latest.toLowerCase()).term)}` : ''}</p>`;
+  document.getElementById('randomLink').onclick = (e) => {
+    e.preventDefault();
+    const pick = entries[Math.floor(Math.random() * entries.length)];
+    location.hash = 'w=' + encodeURIComponent(pick.term);
+  };
+}
+
+function showLetter(letter) {
+  const list = entries.filter(e => letterOf(e.term) === letter);
+  view.innerHTML = `
+    <h1>${esc(letter)}</h1>
+    ${lettersBar(letter)}
+    <p class="muted">${list.length} entries</p>
+    <ul class="word-list">${list.map(e => `<li>${wordLink(e.term)}</li>`).join('')}</ul>`;
+}
+
+function showEntry(term) {
+  const idx = entries.findIndex(e => e.term === term);
+  if (idx === -1) {
+    view.innerHTML = `<h1>${esc(term)}</h1><p>No entry with this name.</p>`;
+    return;
+  }
+  const e = entries[idx];
+  const prev = entries[idx - 1];
+  const next = entries[idx + 1];
+  view.innerHTML = `
+    <h1>${esc(e.term)}</h1>
+    <div class="from">From the Unicyclist Dictionary</div>
+    <h2>English</h2>
+    ${e.pos && e.pos !== '(no pos)' ? `<div class="pos-heading">${esc(e.pos)}</div>` : ''}
+    <ol class="defs"><li>${esc(e.definition)}</li></ol>
+    <div class="nav">
+      <span>${prev ? '← ' + wordLink(prev.term) : ''}</span>
+      <span>${next ? wordLink(next.term) + ' →' : ''}</span>
+    </div>`;
+}
+
+function showSearch(q) {
+  const lower = q.toLowerCase();
+  const starts = [], contains = [], inDef = [];
+  entries.forEach(e => {
+    const t = e.term.toLowerCase();
+    if (t.startsWith(lower)) starts.push(e);
+    else if (t.includes(lower)) contains.push(e);
+    else if (e.definition.toLowerCase().includes(lower)) inDef.push(e);
+  });
+  const shown = starts.concat(contains, inDef).slice(0, 100);
+  view.innerHTML = `
+    <h1>Search: ${esc(q)}</h1>
+    <p class="muted">${starts.length + contains.length + inDef.length} matches${shown.length === 100 ? ' (showing first 100)' : ''}</p>
+    <ol class="defs">${shown.map(e => `
+      <li>${wordLink(e.term)} <span class="muted">${esc(e.definition.slice(0, 140))}${e.definition.length > 140 ? '…' : ''}</span></li>`).join('')}
+    </ol>`;
+}
+
+function route() {
+  const hash = location.hash.replace(/^#/, '');
+  if (hash.startsWith('w=')) return showEntry(decodeURIComponent(hash.slice(2)));
+  if (hash.startsWith('l=')) return showLetter(decodeURIComponent(hash.slice(2)));
+  if (hash.startsWith('q=')) return showSearch(decodeURIComponent(hash.slice(2)));
+  showHome();
+}
+
+searchBox.addEventListener('input', () => {
+  const q = searchBox.value.trim();
+  location.hash = q ? 'q=' + encodeURIComponent(q) : '';
+});
+
+window.addEventListener('hashchange', route);
+
+(async function start() {
+  try {
+    const res = await fetch('stats.json', { cache: 'no-store' });
+    if (!res.ok) throw new Error('stats.json not found (' + res.status + ')');
+    stats = await res.json();
+    entries = (stats.definitions_by_length_asc || []).slice()
+      .sort((a, b) => sortKey(a.term).localeCompare(sortKey(b.term)));
+    entries.forEach(e => byTerm.set(e.term.toLowerCase(), e));
+    route();
+  } catch (err) {
+    view.innerHTML = `<p class="muted">Could not load the dictionary: ${esc(err.message)}</p>`;
+  }
+})();
+</script>
+</body>
+</html>

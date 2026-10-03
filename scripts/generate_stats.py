@@ -250,7 +250,7 @@ def _is_metadata_line(line):
 
 def _make_entry(term, pos, definition):
     return {"term": term, "etymology": "", "pronunciation": "",
-            "sections": [{"pos": pos, "defs": [{"text": definition, "example": ""}]}]}
+            "sections": [{"pos": pos, "defs": [{"text": definition, "examples": []}]}]}
 
 
 def _move_leading_ipa(entry):
@@ -301,7 +301,7 @@ def _parse_block_structured(block_lines):
         m = re.match(r"^(?:-\s*)?(?:examples?|ex):\s*(.*)$", line, re.IGNORECASE)
         if m:
             if sense is not None:
-                sense["example"] = (sense["example"] + "; " if sense["example"] else "") + m.group(1).strip()
+                sense["examples"].append(m.group(1).strip())
                 last = "ex"
             else:
                 last = "other"
@@ -310,7 +310,7 @@ def _parse_block_structured(block_lines):
             last = "other"; continue
         m = re.match(r"^(\d+)\.\s+(.*)$", line)
         if cur is not None and m:
-            sense = {"text": m.group(2).strip(), "example": ""}
+            sense = {"text": m.group(2).strip(), "examples": []}
             cur["defs"].append(sense); last = "def"; continue
 
         parsed = _parse_entry_line(line)
@@ -318,7 +318,7 @@ def _parse_block_structured(block_lines):
             if term is None:
                 term = parsed[0]
             cur = {"pos": parsed[1], "defs": []}
-            sense = {"text": re.sub(r"^1\.\s+", "", parsed[2]), "example": ""}
+            sense = {"text": re.sub(r"^1\.\s+", "", parsed[2]), "examples": []}
             cur["defs"].append(sense); sections.append(cur); last = "def"; continue
 
         if re.match(r"^\([^)]{1,12}\)\.?$", line) or line.lower() in POS_WORDS:
@@ -337,15 +337,15 @@ def _parse_block_structured(block_lines):
             cur = {"pos": pos, "defs": []}; sections.append(cur)
             sense = None; last = "need"
         elif last == "need":
-            sense = {"text": text, "example": ""}
+            sense = {"text": text, "examples": []}
             cur["defs"].append(sense); last = "def"
         elif last == "ety" and ety:
             ety[-1] += " " + text
         elif last == "ex" and sense is not None:
-            sense["example"] += "; " + text
+            sense["examples"].append(text)
         elif last == "def" and sense is not None:
-            if re.match(r"^[\"“'‘]", text) and not sense["example"]:
-                sense["example"] = text
+            if re.match(r"^[\"“'‘]", text) and not sense["examples"]:
+                sense["examples"].append(text)
                 last = "ex"
             else:
                 sense["text"] += "; " + text

@@ -78,7 +78,13 @@ function showHome() {
     <p>${entries.length} entries. Pick a letter, search above, or try a random word.</p>
     ${lettersBar('')}
     <p><a href="#" id="randomLink">Random word</a>
-    ${latest && byTerm.has(latest.toLowerCase()) ? ` · Newest word: ${wordLink(byTerm.get(latest.toLowerCase()).term)}` : ''}</p>`;
+    ${latest && byTerm.has(latest.toLowerCase()) ? ` · Newest word: ${wordLink(byTerm.get(latest.toLowerCase()).term)}` : ''}</p>
+    ${'#ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').map(letter => {
+      const list = entries.filter(e => letterOf(e.term) === letter);
+      if (list.length === 0) return '';
+      return `<h2>${letter}</h2>
+        <ul class="word-list">${list.map(e => `<li>${wordLink(e.term)}</li>`).join('')}</ul>`;
+    }).join('')}`;
   document.getElementById('randomLink').onclick = (e) => {
     e.preventDefault();
     const pick = entries[Math.floor(Math.random() * entries.length)];

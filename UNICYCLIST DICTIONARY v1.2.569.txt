@@ -1980,12 +1980,10 @@ shout-down (n.) - the opposite of a shout-out
 Siborg (n.) - Robo Sisi
 
 ---------------------------------------------
-single entendre (n.) - a pun where the two concepts being combined have NOTHING in common except for the wordplay. 
-
-Examples:
-    *200 years from the final buffalo roundup, we will celebrate the bison-tennial.*
-    *The dirty motel shaped like a fiddle was a vile inn.*
-    *You can't sing with a mouthful of garbanzo beans? Then at least hummus a tune!*
+single entendre (n.) - a pun where the two concepts being combined have NOTHING in common except for the wordplay.
+- Example: "200 years from the final buffalo roundup, we will celebrate the bison-tennial."
+- Example: "The dirty motel shaped like a fiddle was a vile inn."
+- Example: "You can't sing with a mouthful of garbanzo beans? Then at least hummus a tune!"
 ---------------------------------------------
 
 Sis (n.) - /sis/ a nickname for Sierra

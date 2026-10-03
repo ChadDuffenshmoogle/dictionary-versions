@@ -1584,9 +1584,7 @@ ones of ones (expr.) - ones, some of the time, but also tens most of the time
 
 ---------------------------------------------
 ones of ones of ones (expr.) - any number between 1 and 729
-- "Your honor, while my opponent has presented 34 pieces of direct evidence, let me assure you that I actually have ones of ones of ones of pieces of evidence proving the opposite."
-- "Wow, that could be a lot. Go on." 
-  - (this gives you ethos for when you present your one piece of circumstantial counterevidence.)
+- Example: "Your honor, while my opponent has presented 34 pieces of direct evidence, let me assure you that I actually have ones of ones of ones of pieces of evidence proving the opposite." -> "Wow, that could be a lot. Go on." (this gives you ethos for when you present your one piece of circumstantial counterevidence.)
 ---------------------------------------------
 
 ong (inter.) - an exclamation used for inclement weather

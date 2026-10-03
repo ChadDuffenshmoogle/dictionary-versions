@@ -358,7 +358,10 @@ C. D. Pough / HS C. D. Pough (n.) - a convenience shop with assorted items such 
 
 celse (n.) - shorthand for a Celsius enegry drink
 
-cemeter (n.) - an undertaker, or one who tends/upkeeps a cemetery
+---------------------------------------------
+cemeter (n.) - 1. an undertaker
+2. one who tends/upkeeps a cemetery
+---------------------------------------------
 
 CFA (n.) - Ckentucky Fried Actually-its-chick-fil-a 
 

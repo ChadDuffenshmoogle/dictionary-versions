@@ -53,6 +53,9 @@
   ol.defs-edit { padding-left:26px; margin:8px 0 0 0; }
   ol.defs-edit li { margin-bottom:10px; }
   ol.defs-edit li input, ol.defs-edit li textarea { margin-top:4px; }
+  .ex-row { display:flex; gap:8px; align-items:center; }
+  .ex-row input { flex:1; }
+  .ex-row button { margin:4px 0 0 0; }
   .btn-row { display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; }
   .btn-row button, .edit-box .add-pos button, .sec button { margin:0; }
   .edit-box .add-pos { margin-top:12px; }
@@ -147,14 +150,14 @@ function showLetter(letter) {
 }
 
 function entryBodyHtml(e) {
-  const secs = e.senses && e.senses.length ? e.senses : [{ pos: e.pos, defs: [{ text: e.definition, example: '' }] }];
+  const secs = e.senses && e.senses.length ? e.senses : [{ pos: e.pos, defs: [{ text: e.definition, examples: [] }] }];
   let html = '';
   if (e.pronunciation) html += `<div class="pron">${esc(e.pronunciation)}</div>`;
   if (e.etymology) html += `<h3 class="sub">Etymology</h3><p>${esc(e.etymology)}</p>`;
   secs.forEach(sec => {
     if (sec.pos && sec.pos !== '(no pos)') html += `<div class="pos-heading">${esc(sec.pos)}</div>`;
     html += '<ol class="defs">' + sec.defs.map(d =>
-      `<li>${esc(d.text)}${d.example ? `<div class="example">${esc(d.example)}</div>` : ''}</li>`).join('') + '</ol>';
+      `<li>${esc(d.text)}${(d.examples || (d.example ? [d.example] : [])).map(x => `<div class="example">${esc(x)}</div>`).join('')}</li>`).join('') + '</ol>';
   });
   return html;
 }
@@ -341,7 +344,7 @@ function findUnitFor(entry, units, lines) {
 }
 
 // ---- entry <-> form model ----
-// model = { term, pron, ety, sections: [{ pos, defs: [{ text, example }] }] }
+// model = { term, pron, ety, sections: [{ pos, defs: [{ text, examples }] }] }
 function parseBlock(rawLines) {
   const lines = rawLines.map(l => l.trim());
   let term = null, pron = '', cur = null, sense = null, last = null, bad = false;
@@ -352,12 +355,12 @@ function parseBlock(rawLines) {
     if ((m = /^etymology:\s*(.*)$/i.exec(line))) { ety.push(m[1].trim()); last = 'ety'; continue; }
     if ((m = /^pronunciation:\s*(.*)$/i.exec(line))) { pron = m[1].trim(); last = 'pron'; continue; }
     if ((m = /^(?:-\s*)?(?:examples?|ex):\s*(.*)$/i.exec(line))) {
-      if (sense) { sense.example = (sense.example ? sense.example + '; ' : '') + m[1].trim(); last = 'ex'; } else bad = true;
+      if (sense) { sense.examples.push(m[1].trim()); last = 'ex'; } else bad = true;
       continue;
     }
     if (/^(?:-\s*)?(derived terms|synonyms?|antonyms?|notes)\s*:/i.test(line)) { bad = true; continue; }
     if (cur && (m = /^(\d+)\.\s+(.*)$/.exec(line))) {
-      sense = { text: m[2].trim(), example: '' }; cur.defs.push(sense); last = 'def'; continue;
+      sense = { text: m[2].trim(), examples: [] }; cur.defs.push(sense); last = 'def'; continue;
     }
     const p = parseEntryLine(line);
     if (p && (term === null || p.term.toLowerCase() === term.toLowerCase())) {
@@ -368,7 +371,7 @@ function parseBlock(rawLines) {
         if (ph) { pron = pron || ph[0]; term = cleanTerm(term.replace(ph[0], '')); }
       }
       cur = { pos: p.pos, defs: [] }; sections.push(cur);
-      sense = { text: p.def.replace(/^1\.\s+/, ''), example: '' }; cur.defs.push(sense); last = 'def';
+      sense = { text: p.def.replace(/^1\.\s+/, ''), examples: [] }; cur.defs.push(sense); last = 'def';
       continue;
     }
     if (p) { bad = true; continue; }   // a different word lives in this block
@@ -379,11 +382,11 @@ function parseBlock(rawLines) {
       if (!pm) { bad = true; continue; }
       term = cleanTerm(pm[1]); cur = { pos: pm[2].trim(), defs: [] }; sections.push(cur); sense = null; last = 'need';
     } else if (last === 'need') {
-      sense = { text, example: '' }; cur.defs.push(sense); last = 'def';
+      sense = { text, examples: [] }; cur.defs.push(sense); last = 'def';
     } else if (last === 'ety' && ety.length) ety[ety.length - 1] += ' ' + text;
-    else if (last === 'ex' && sense) sense.example += '; ' + text;
+    else if (last === 'ex' && sense) sense.examples.push(text);
     else if (last === 'def' && sense) {
-      if (/^["“'‘]/.test(text) && !sense.example) { sense.example = text; last = 'ex'; } else sense.text += '; ' + text;
+      if (/^["“'‘]/.test(text) && !sense.examples.length) { sense.examples.push(text); last = 'ex'; } else sense.text += '; ' + text;
     } else bad = true;
   }
   const secs = sections.filter(s => s.defs.some(d => d.text));
@@ -401,12 +404,12 @@ function formatEntry(model) {   // -> { lines, block }  (same on-disk format the
   const term = oneLine(model.term);
   const secs = model.sections.map(s => ({
     pos: oneLine(s.pos) || 'n.',
-    defs: s.defs.filter(d => oneLine(d.text)).map(d => ({ text: oneLine(d.text), example: oneLine(d.example) })),
+    defs: s.defs.filter(d => oneLine(d.text)).map(d => ({ text: oneLine(d.text), examples: d.examples.map(oneLine).filter(Boolean) })),
   })).filter(s => s.defs.length);
   const ety = oneLine(model.ety);
   let pron = oneLine(model.pron);
   if (pron && !(pron.startsWith('/') && pron.endsWith('/'))) pron = '/' + pron.replace(/^\/+|\/+$/g, '') + '/';
-  if (secs.length === 1 && secs[0].defs.length === 1 && !secs[0].defs[0].example && !ety && !pron) {
+  if (secs.length === 1 && secs[0].defs.length === 1 && !secs[0].defs[0].examples.length && !ety && !pron) {
     return { lines: [`${term} (${secs[0].pos}) - ${secs[0].defs[0].text}`], block: false };
   }
   const out = [];
@@ -414,7 +417,7 @@ function formatEntry(model) {   // -> { lines, block }  (same on-disk format the
     const numbered = s.defs.length > 1;
     s.defs.forEach((d, i) => {
       out.push(i === 0 ? `${term} (${s.pos}) - ${numbered ? '1. ' : ''}${d.text}` : `${i + 1}. ${d.text}`);
-      if (d.example) out.push(`- Example: ${d.example}`);
+      d.examples.forEach(x => out.push(`- Example: ${x}`));
     });
   });
   if (ety) out.push(`Etymology: ${ety}`);
@@ -451,7 +454,7 @@ function removeEntry(lines, u) {
 
 // ---- display helpers for the page after a save ----
 function applyModelToEntry(entry, model) {
-  const secs = model.sections.map(s => ({ pos: oneLine(s.pos), defs: s.defs.filter(d => oneLine(d.text)).map(d => ({ text: oneLine(d.text), example: oneLine(d.example) })) })).filter(s => s.defs.length);
+  const secs = model.sections.map(s => ({ pos: oneLine(s.pos), defs: s.defs.filter(d => oneLine(d.text)).map(d => ({ text: oneLine(d.text), examples: d.examples.map(oneLine).filter(Boolean) })) })).filter(s => s.defs.length);
   const senses = secs.map(s => ({ pos: POS_NAMES[s.pos.toLowerCase().replace(/[.\s]/g, '')] || s.pos, defs: s.defs }));
   const posList = [...new Set(senses.map(s => s.pos))];
   const lines = [];
@@ -504,7 +507,7 @@ async function openEditor(entry) {
   }
 
   const parsed = parseBlock(innerLines);
-  let model = parsed.ok ? parsed.model : { term: entry.term, pron: '', ety: '', sections: [{ pos: 'n.', defs: [{ text: '', example: '' }] }] };
+  let model = parsed.ok ? parsed.model : { term: entry.term, pron: '', ety: '', sections: [{ pos: 'n.', defs: [{ text: '', examples: [] }] }] };
   let mode = parsed.ok ? 'form' : 'raw';
   let rawText = innerLines.filter(l => l.trim()).join('\n');
 
@@ -548,7 +551,8 @@ async function openEditor(entry) {
             ${s.defs.map((d, di) => `
               <li data-d="${di}">
                 <textarea class="dText" rows="2" placeholder="Definition">${esc(d.text)}</textarea>
-                <input class="dEx" value="${esc(d.example)}" placeholder="Example sentence (optional)">
+                ${d.examples.map(x => `<div class="ex-row"><input class="dEx" value="${esc(x)}" placeholder="Example sentence"><button type="button" class="delEx">Delete example</button></div>`).join('')}
+                <button type="button" class="addEx">+ add example</button>
                 ${s.defs.length > 1 ? '<button type="button" class="delDef">Delete definition</button>' : ''}
               </li>`).join('')}
           </ol>
@@ -571,7 +575,7 @@ async function openEditor(entry) {
       secEl.querySelectorAll('li').forEach(li => {
         const d = s.defs[+li.dataset.d];
         d.text = li.querySelector('.dText').value;
-        d.example = li.querySelector('.dEx').value;
+        d.examples = Array.from(li.querySelectorAll('.dEx')).map(i => i.value);
       });
     });
   }
@@ -582,14 +586,19 @@ async function openEditor(entry) {
     if (t.id === 'addPos') { document.getElementById('posPicker').style.display = ''; t.style.display = 'none'; return; }
     if (t.id === 'posOk') {
       collect();
-      model.sections.push({ pos: document.getElementById('newPos').value, defs: [{ text: '', example: '' }] });
+      model.sections.push({ pos: document.getElementById('newPos').value, defs: [{ text: '', examples: [] }] });
       renderForm(); return;
     }
     if (!secEl) return;
     collect();
     const s = model.sections[+secEl.dataset.s];
-    if (t.classList.contains('addDef')) s.defs.push({ text: '', example: '' });
+    if (t.classList.contains('addDef')) s.defs.push({ text: '', examples: [] });
     else if (t.classList.contains('delDef')) s.defs.splice(+t.closest('li').dataset.d, 1);
+    else if (t.classList.contains('addEx')) s.defs[+t.closest('li').dataset.d].examples.push('');
+    else if (t.classList.contains('delEx')) {
+      const row = t.closest('.ex-row');
+      s.defs[+t.closest('li').dataset.d].examples.splice(Array.from(row.parentNode.querySelectorAll('.ex-row')).indexOf(row), 1);
+    }
     else if (t.classList.contains('delSec')) model.sections.splice(+secEl.dataset.s, 1);
     else return;
     renderForm();

@@ -583,6 +583,8 @@ function posSelectHtml(current) {
     '</select>';
 }
 
+let editKeyHandler = null;
+
 async function openEditor(entry) {
   const panel = document.getElementById('editPanel');
   panel.innerHTML = '<p class="muted">Loading the live file…</p>';
@@ -730,6 +732,17 @@ async function openEditor(entry) {
   showMode();
 
   document.getElementById('editCancel').onclick = () => { panel.innerHTML = ''; };
+
+  // Ctrl+S (or Cmd+S on a Mac) saves while the editor is open.
+  if (editKeyHandler) document.removeEventListener('keydown', editKeyHandler);
+  editKeyHandler = (ev) => {
+    if (!(ev.ctrlKey || ev.metaKey) || ev.key.toLowerCase() !== 's') return;
+    const saveBtn = document.getElementById('editSave');
+    if (!saveBtn) { document.removeEventListener('keydown', editKeyHandler); editKeyHandler = null; return; }
+    ev.preventDefault();
+    saveBtn.click();
+  };
+  document.addEventListener('keydown', editKeyHandler);
 
   async function ensureToken() {
     if (savedToken) return savedToken;

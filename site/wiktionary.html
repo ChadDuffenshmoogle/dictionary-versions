@@ -183,6 +183,27 @@ const API = `https://api.github.com/repos/${OWNER}/${REPO}`;
 const NAME_PATTERN = /^UNICYCLIST DICTIONARY v1\.2\.(\d+)\.txt$/;
 const DIVIDER = /^-{20,}\s*$/;
 
+// Paste the output of lock-token.html in place of "null" below (keep the semicolon).
+const LOCKED_TOKEN = null;
+
+function fromBase64(s) {
+  return Uint8Array.from(atob(s), c => c.charCodeAt(0));
+}
+
+async function unlockToken(password) {
+  const baseKey = await crypto.subtle.importKey('raw', new TextEncoder().encode(password), 'PBKDF2', false, ['deriveKey']);
+  const key = await crypto.subtle.deriveKey(
+    { name: 'PBKDF2', salt: fromBase64(LOCKED_TOKEN.salt), iterations: LOCKED_TOKEN.iterations, hash: 'SHA-256' },
+    baseKey, { name: 'AES-GCM', length: 256 }, false, ['decrypt']
+  );
+  try {
+    const plain = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: fromBase64(LOCKED_TOKEN.iv) }, key, fromBase64(LOCKED_TOKEN.data));
+    return new TextDecoder().decode(plain);
+  } catch (e) {
+    throw new Error('Wrong password.');
+  }
+}
+
 function fileNameFor(number) {
   return `UNICYCLIST DICTIONARY v1.2.${number}.txt`;
 }
@@ -261,18 +282,25 @@ async function openEditor(entry) {
 
   panel.innerHTML = `
     <div class="edit-box">
-      <label for="editToken">GitHub token (stays in this browser)</label>
-      <input type="password" id="editToken" autocomplete="off">
+      ${savedToken
+        ? '<p class="muted">Signed in on this browser. <a href="#" id="editSignOut">Sign out</a></p>'
+        : '<label for="editPassword">Password</label><input type="password" id="editPassword" autocomplete="off">'}
       <label for="editText">Entry text</label>
       <textarea id="editText"></textarea>
       <button id="editSave">Save edit</button>
       <button id="editCancel">Cancel</button>
       <div id="editStatus"></div>
     </div>`;
-  const tokenInput = document.getElementById('editToken');
   const textArea = document.getElementById('editText');
   const status = document.getElementById('editStatus');
-  tokenInput.value = savedToken;
+  const signOut = document.getElementById('editSignOut');
+  if (signOut) {
+    signOut.onclick = (ev) => {
+      ev.preventDefault();
+      try { localStorage.removeItem('ghToken'); } catch (e) {}
+      openEditor(entry);
+    };
+  }
   textArea.value = found.blockText;
   textArea.rows = Math.max(4, found.blockText.split('\n').length + 1);
 
@@ -284,15 +312,22 @@ async function openEditor(entry) {
   document.getElementById('editCancel').onclick = () => { panel.innerHTML = ''; };
 
   document.getElementById('editSave').onclick = async () => {
-    const token = tokenInput.value.trim();
     const newText = textArea.value.replace(/\r/g, '').replace(/\n+$/, '');
-    if (!token) return setStatus('Paste the GitHub token first.', 'error');
     if (!newText.trim()) return setStatus('The entry cannot be empty.', 'error');
     if (/\n\s*\n/.test(newText)) return setStatus('Blank lines are not allowed inside an entry.', 'error');
     if (newText === found.blockText) return setStatus('Nothing was changed.', 'error');
 
     try {
-      try { localStorage.setItem('ghToken', token); } catch (e) {}
+      let token = savedToken;
+      if (!token) {
+        if (!LOCKED_TOKEN) throw new Error('Editing is not set up yet.');
+        const password = document.getElementById('editPassword').value;
+        if (!password) throw new Error('Enter the password first.');
+        setStatus('Unlocking…');
+        token = await unlockToken(password);
+        try { localStorage.setItem('ghToken', token); } catch (e) {}
+        savedToken = token;
+      }
       setStatus('Saving…');
       const live = await fetchLiveFile(token);
       const again = locateBlock(live.text, entry);
@@ -317,7 +352,8 @@ async function openEditor(entry) {
         throw new Error('The file changed while saving. Close the editor and try again.');
       }
       if (res.status === 401 || res.status === 403 || res.status === 404) {
-        throw new Error('GitHub rejected the token. It needs "Contents: Read and write" on dictionary-versions.');
+        try { localStorage.removeItem('ghToken'); } catch (e) {}
+        throw new Error('GitHub rejected the token. It may have expired. Close the editor and reopen it to sign in again.');
       }
       if (!res.ok) throw new Error('Save failed (' + res.status + ').');
       setStatus(`Saved to v1.2.${live.number}. The page shows the change after the next stats rebuild.`, 'ok');

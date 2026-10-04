@@ -1,11 +1,17 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script>try { var t = localStorage.getItem('theme') || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'); document.documentElement.dataset.theme = t; } catch (e) {}</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Unicyclist Wiktionary</title>
 <style>
-  :root { --bg:#fff; --text:#202122; --muted:#54595d; --link:#0645ad; --line:#a2a9b1; --panel:#f8f9fa; }
+  :root { --bg:#fff; --text:#202122; --muted:#54595d; --link:#0645ad; --line:#a2a9b1; --panel:#f8f9fa;
+          --mark:#fef6c7; --wotd-line:#cedff2; --wotd-bg:#f5faff; --wotd-head:#cedff2; --error:#b32424; }
+  html[data-theme="dark"] { color-scheme:dark; --bg:#14171a; --text:#e3e5e8; --muted:#a0a7b0; --link:#6ea8fe; --line:#3d444d; --panel:#1d2127;
+          --mark:#5c4b00; --wotd-line:#2c4560; --wotd-bg:#17222e; --wotd-head:#22364a; --error:#ff7b72; }
+  html[data-theme="dark"] input, html[data-theme="dark"] textarea, html[data-theme="dark"] select, html[data-theme="dark"] button { background:var(--panel); color:var(--text); border:1px solid var(--line); }
+  html[data-theme="dark"] .letters a.on { color:#14171a; }
   * { box-sizing: border-box; }
   body { margin:0; background:var(--bg); color:var(--text); font-family: sans-serif; line-height:1.6; }
   a { color:var(--link); text-decoration:none; }
@@ -28,9 +34,9 @@
   .word-list li { margin-bottom:3px; overflow-wrap:anywhere; }
   .nav { display:flex; justify-content:space-between; gap:10px; margin-top:28px; padding-top:10px; border-top:1px solid var(--line); font-size:0.9rem; }
   .muted { color:var(--muted); }
-  mark { background:#fef6c7; }
-  .wotd { border:1px solid #cedff2; background:#f5faff; margin:16px 0 20px 0; }
-  .wotd-head { background:#cedff2; padding:4px 12px; font-weight:bold; font-size:1.05rem; }
+  mark { background:var(--mark); color:inherit; }
+  .wotd { border:1px solid var(--wotd-line); background:var(--wotd-bg); margin:16px 0 20px 0; }
+  .wotd-head { background:var(--wotd-head); padding:4px 12px; font-weight:bold; font-size:1.05rem; }
   .wotd-body { padding:10px 14px; }
   .wotd-word { font-family: Georgia, serif; font-size:1.6rem; font-weight:bold; overflow-wrap:anywhere; }
   .wotd-pos { font-style:italic; color:var(--muted); margin-left:6px; }
@@ -41,14 +47,14 @@
   .edit-box input, .edit-box textarea { width:100%; padding:6px 8px; font-size:0.95rem; border:1px solid var(--line); border-radius:2px; }
   .edit-box textarea { font-family: ui-monospace, Menlo, monospace; min-height:7rem; }
   .edit-box button { margin:10px 8px 0 0; padding:6px 14px; font-size:0.95rem; cursor:pointer; }
-  .edit-error { color:#b32424; }
+  .edit-error { color:var(--error); }
   .edit-ok { color:#14866d; }
   .wotd-def { white-space:pre-line; }
   .pron { color:var(--muted); margin:2px 0 6px 0; }
   h3.sub { font-size:1.05rem; margin:1rem 0 0.2rem 0; }
   .example { color:var(--muted); font-style:italic; }
   .edit-box select { padding:5px 6px; font-size:0.95rem; }
-  .sec { border:1px solid var(--line); background:#fff; padding:8px 12px; margin-top:12px; }
+  .sec { border:1px solid var(--line); background:var(--bg); padding:8px 12px; margin-top:12px; }
   .sec-head { display:flex; gap:10px; align-items:center; justify-content:space-between; }
   ol.defs-edit { padding-left:26px; margin:8px 0 0 0; }
   ol.defs-edit li { margin-bottom:10px; }
@@ -60,7 +66,7 @@
   .btn-row button, .edit-box .add-pos button, .sec button { margin:0; }
   .edit-box .add-pos { margin-top:12px; }
   .edit-box textarea.dText, .edit-box #fEty { min-height:3rem; }
-  .edit-box .danger { margin-left:auto; color:#b32424; border-color:#b32424; }
+  .edit-box .danger { margin-left:auto; color:var(--error); border-color:var(--error); }
   /* three columns: sidebar (left edge) | content (centered) | empty mirror column.
      The two side columns are always equal and never narrower than the sidebar, so nothing overlaps. */
   .layout { display:grid; grid-template-columns: minmax(190px,1fr) minmax(0,820px) minmax(190px,1fr); align-items:start; }
@@ -91,6 +97,7 @@
       <li><a href="#">Main page</a></li>
       <li><a href="#" id="randomLink">Random word</a></li>
       <li><a href="#c=">Categories</a></li>
+      <li><a href="#" id="themeToggle">Dark mode</a></li>
       <li><a href="index.html">Back to stats</a></li>
     </ul>
   </aside>
@@ -116,6 +123,60 @@ function sortKey(term) {
 function letterOf(term) {
   const c = sortKey(term).charAt(0).toUpperCase();
   return /[A-Z]/.test(c) ? c : '#';
+}
+
+// ---- cross-links: any dictionary word inside a definition, example or etymology becomes a link ----
+let linkRegex = null, linkMap = null;
+
+function buildLinker() {
+  linkMap = new Map();
+  entries.forEach(e => linkMap.set(e.term.toLowerCase(), e.term));
+  const terms = [...linkMap.keys()].filter(t => t.trim()).sort((a, b) => b.length - a.length)
+    .map(t => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+  linkRegex = terms.length ? new RegExp('(?<![\\p{L}\\p{N}_])(?:' + terms.join('|') + ')(?![\\p{L}\\p{N}_])', 'giu') : null;
+}
+
+function linkify(text, selfTerm) {   // returns safe HTML
+  text = String(text || '');
+  if (!linkRegex) buildLinker();
+  if (!linkRegex) return esc(text);
+  const self = (selfTerm || '').toLowerCase();
+  let out = '', last = 0, m;
+  linkRegex.lastIndex = 0;
+  while ((m = linkRegex.exec(text))) {
+    const target = linkMap.get(m[0].toLowerCase());
+    out += esc(text.slice(last, m.index));
+    out += target && target.toLowerCase() !== self
+      ? `<a href="#w=${encodeURIComponent(target)}">${esc(m[0])}</a>` : esc(m[0]);
+    last = m.index + m[0].length;
+  }
+  return out + esc(text.slice(last));
+}
+
+function entryTexts(e) {
+  if (!e.senses || !e.senses.length) return [e.etymology, e.definition].filter(Boolean);
+  const out = [];
+  if (e.etymology) out.push(e.etymology);
+  e.senses.forEach(s => s.defs.forEach(d => {
+    out.push(d.text);
+    (d.examples || (d.example ? [d.example] : [])).forEach(x => out.push(x));
+  }));
+  return out;
+}
+
+function crossRefs(e) {   // other dictionary words mentioned in this entry
+  if (!linkRegex) buildLinker();
+  const found = new Set();
+  if (!linkRegex) return [];
+  entryTexts(e).forEach(t => {
+    linkRegex.lastIndex = 0;
+    let m;
+    while ((m = linkRegex.exec(t))) {
+      const target = linkMap.get(m[0].toLowerCase());
+      if (target && target.toLowerCase() !== e.term.toLowerCase()) found.add(target);
+    }
+  });
+  return [...found];
 }
 
 function wordLink(term) {
@@ -155,7 +216,7 @@ function wordOfTheDayHtml() {
       <div class="wotd-head">Word of the day for ${esc(dateText)}</div>
       <div class="wotd-body">
         <div><span class="wotd-word">${wordLink(e.term)}</span>${e.pos && e.pos !== '(no pos)' ? `<span class="wotd-pos">${esc(e.pos)}</span>` : ''}</div>
-        <div class="wotd-def">${esc(e.definition)}</div>
+        <div class="wotd-def">${linkify(e.definition, e.term)}</div>
       </div>
     </div>`;
 }
@@ -175,6 +236,18 @@ function showHome() {
         <ul class="word-list">${list.map(e => `<li>${wordLink(e.term)}</li>`).join('')}</ul>`;
     }).join('')}`;
 }
+
+function syncThemeLabel() {
+  document.getElementById('themeToggle').textContent = document.documentElement.dataset.theme === 'dark' ? 'Light mode' : 'Dark mode';
+}
+document.getElementById('themeToggle').onclick = (e) => {
+  e.preventDefault();
+  const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+  document.documentElement.dataset.theme = next;
+  try { localStorage.setItem('theme', next); } catch (err) {}
+  syncThemeLabel();
+};
+syncThemeLabel();
 
 document.getElementById('randomLink').onclick = (e) => {
   e.preventDefault();
@@ -199,6 +272,7 @@ const CATEGORIES = [
   { key: 'no-pron', label: 'Words without pronunciation', test: e => !e.pronunciation },
   { key: 'multi-pos', label: 'Words with several parts of speech', test: e => (e.pos_list || []).length > 1 },
   { key: 'multi-def', label: 'Words with several definitions', test: e => senseCount(e) > 1 },
+  { key: 'xref', label: 'Cross-references other words', test: e => crossRefs(e).length > 0 },
 ];
 
 function pluralize(w) {
@@ -246,11 +320,11 @@ function entryBodyHtml(e) {
   const secs = e.senses && e.senses.length ? e.senses : [{ pos: e.pos, defs: [{ text: e.definition, examples: [] }] }];
   let html = '';
   if (e.pronunciation) html += `<div class="pron">${esc(e.pronunciation)}</div>`;
-  if (e.etymology) html += `<h3 class="sub">Etymology</h3><p>${esc(e.etymology)}</p>`;
+  if (e.etymology) html += `<h3 class="sub">Etymology</h3><p>${linkify(e.etymology, e.term)}</p>`;
   secs.forEach(sec => {
     if (sec.pos && sec.pos !== '(no pos)') html += `<div class="pos-heading">${esc(sec.pos)}</div>`;
     html += '<ol class="defs">' + sec.defs.map(d =>
-      `<li>${esc(d.text)}${(d.examples || (d.example ? [d.example] : [])).map(x => `<div class="example">${esc(x)}</div>`).join('')}</li>`).join('') + '</ol>';
+      `<li>${linkify(d.text, e.term)}${(d.examples || (d.example ? [d.example] : [])).map(x => `<div class="example">${linkify(x, e.term)}</div>`).join('')}</li>`).join('') + '</ol>';
   });
   return html;
 }
@@ -569,6 +643,7 @@ function applyModelToEntry(entry, model) {
 }
 
 function resortEntries() {
+  linkRegex = null;
   entries.sort((a, b) => sortKey(a.term).localeCompare(sortKey(b.term)));
   byTerm = new Map();
   entries.forEach(e => byTerm.set(e.term.toLowerCase(), e));

@@ -1504,7 +1504,10 @@ mid-gerator (n.) - An icebox or cooler
 
 millexeme (n.) - the one thousandth word in a list
 
-millexicon (n.) - a list or set of one thousand words; [often derogatory] a lexicon of one thousand words
+---------------------------------------------
+millexicon (n.) - 1. a list or set of one thousand words
+2. [often derogatory] a lexicon of one thousand words
+---------------------------------------------
 
 minimun (n.) - the opposite of a challobon/gigachoodel/cinnabeast/mastobon, a small cinnabon
 

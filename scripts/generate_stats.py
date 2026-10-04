@@ -510,6 +510,31 @@ def _normalize_pos(raw_pos):
         return POS_NORMALIZATION[key[:-2]]
     return raw
 
+def _split_pos(raw_pos):
+    """Split one raw pos label into (real parts of speech, extra tags).
+    "Cyrilism, v."  -> (["Verb"], ["Cyrilism"])   any "...ism" word is a tag
+    "mass n."       -> (["Noun"], ["Uncountable"])
+    "v. + pron."    -> (["Verb", "Pronoun"], [])"""
+    labels, tags = [], []
+    for tok in re.split(r"\s*(?:,|\+|/|&|;)\s*", raw_pos or ""):
+        tok = tok.strip()
+        if not tok:
+            continue
+        if re.fullmatch(r"[A-Za-z]+ism", tok, re.IGNORECASE):
+            tag = tok[0].upper() + tok[1:]
+            if tag not in tags:
+                tags.append(tag)
+            continue
+        label = _normalize_pos(tok)
+        if label == "Mass Noun":
+            label = "Noun"
+            if "Uncountable" not in tags:
+                tags.append("Uncountable")
+        if label not in labels:
+            labels.append(label)
+    return labels, tags
+
+
 def fetch_scrabble_words():
     """Load the Scrabble word list into a set of uppercase words."""
     text = fetch_raw(SCRABBLE_FILE)
@@ -635,15 +660,21 @@ def main():
 
     def build_row(t, e):
         if not e or not e["sections"]:
-            return {"term": t, "pos": "(no pos)", "pos_list": ["(no pos)"],
+            return {"term": t, "pos": "(no pos)", "pos_list": ["(no pos)"], "tags": [],
                     "definition": "(definition not parsed -- see raw file)",
                     "senses": [], "pronunciation": "", "etymology": ""}
-        senses, pos_list = [], []
+        senses, pos_list, tags = [], [], []
         for s in e["sections"]:
-            p = _normalize_pos(s["pos"])
-            senses.append({"pos": p, "defs": s["defs"]})
-            if p not in pos_list:
-                pos_list.append(p)
+            labels, stags = _split_pos(s["pos"])
+            senses.append({"pos": ", ".join(labels) or "(no pos)", "defs": s["defs"]})
+            for p in labels:
+                if p not in pos_list:
+                    pos_list.append(p)
+            for t in stags:
+                if t not in tags:
+                    tags.append(t)
+        if not pos_list:
+            pos_list = ["(no pos)"]
         lines = []
         for s in senses:
             if len(senses) > 1:
@@ -652,7 +683,7 @@ def main():
                 lines += [f"{i}. {d['text']}" for i, d in enumerate(s["defs"], 1)]
             else:
                 lines.append(s["defs"][0]["text"])
-        return {"term": t, "pos": " / ".join(pos_list), "pos_list": pos_list,
+        return {"term": t, "pos": " / ".join(pos_list), "pos_list": pos_list, "tags": tags,
                 "definition": "\n".join(lines), "senses": senses,
                 "pronunciation": e["pronunciation"], "etymology": e["etymology"]}
 

@@ -497,6 +497,7 @@ function showCategory(key) {
         <input id="catAddWord" list="allTerms" placeholder="Add a word…">
         <datalist id="allTerms">${entries.map(e => `<option value="${esc(e.term)}">`).join('')}</datalist>
         <button id="catAddBtn" type="button">Add</button>
+        <button id="catRenBtn" type="button">Rename category</button>
         <button id="catDelBtn" type="button" class="danger">Delete category</button>
       </div>` : ''}`;
   if (!editing) return;
@@ -507,6 +508,19 @@ function showCategory(key) {
     if (!e) { alert('That word is not in the dictionary.'); return; }
     if (hasWord(findCat(customCats, name), e.term)) { alert('Already in this category.'); return; }
     catAction(cats => { const k = findCat(cats, name); if (k && !hasWord(k, e.term)) k.words.push(e.term); }, `Edit categories: add '${e.term}' to '${name}'`);
+  };
+  document.getElementById('catRenBtn').onclick = async () => {
+    const nn = (prompt('New name for this category:', name) || '').trim();
+    if (!nn || nn === name) return;
+    if (customCats.some(k => k.name.toLowerCase() === nn.toLowerCase() && k.name.toLowerCase() !== name.toLowerCase())) {
+      alert('A category with that name already exists.'); return;
+    }
+    try {
+      await saveCategories(cats => { const k = findCat(cats, name); if (k) k.name = nn; }, `Edit categories: rename '${name}' to '${nn}'`);
+      location.hash = 'c=' + encodeURIComponent('custom:' + nn);
+    } catch (err) {
+      if (err.message !== 'Cancelled.') alert(err.message);
+    }
   };
   document.getElementById('catDelBtn').onclick = () => {
     if (!confirm(`Delete the category "${name}"? The words themselves are not deleted.`)) return;

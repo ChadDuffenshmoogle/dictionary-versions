@@ -670,9 +670,9 @@ def main():
             for p in labels:
                 if p not in pos_list:
                     pos_list.append(p)
-            for t in stags:
-                if t not in tags:
-                    tags.append(t)
+            for tg in stags:
+                if tg not in tags:
+                    tags.append(tg)
         if not pos_list:
             pos_list = ["(no pos)"]
         lines = []

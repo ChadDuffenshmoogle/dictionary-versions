@@ -730,6 +730,18 @@ def main():
     with open(out_path, "w") as f:
         json.dump(stats, f, indent=2)
 
+    # One plain word list per word length (lowercase), so the daily word game page
+    # only downloads the length it needs.
+    wordlist_dir = os.path.join(os.path.dirname(__file__), "..", "site", "wordlist")
+    os.makedirs(wordlist_dir, exist_ok=True)
+    words_by_len = {}
+    for w in scrabble_set:
+        if re.fullmatch(r"[A-Z]+", w) and 3 <= len(w) <= 15:
+            words_by_len.setdefault(len(w), []).append(w.lower())
+    for n, words in words_by_len.items():
+        with open(os.path.join(wordlist_dir, f"{n}.txt"), "w") as f:
+            f.write("\n".join(sorted(words)))
+
     print(f"Wrote {out_path}: {total_entries} entries, latest={latest_name}")
 
 

@@ -33,6 +33,8 @@
   .letters a.on { background:var(--link); color:#fff; border-color:var(--link); }
   .word-list { columns:2 260px; padding-left:0; list-style:none; margin:0; }
   .word-list li { margin-bottom:3px; overflow-wrap:anywhere; }
+  .nav > span { min-width:0; max-width:48%; overflow-wrap:anywhere; }
+  .nav > span:last-child { text-align:right; }
   .nav { display:flex; justify-content:space-between; gap:10px; margin-top:28px; padding-top:10px; border-top:1px solid var(--line); font-size:0.9rem; }
   .muted { color:var(--muted); }
   mark { background:var(--mark); color:inherit; }
@@ -346,18 +348,18 @@ document.addEventListener('keydown', (ev) => {
     document.getElementById('search').focus();
     return;
   }
-  if (ev.key === 'ArrowLeft') goWord(-1);
-  if (ev.key === 'ArrowRight') goWord(1);
+  if (ev.key === 'ArrowLeft') goWord(-1, false);
+  if (ev.key === 'ArrowRight') goWord(1, false);
 });
 
 // ---- go to the previous (-1) or next (+1) word, with a small slide-in animation ----
-function goWord(step) {
+function goWord(step, animate) {
   const hash = decodeURIComponent(location.hash.slice(1));
   if (!hash.startsWith('w=')) return;
   const idx = entries.findIndex(e => e.term === hash.slice(2));
   const target = entries[idx + step];
   if (idx === -1 || !target) return;
-  navDir = step > 0 ? 'next' : 'prev';
+  navDir = animate ? (step > 0 ? 'next' : 'prev') : null;
   location.hash = 'w=' + encodeURIComponent(target.term);
 }
 
@@ -373,7 +375,7 @@ document.addEventListener('touchend', (ev) => {
   const dx = ev.changedTouches[0].clientX - touchStart.x, dy = ev.changedTouches[0].clientY - touchStart.y;
   touchStart = null;
   if (Math.abs(dx) < 70 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
-  goWord(dx < 0 ? 1 : -1);
+  goWord(dx < 0 ? 1 : -1, true);
 }, { passive: true });
 
 function syncSignInLabel() {

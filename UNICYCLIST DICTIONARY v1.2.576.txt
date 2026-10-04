@@ -1112,6 +1112,10 @@ groce (v.) - to buy or sell groceries
 
 ---------------------------------------------
 göse (n.) - nominative/emphatic singular of goose.
+göse (inter.) - 1. an exclamation uttered upon seeing a goose.
+2. a cry believed to ward off geese or to deter anserine aggression. Synonym: hjonk
+Etymology: from goose, influenced onomatopoeically
+Pronunciation: /'gœzɐ/
 ---------------------------------------------
 
 grandcycle (n.) - one of your subcycles' subcycles, or your supercycles supercycle

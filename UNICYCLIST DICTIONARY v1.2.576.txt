@@ -1746,7 +1746,10 @@ postdecessor (n.) - synonym of successor, someone who comes after
 
 post-perschlortem (adj.) - after death of pershlaps
 
-Postradamus (n.) - generic nickname for one who predicts events after they have happened; a historian
+---------------------------------------------
+Postradamus (n.) - 1. generic nickname for one who predicts events after they have happened
+2. a historian
+---------------------------------------------
 
 posttoled / postwarned (adj.) - told at an inconveniently late time, or even after the fact.
 

@@ -384,7 +384,21 @@ function allCategories() {
 }
 
 function categoriesOf(e) {
-  return allCategories().filter(c => c.test(e));
+  const all = allCategories();
+  const out = all.filter(c => c.test(e));
+  const have = new Set(out.map(c => c.key));
+  // a word in "Sandwiches" is also listed under "Cuisine" (the category Sandwiches sits inside)
+  out.filter(c => c.custom).forEach(c => {
+    let k = findCat(customCats, c.label);
+    for (let n = 0; k && k.parent && n < 10; n++) {
+      const parent = findCat(customCats, k.parent);
+      if (!parent) break;
+      const key = 'custom:' + parent.name;
+      if (!have.has(key)) { have.add(key); const pc = all.find(x => x.key === key); if (pc) out.push(pc); }
+      k = parent;
+    }
+  });
+  return out;
 }
 
 // ---- custom categories (saved in site/categories.json; anyone can read, only signed-in editors change them) ----
@@ -645,8 +659,10 @@ function showEntry(term) {
       <span>${next ? wordLink(next.term) + ' →' : ''}</span>
     </div>
     <div class="cat-box"><b>Categories:</b>
-      <a href="#l=${encodeURIComponent(letterOf(e.term))}">${letterOf(e.term) === '#' ? 'Symbol and number words' : letterOf(e.term) + ' words'}</a>
-      ${categoriesOf(e).map(c => ` · <a href="#c=${encodeURIComponent(c.key)}">${esc(c.label)}</a>`).join('')}
+      ${[{ label: letterOf(e.term) === '#' ? 'Symbol and number words' : letterOf(e.term) + ' words', href: '#l=' + encodeURIComponent(letterOf(e.term)) }]
+        .concat(categoriesOf(e).map(c => ({ label: c.label, href: '#c=' + encodeURIComponent(c.key) })))
+        .sort((a, b) => a.label.localeCompare(b.label, undefined, { sensitivity: 'base' }))
+        .map((c, i) => `${i ? ' · ' : ''}<a href="${c.href}">${esc(c.label)}</a>`).join('')}
       <div id="catEdit" class="cat-edit"></div>
     </div>`;
   renderCatEdit(e);

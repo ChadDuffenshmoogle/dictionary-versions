@@ -667,7 +667,7 @@ de (v.) - to perform two complementary actions on an object that are both prefix
 
 ---------------------------------------------
 debear (v.) - to remove the bear from
-Ex. "Oops, looks like I accidentally deed my neighbor. I detected him, debeared him, decapitated him, and deboned him!" 
+- Example: "Oops, looks like I accidentally deed my neighbor. I detected him, debeared him, decapitated him, and deboned him!"
 ---------------------------------------------
 ---------------------------------------------
 debig (v.) - (transitive) to turn off the primary light source of one's domicile.

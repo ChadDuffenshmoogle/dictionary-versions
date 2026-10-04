@@ -694,7 +694,7 @@ dequorum (n.) - propriety and orderliness despide a large number of people
 
 ---------------------------------------------
 derpatronic (n.) - Cyril staring at you in the VR headset
-	(adj.) - someone resembling likewise
+derpatronic (adj.) - someone resembling likewise
 ---------------------------------------------
 
 descendor (n.) - a machine that moves people to floors of a building by moving downwards

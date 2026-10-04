@@ -2533,7 +2533,7 @@ wigdo (n.) - any notable styling of wig
 
 Wiirtzing (n.) - when one plays their Wii at Wirtz Hall
 
-wiisure (n.) - Nintendo Wii (TM) seizure
+wiisure (n.) - Nintendo Wii™ seizure
 
 word-blindness (n.) - the occasional inability of the dictionary bot to parse a word, either by not identifying what should be a word, or by misidentifying a non-word as a word
 

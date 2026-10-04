@@ -2496,7 +2496,10 @@ violable (adj.) - reasonably able to be accompanied by a viola
 
 Vivaldessert (n.) - a musical variety of cake
 
-voce vosta (adj.) - spoken in the accent of Damien DalVosta or (n.) a word so spoken 
+---------------------------------------------
+voce vosta (adj.) - spoken in the accent of Damien DalVosta
+voce vosta (n.) - a word so spoken
+---------------------------------------------
 
 v'you (v. + pron.) - contraction of "have you"
 

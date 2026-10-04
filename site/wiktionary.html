@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <script>try { var t = localStorage.getItem('theme') || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'); document.documentElement.dataset.theme = t; } catch (e) {}</script>
+<script src="locked-token.js"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Unicyclist Wiktionary</title>
@@ -623,8 +624,8 @@ const NAME_PATTERN = /^UNICYCLIST DICTIONARY v1\.2\.(\d+)\.txt$/;
 const DIVIDER = /^-{20,}\s*$/;
 const DIV45 = '-'.repeat(45);
 
-// Paste the output of lock-token.html in place of "null" below (keep the semicolon).
-const LOCKED_TOKEN = null;
+// The locked token now lives in its own file, locked-token.js, so updating this page never wipes it.
+const LOCKED_TOKEN = window.LOCKED_TOKEN || null;
 
 const POS_OPTIONS = [
   ['n.', 'noun'], ['v.', 'verb'], ['adj.', 'adjective'], ['adv.', 'adverb'], ['expr.', 'expression'],

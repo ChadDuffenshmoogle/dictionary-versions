@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<title>Daily Word Game - Unicyclist Dictionary</title>
+<title>Unicyclist Wordle</title>
 <script>try { var t = localStorage.getItem('theme') || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'); document.documentElement.dataset.theme = t; } catch (e) {}</script>
 <style>
   :root {
@@ -76,14 +76,14 @@
   .bottom .next { text-align:center; font-size:0.75rem; text-transform:uppercase; font-weight:bold; }
   .bottom .next .t { font-size:1.6rem; font-weight:normal; }
   .share { background:var(--correct); color:#fff; border:0; border-radius:4px; font-size:1.1rem; font-weight:bold; padding:14px 26px; cursor:pointer; text-transform:uppercase; font-family:inherit; }
-  .ex-row { display:grid; grid-template-columns:repeat(5, 40px); gap:5px; margin:8px 0; }
+  .ex-row { display:grid; gap:5px; margin:8px 0; }
   .ex-row .tile { width:40px; height:40px; font-size:1.3rem; }
 </style>
 </head>
 <body>
 <header>
   <div class="side"><a class="icon" href="index.html" title="Back to stats" aria-label="Back to stats">&#8592;</a><button class="icon" id="helpBtn" title="How to play" aria-label="How to play">?</button></div>
-  <h1>Daily Word Game</h1>
+  <h1>Unicyclist Wordle</h1>
   <div class="side right"><button class="icon" id="statsBtn" title="Statistics" aria-label="Statistics">&#128202;</button><button class="icon" id="themeBtn" title="Dark / light" aria-label="Toggle dark mode">&#9680;</button></div>
 </header>
 <div id="toasts"></div>
@@ -289,7 +289,7 @@ let timerId = null;
 function shareText() {
   const rows = state.guesses.map(g => evaluate(g, answer).map(s => ({ correct: '\u{1F7E9}', present: '\u{1F7E8}', absent: '\u2B1B' }[s])).join(''));
   const score = state.status === 'won' ? state.guesses.length : 'X';
-  return `Unicyclist Daily Word Game ${today} (${len} letters) ${score}/${MAX_GUESSES}\n\n${rows.join('\n')}`;
+  return `Unicyclist Wordle ${today} (${len} letters) ${score}/${MAX_GUESSES}\n\n${rows.join('\n')}\n\nhttps://chadduffenshmoogle.github.io/dictionary-versions/wordle.html`;
 }
 async function copyShare() {
   try { await navigator.clipboard.writeText(shareText()); toast('Copied results to clipboard'); }
@@ -332,16 +332,16 @@ function showStats() {
   if (over) { $('shareBtn').onclick = copyShare; tickTimer(); timerId = setInterval(tickTimer, 1000); }
 }
 function showHelp() {
-  const ex = (word, idx, st) => `<div class="ex-row">${[...word].map((c, i) => `<div class="tile" ${i === idx ? `data-state="${st}"` : ''}>${c}</div>`).join('')}</div>`;
+  const ex = (word, idx, st) => `<div class="ex-row" style="grid-template-columns:repeat(${word.length}, 40px)">${[...word].map((c, i) => `<div class="tile" ${i === idx ? `data-state="${st}"` : ''}>${c}</div>`).join('')}</div>`;
   openModal(`<h2>How to play</h2>
-    <p>Guess the dictionary word in ${MAX_GUESSES} tries. The word can be any length, so count the boxes.</p>
+    <p>Guess the Unicyclist Dictionary word in ${MAX_GUESSES} tries. The word can be any length, so count the boxes.</p>
     <p>Each guess must be a real word (a dictionary word or a Scrabble word). Hit enter to submit.</p>
     <p>After each guess, the color of the tiles shows how close your guess was.</p>
     <hr style="border:0;border-top:1px solid var(--line)">
     <p><b>Examples</b></p>
     ${ex('wheel', 0, 'correct')}<p><b>W</b> is in the word and in the correct spot.</p>
-    ${ex('pedal', 1, 'present')}<p><b>E</b> is in the word but in the wrong spot.</p>
-    ${ex('chain', 3, 'absent')}<p><b>I</b> is not in the word in any spot.</p>
+    ${ex('crank', 1, 'present')}<p><b>R</b> is in the word but in the wrong spot.</p>
+    ${ex('spoke', 3, 'absent')}<p><b>K</b> is not in the word in any spot.</p>
     <hr style="border:0;border-top:1px solid var(--line)">
     <p>A new word every day, the same for everyone.</p>`);
 }

@@ -1110,13 +1110,8 @@ Great America Make America Again / GAMAA (expr.) - a political slogan imploring 
 
 groce (v.) - to buy or sell groceries
 
---------------------------------------------- 
-Etymology: from goose, influenced onomatopoeically
-
-göse (n.) - /'gœzɐ/ nominative/emphatic singular of goose.
-(int.) an exclamation uttered upon seeing a goose.
-- a cry believed to ward off geese or to deter anserine aggression.
-  - Synonym: hjonk
+---------------------------------------------
+göse (n.) - nominative/emphatic singular of goose.
 ---------------------------------------------
 
 grandcycle (n.) - one of your subcycles' subcycles, or your supercycles supercycle

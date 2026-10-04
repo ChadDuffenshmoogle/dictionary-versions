@@ -1753,10 +1753,10 @@ posttoled / postwarned (adj.) - told at an inconveniently late time, or even aft
 povving off (v.) - losing money rapidly
 
 ---------------------------------------------
-p'pmpic (adj.) - (of water) having a high concentration of particulates
-- (of water) enriched with additional electrolytes or analogous compounds
-- excited, moderately ecstatic
-(int.) an exclamation of wonder, joy, or surprise
+p'pmpic (adj.) - 1. (of water) having a high concentration of particulates
+2. (of water) enriched with additional electrolytes or analogous compounds
+3. excited, moderately ecstatic
+p'pmpic (inter.) - an exclamation of wonder, joy, or surprise
 ---------------------------------------------
 
 practition (v.) - to practice a profession

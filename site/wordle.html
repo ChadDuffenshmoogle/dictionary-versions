@@ -289,7 +289,7 @@ let timerId = null;
 function shareText() {
   const rows = state.guesses.map(g => evaluate(g, answer).map(s => ({ correct: '\u{1F7E9}', present: '\u{1F7E8}', absent: '\u2B1B' }[s])).join(''));
   const score = state.status === 'won' ? state.guesses.length : 'X';
-  return `Unicyclist Wordle ${today} (${len} letters) ${score}/${MAX_GUESSES}\n\n${rows.join('\n')}\n\nhttps://chadduffenshmoogle.github.io/dictionary-versions/wordle.html`;
+  return `[Unicyclist Wordle](https://chadduffenshmoogle.github.io/dictionary-versions/wordle.html) ${today} (${len} letters) ${score}/${MAX_GUESSES}\n\n${rows.join('\n')}`;
 }
 async function copyShare() {
   try { await navigator.clipboard.writeText(shareText()); toast('Copied results to clipboard'); }
@@ -339,9 +339,9 @@ function showHelp() {
     <p>After each guess, the color of the tiles shows how close your guess was.</p>
     <hr style="border:0;border-top:1px solid var(--line)">
     <p><b>Examples</b></p>
-    ${ex('wheel', 0, 'correct')}<p><b>W</b> is in the word and in the correct spot.</p>
-    ${ex('crank', 1, 'present')}<p><b>R</b> is in the word but in the wrong spot.</p>
-    ${ex('spoke', 3, 'absent')}<p><b>K</b> is not in the word in any spot.</p>
+    ${ex('yappy', 0, 'correct')}<p><b>Y</b> is in the word and in the correct spot.</p>
+    ${ex('kreeb', 1, 'present')}<p><b>R</b> is in the word but in the wrong spot.</p>
+    ${ex('blong', 3, 'absent')}<p><b>N</b> is not in the word in any spot.</p>
     <hr style="border:0;border-top:1px solid var(--line)">
     <p>A new word every day, the same for everyone.</p>`);
 }

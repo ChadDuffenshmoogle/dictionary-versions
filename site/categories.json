@@ -261,6 +261,7 @@
     },
     {
       "name": "Beverages",
+      "parent": "Cuisine",
       "words": []
     }
   ]

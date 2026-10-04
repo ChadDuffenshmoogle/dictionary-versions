@@ -83,6 +83,8 @@
     #sidebar ul { display:flex; flex-wrap:wrap; gap:6px 16px; }
   }
   .cat-index { line-height:1.9; }
+  .from-row { display:flex; justify-content:space-between; align-items:center; gap:10px; }
+  button.speak.share { font-size:0.8rem; margin-left:0; vertical-align:baseline; }
   button.speak { font-size:1rem; padding:0 6px; margin-left:6px; cursor:pointer; vertical-align:middle; }
   .cat-edit { margin-top:8px; font-size:0.9rem; }
   .cat-edit input { padding:5px 8px; width:220px; max-width:100%; }
@@ -669,6 +671,85 @@ function entryBodyHtml(e) {
   return html;
 }
 
+// ---- share card: draws the entry onto a picture and copies it to the clipboard ----
+function wrapLines(ctx, text, maxWidth) {
+  const words = String(text).split(/\s+/), lines = [];
+  let line = '';
+  words.forEach(w => {
+    const test = line ? line + ' ' + w : w;
+    if (line && ctx.measureText(test).width > maxWidth) { lines.push(line); line = w; } else line = test;
+  });
+  if (line) lines.push(line);
+  return lines;
+}
+
+function renderShareCard(e) {
+  const W = 900, PAD = 52, TEXT_W = W - PAD * 2;
+  const SERIF = 'Georgia, "Times New Roman", serif', SANS = 'system-ui, -apple-system, "Segoe UI", Arial, sans-serif';
+  const meas = document.createElement('canvas').getContext('2d');
+  const items = [];
+  let y = PAD;
+  const add = (text, font, color, x, size, gapAfter) => {
+    meas.font = font;
+    wrapLines(meas, text, TEXT_W - (x - PAD)).forEach(l => { y += size * 1.3; items.push({ text: l, font, color, x, y: y - size * 0.3 }); });
+    y += gapAfter;
+  };
+  add(e.term, `bold 60px ${SERIF}`, '#202122', PAD, 60, 4);
+  if (e.pronunciation) add(e.pronunciation, `28px ${SANS}`, '#54595d', PAD, 28, 10);
+  const secs = e.senses && e.senses.length ? e.senses : [{ pos: e.pos, defs: [{ text: e.definition }] }];
+  let shown = 0, total = secs.reduce((n, sec) => n + sec.defs.length, 0), exampleDone = false;
+  for (const sec of secs) {
+    if (shown >= 4) break;
+    if (sec.pos && sec.pos !== '(no pos)') add(sec.pos, `italic 26px ${SANS}`, '#54595d', PAD, 26, 6);
+    const multi = sec.defs.length > 1;
+    sec.defs.slice(0, 4 - shown).forEach((d, i) => {
+      add((multi ? (i + 1) + '. ' : '') + d.text, `30px ${SANS}`, '#202122', PAD, 30, 6);
+      const ex = d.examples ? d.examples[0] : d.example;
+      if (ex && !exampleDone) { add(ex, `italic 26px ${SANS}`, '#54595d', PAD + 24, 26, 6); exampleDone = true; }
+      shown++;
+    });
+  }
+  if (total > shown) add('…', `30px ${SANS}`, '#54595d', PAD, 30, 0);
+  y += 26;
+  const footerY = y + 20;
+  const H = footerY + PAD - 8;
+
+  const canvas = document.createElement('canvas');
+  const scale = 2;
+  canvas.width = W * scale; canvas.height = H * scale;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(scale, scale);
+  ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, W, H);
+  ctx.fillStyle = '#cedff2'; ctx.fillRect(0, 0, 14, H);
+  items.forEach(it => { ctx.font = it.font; ctx.fillStyle = it.color; ctx.fillText(it.text, it.x + 10, it.y); });
+  ctx.strokeStyle = '#a2a9b1'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(PAD + 10, y); ctx.lineTo(W - PAD, y); ctx.stroke();
+  ctx.font = `24px ${SANS}`; ctx.fillStyle = '#54595d';
+  ctx.fillText('Unicyclist Dictionary', PAD + 10, footerY);
+  return canvas;
+}
+
+async function copyShareCard(e, btn) {
+  const label = btn.textContent;
+  const say = (t) => { btn.textContent = t; setTimeout(() => { btn.textContent = label; }, 1800); };
+  try {
+    const canvas = renderShareCard(e);
+    const blobPromise = new Promise((resolve, reject) => canvas.toBlob(b => b ? resolve(b) : reject(new Error('no image')), 'image/png'));
+    if (navigator.clipboard && window.ClipboardItem) {
+      await navigator.clipboard.write([new ClipboardItem({ 'image/png': blobPromise })]);
+      say('Copied!');
+    } else {   // browser cannot copy images: download it instead
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(await blobPromise);
+      a.download = e.term + '.png';
+      a.click();
+      say('Saved as a file');
+    }
+  } catch (err) {
+    say('Could not copy');
+  }
+}
+
 // ---- read aloud: the browser's own voice reads a spelled-out version of the pronunciation, or else the word ----
 const IPA_TOKENS = [
   ['tʃ', 'ch'], ['dʒ', 'j'], ['eɪ', 'ay'], ['aɪ', 'eye'], ['ɔɪ', 'oy'], ['aʊ', 'ow'], ['oʊ', 'oh'], ['əʊ', 'oh'],
@@ -709,7 +790,7 @@ function showEntry(term) {
   const next = entries[idx + 1];
   view.innerHTML = `
     <h1>${esc(e.term)} <button type="button" id="speakBtn" class="speak" title="Read aloud" aria-label="Read aloud">🔊</button></h1>
-    <div class="from">From the Unicyclist Dictionary</div>
+    <div class="from-row"><div class="from">From the Unicyclist Dictionary</div><button type="button" id="shareBtn" class="speak share" title="Copy a picture of this entry">Copy card</button></div>
     <h2>English <a href="#" class="edit-link" id="editLink">[edit]</a></h2>
     ${entryBodyHtml(e)}
     <div id="editPanel"></div>
@@ -726,6 +807,7 @@ function showEntry(term) {
     </div>`;
   renderCatEdit(e);
   document.getElementById('speakBtn').onclick = () => speakEntry(e);
+  document.getElementById('shareBtn').onclick = (ev) => copyShareCard(e, ev.currentTarget);
   document.getElementById('editLink').onclick = (ev) => {
     ev.preventDefault();
     openEditor(e);

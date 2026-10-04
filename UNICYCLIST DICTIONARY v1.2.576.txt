@@ -1061,10 +1061,10 @@ Gilbertian (adj.) - of Gilbert
 
 glama (n.) - alt. of glamour
 
---------------------------------------------- 
+---------------------------------------------
 glane (v.) - to communicate non-verbally using the eyeballs
-(n.) - such a communication
---------------------------------------------- 
+glane (n.) - such a communication
+---------------------------------------------
 
 glasstic (n.) - a material that's either glass or plastic, but you can't tell
 

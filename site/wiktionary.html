@@ -82,6 +82,10 @@
     #sidebar ul { display:flex; flex-wrap:wrap; gap:6px 16px; }
   }
   .cat-index { line-height:1.9; }
+  .cat-edit { margin-top:8px; font-size:0.9rem; }
+  .cat-edit input { padding:5px 8px; width:220px; max-width:100%; }
+  .cat-edit .danger { color:var(--error); border-color:var(--error); }
+  .rm-word, .rm-cat { color:var(--error); }
   /* hover preview card, styled after Wiktionary's page previews */
   .pv { position:absolute; z-index:1000; display:none; width:360px; max-width:calc(100vw - 16px); background:var(--bg); color:var(--text);
         border:1px solid var(--line); border-radius:2px; padding:12px 16px; font-size:0.9rem; line-height:1.55;
@@ -109,6 +113,7 @@
       <li><a href="#" id="randomLink">Random word</a></li>
       <li><a href="#c=">Categories</a></li>
       <li><a href="#" id="themeToggle">Dark mode</a></li>
+      <li><a href="#" id="signInLink">Sign in to edit</a></li>
       <li><a href="index.html">Back to stats</a></li>
     </ul>
   </aside>
@@ -312,6 +317,17 @@ document.addEventListener('mouseout', (ev) => {
 document.addEventListener('click', hidePreview);
 window.addEventListener('hashchange', hidePreview);
 
+function syncSignInLabel() {
+  document.getElementById('signInLink').textContent = isSignedIn() ? 'Sign out' : 'Sign in to edit';
+}
+document.getElementById('signInLink').onclick = async (e) => {
+  e.preventDefault();
+  if (isSignedIn()) { try { localStorage.removeItem('ghToken'); } catch (err) {} }
+  else { try { await signIn(); } catch (err) { if (err.message !== 'Cancelled.') alert(err.message); } }
+  syncSignInLabel();
+  route();
+};
+
 function syncThemeLabel() {
   document.getElementById('themeToggle').textContent = document.documentElement.dataset.theme === 'dark' ? 'Light mode' : 'Dark mode';
 }
@@ -323,6 +339,7 @@ document.getElementById('themeToggle').onclick = (e) => {
   syncThemeLabel();
 };
 syncThemeLabel();
+syncSignInLabel();
 
 document.getElementById('randomLink').onclick = (e) => {
   e.preventDefault();
@@ -358,28 +375,172 @@ function pluralize(w) {
 
 function allCategories() {
   const posSet = [...new Set(entries.flatMap(e => e.pos_list || []))].filter(p => p && p !== '(no pos)').sort();
-  return CATEGORIES.concat(posSet.map(p => ({ key: 'pos:' + p, label: pluralize(p), test: e => (e.pos_list || []).includes(p) })));
+  return CATEGORIES
+    .concat(posSet.map(p => ({ key: 'pos:' + p, label: pluralize(p), test: e => (e.pos_list || []).includes(p) })))
+    .concat(customCats.map(c => ({ key: 'custom:' + c.name, label: c.name, custom: true, test: e => hasWord(c, e.term) })));
 }
 
 function categoriesOf(e) {
   return allCategories().filter(c => c.test(e));
 }
 
+// ---- custom categories (saved in site/categories.json; anyone can read, only signed-in editors change them) ----
+const CATS_PATH = 'site/categories.json';
+let customCats = [];   // [{ name, words: [term, ...] }]
+
+function isSignedIn() { try { return !!localStorage.getItem('ghToken'); } catch (e) { return false; } }
+
+function normalizeCats(j) {
+  return ((j && j.categories) || []).filter(c => c && c.name)
+    .map(c => ({ name: String(c.name), words: Array.isArray(c.words) ? c.words.map(String) : [] }));
+}
+
+async function loadCustomCategories() {
+  try {
+    const res = await fetch('categories.json?x=' + Date.now(), { cache: 'no-store' });
+    if (res.ok) customCats = normalizeCats(await res.json());
+  } catch (e) {}
+}
+
+async function signIn() {
+  if (isSignedIn()) return localStorage.getItem('ghToken');
+  if (!LOCKED_TOKEN) throw new Error('Editing is not set up yet.');
+  const pw = prompt('Password:');
+  if (!pw) throw new Error('Cancelled.');
+  const token = await unlockToken(pw);
+  try { localStorage.setItem('ghToken', token); } catch (e) {}
+  return token;
+}
+
+function findCat(cats, name) { return cats.find(c => c.name.toLowerCase() === name.toLowerCase()); }
+function hasWord(cat, term) { return cat.words.some(w => w.toLowerCase() === term.toLowerCase()); }
+
+// Reads the live categories file, applies the change, saves it as a new commit.
+async function saveCategories(mutate, message) {
+  const token = await signIn();
+  const url = `${API}/contents/${CATS_PATH}`;
+  let sha = null, data = { categories: [] };
+  const res = await fetch(`${url}?ref=${BRANCH}`, { headers: ghHeaders(token), cache: 'no-store' });
+  if (res.ok) {
+    const j = await res.json();
+    sha = j.sha;
+    try { data = JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(j.content.replace(/\n/g, '')), c => c.charCodeAt(0)))); } catch (e) {}
+  } else if (res.status !== 404) {
+    if (res.status === 401 || res.status === 403) { try { localStorage.removeItem('ghToken'); } catch (e) {} }
+    throw new Error('Could not read the categories file (' + res.status + ').');
+  }
+  const cats = normalizeCats(data);
+  mutate(cats);
+  const body = { message, content: toBase64(JSON.stringify({ categories: cats }, null, 2) + '\n'), branch: BRANCH };
+  if (sha) body.sha = sha;
+  const put = await fetch(url, { method: 'PUT', headers: { ...ghHeaders(token), 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+  if (put.status === 401 || put.status === 403) {
+    try { localStorage.removeItem('ghToken'); } catch (e) {}
+    throw new Error('GitHub rejected the token. Sign in again.');
+  }
+  if (!put.ok) throw new Error('Saving categories failed (' + put.status + ').');
+  customCats = cats;
+}
+
+async function catAction(mutate, message) {
+  try { await saveCategories(mutate, message); } catch (err) { if (err.message !== 'Cancelled.') alert(err.message); }
+  route();
+}
+
+// keep category lists right when a word is renamed (newTerm) or deleted (newTerm = null)
+async function syncCatsForWord(oldTerm, newTerm) {
+  if (!customCats.some(c => hasWord(c, oldTerm))) return;
+  await saveCategories(cats => cats.forEach(c => {
+    const i = c.words.findIndex(w => w.toLowerCase() === oldTerm.toLowerCase());
+    if (i >= 0) { if (newTerm) c.words[i] = newTerm; else c.words.splice(i, 1); }
+  }), newTerm ? `Edit categories: rename '${oldTerm}' to '${newTerm}'` : `Edit categories: remove '${oldTerm}'`);
+}
+
+function newCategoryPrompt(thenAddTerm) {
+  const name = (prompt('Name of the new category:') || '').trim();
+  if (!name) return;
+  if (findCat(customCats, name)) { alert('That category already exists.'); return; }
+  catAction(cats => {
+    if (!findCat(cats, name)) cats.push({ name, words: thenAddTerm ? [thenAddTerm] : [] });
+  }, thenAddTerm ? `Edit categories: add '${thenAddTerm}' to new '${name}'` : `Edit categories: create '${name}'`);
+}
+
 function showCategoryIndex() {
+  const auto = allCategories().filter(c => !c.custom);
+  const custom = allCategories().filter(c => c.custom);
+  const li = c => `<li><a href="#c=${encodeURIComponent(c.key)}">${esc(c.label)}</a> <span class="muted">(${entries.filter(c.test).length})</span></li>`;
   view.innerHTML = `
     <h1>Categories</h1>
-    <ul class="cat-index">${allCategories().map(c =>
-      `<li><a href="#c=${encodeURIComponent(c.key)}">${esc(c.label)}</a> <span class="muted">(${entries.filter(c.test).length})</span></li>`).join('')}</ul>`;
+    <h2>Custom categories</h2>
+    ${custom.length ? `<ul class="cat-index">${custom.map(li).join('')}</ul>` : '<p class="muted">None yet.</p>'}
+    ${isSignedIn() ? '<button id="newCat" type="button">+ New category</button>' : ''}
+    <h2>Automatic categories</h2>
+    <ul class="cat-index">${auto.map(li).join('')}</ul>`;
+  const nb = document.getElementById('newCat');
+  if (nb) nb.onclick = () => newCategoryPrompt(null);
 }
 
 function showCategory(key) {
   const c = allCategories().find(x => x.key === key);
   if (!c) { view.innerHTML = '<h1>Category</h1><p>No category with this name.</p>'; return; }
   const list = entries.filter(c.test);
+  const editing = c.custom && isSignedIn();
   view.innerHTML = `
     <h1>${esc(c.label)}</h1>
     <p class="muted">${list.length} entries · <a href="#c=">All categories</a></p>
-    <ul class="word-list">${list.map(e => `<li>${wordLink(e.term)}</li>`).join('')}</ul>`;
+    <ul class="word-list">${list.map(e => `<li>${wordLink(e.term)}${editing ? ` <a href="#" class="rm-word" data-t="${esc(e.term)}" title="Remove from this category">✕</a>` : ''}</li>`).join('')}</ul>
+    ${editing ? `
+      <div class="cat-edit">
+        <input id="catAddWord" list="allTerms" placeholder="Add a word…">
+        <datalist id="allTerms">${entries.map(e => `<option value="${esc(e.term)}">`).join('')}</datalist>
+        <button id="catAddBtn" type="button">Add</button>
+        <button id="catDelBtn" type="button" class="danger">Delete category</button>
+      </div>` : ''}`;
+  if (!editing) return;
+  const name = c.label;
+  document.getElementById('catAddBtn').onclick = () => {
+    const typed = document.getElementById('catAddWord').value.trim();
+    const e = byTerm.get(typed.toLowerCase());
+    if (!e) { alert('That word is not in the dictionary.'); return; }
+    if (hasWord(findCat(customCats, name), e.term)) { alert('Already in this category.'); return; }
+    catAction(cats => { const k = findCat(cats, name); if (k && !hasWord(k, e.term)) k.words.push(e.term); }, `Edit categories: add '${e.term}' to '${name}'`);
+  };
+  document.getElementById('catDelBtn').onclick = () => {
+    if (!confirm(`Delete the category "${name}"? The words themselves are not deleted.`)) return;
+    catAction(cats => { const i = cats.findIndex(k => k.name.toLowerCase() === name.toLowerCase()); if (i >= 0) cats.splice(i, 1); }, `Edit categories: delete '${name}'`);
+    location.hash = 'c=';
+  };
+  view.querySelectorAll('.rm-word').forEach(a => a.onclick = (ev) => {
+    ev.preventDefault();
+    const t = a.dataset.t;
+    catAction(cats => { const k = findCat(cats, name); if (k) k.words = k.words.filter(w => w.toLowerCase() !== t.toLowerCase()); }, `Edit categories: remove '${t}' from '${name}'`);
+  });
+}
+
+// on a word page: add the word to a custom category, or take it out of one
+function renderCatEdit(e) {
+  const box = document.getElementById('catEdit');
+  if (!box || !isSignedIn()) return;
+  const mine = customCats.filter(c => hasWord(c, e.term));
+  const others = customCats.filter(c => !hasWord(c, e.term));
+  box.innerHTML = `
+    <select id="catPick">
+      <option value="">Add to a custom category…</option>
+      ${others.map(c => `<option value="${esc(c.name)}">${esc(c.name)}</option>`).join('')}
+      <option value="__new__">➕ New category…</option>
+    </select>
+    ${mine.length ? ' · Remove from: ' + mine.map(c => `<a href="#" class="rm-cat" data-n="${esc(c.name)}">${esc(c.name)} ✕</a>`).join(' ') : ''}`;
+  document.getElementById('catPick').onchange = (ev) => {
+    const v = ev.target.value;
+    if (!v) return;
+    if (v === '__new__') { newCategoryPrompt(e.term); return; }
+    catAction(cats => { const k = findCat(cats, v); if (k && !hasWord(k, e.term)) k.words.push(e.term); }, `Edit categories: add '${e.term}' to '${v}'`);
+  };
+  box.querySelectorAll('.rm-cat').forEach(a => a.onclick = (ev) => {
+    ev.preventDefault();
+    const n = a.dataset.n;
+    catAction(cats => { const k = findCat(cats, n); if (k) k.words = k.words.filter(w => w.toLowerCase() !== e.term.toLowerCase()); }, `Edit categories: remove '${e.term}' from '${n}'`);
+  });
 }
 
 function showLetter(letter) {
@@ -426,7 +587,9 @@ function showEntry(term) {
     <div class="cat-box"><b>Categories:</b>
       <a href="#l=${encodeURIComponent(letterOf(e.term))}">${letterOf(e.term) === '#' ? 'Symbol and number words' : letterOf(e.term) + ' words'}</a>
       ${categoriesOf(e).map(c => ` · <a href="#c=${encodeURIComponent(c.key)}">${esc(c.label)}</a>`).join('')}
+      <div id="catEdit" class="cat-edit"></div>
     </div>`;
+  renderCatEdit(e);
   document.getElementById('editLink').onclick = (ev) => {
     ev.preventDefault();
     openEditor(e);
@@ -963,6 +1126,7 @@ async function openEditor(entry) {
         (lines, u) => placeEntry(lines, u, inner, block, renamed ? newTerm : null),
         n => renamed ? `Edit dictionary v1.2.${n}: rename '${oldTerm}' to '${newTerm}'` : `Edit dictionary v1.2.${n}: update '${oldTerm}'`
       );
+      if (renamed) { try { await syncCatsForWord(oldTerm, newTerm); } catch (err) { alert('The word was saved, but its custom categories could not be updated: ' + err.message); } }
       if (newModel) applyModelToEntry(entry, newModel);
       else { entry.term = newTerm; }
       resortEntries();
@@ -978,6 +1142,7 @@ async function openEditor(entry) {
     try {
       const oldTerm = entry.term;
       await pushChange((lines, u) => removeEntry(lines, u), n => `Edit dictionary v1.2.${n}: remove '${oldTerm}'`);
+      try { await syncCatsForWord(oldTerm, null); } catch (err) { alert('The word was deleted, but its custom categories could not be updated: ' + err.message); }
       entries = entries.filter(e => e !== entry);
       resortEntries();
       location.hash = '';
@@ -1012,6 +1177,7 @@ window.addEventListener('hashchange', route);
     entries = (stats.definitions_by_length_asc || []).slice()
       .sort((a, b) => sortKey(a.term).localeCompare(sortKey(b.term)));
     entries.forEach(e => byTerm.set(e.term.toLowerCase(), e));
+    await loadCustomCategories();
     route();
   } catch (err) {
     view.innerHTML = `<p class="muted">Could not load the dictionary: ${esc(err.message)}</p>`;

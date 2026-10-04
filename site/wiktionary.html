@@ -82,6 +82,17 @@
     #sidebar ul { display:flex; flex-wrap:wrap; gap:6px 16px; }
   }
   .cat-index { line-height:1.9; }
+  /* hover preview card, styled after Wiktionary's page previews */
+  .pv { position:absolute; z-index:1000; display:none; width:360px; max-width:calc(100vw - 16px); background:var(--bg); color:var(--text);
+        border:1px solid var(--line); border-radius:2px; padding:12px 16px; font-size:0.9rem; line-height:1.55;
+        box-shadow:0 30px 90px -20px rgba(0,0,0,0.3), 0 0 1px 1px rgba(0,0,0,0.05); }
+  .pv::before { content:""; position:absolute; left:var(--arrow,20px); width:10px; height:10px; background:var(--bg); transform:rotate(45deg); }
+  .pv.below::before { top:-6px; border-left:1px solid var(--line); border-top:1px solid var(--line); }
+  .pv.above::before { bottom:-6px; border-right:1px solid var(--line); border-bottom:1px solid var(--line); }
+  .pv-word { font-weight:bold; }
+  .pv-pos { font-style:italic; color:var(--muted); margin-top:4px; }
+  .pv ol { margin:0; padding-left:22px; }
+  .pv-more { color:var(--muted); }
 </style>
 </head>
 <body>
@@ -236,6 +247,70 @@ function showHome() {
         <ul class="word-list">${list.map(e => `<li>${wordLink(e.term)}</li>`).join('')}</ul>`;
     }).join('')}`;
 }
+
+// ---- hover previews ----
+let pvEl = null, pvShowTimer = null, pvHideTimer = null, pvLink = null;
+
+function previewHtml(e) {
+  const secs = e.senses && e.senses.length ? e.senses : [{ pos: e.pos, defs: [{ text: e.definition }] }];
+  let html = `<div><span class="pv-word">${esc(e.term)}</span>${e.pronunciation ? ` <span class="muted">${esc(e.pronunciation)}</span>` : ''}</div>`;
+  let shown = 0, total = secs.reduce((n, s2) => n + s2.defs.length, 0);
+  for (const sec of secs) {
+    if (shown >= 3) break;
+    const defs = sec.defs.slice(0, 3 - shown);
+    if (sec.pos && sec.pos !== '(no pos)') html += `<div class="pv-pos">${esc(sec.pos)}</div>`;
+    html += '<ol>' + defs.map(d => `<li>${esc(d.text)}</li>`).join('') + '</ol>';
+    shown += defs.length;
+  }
+  if (total > shown) html += '<div class="pv-more">…</div>';
+  return html;
+}
+
+function hidePreview() {
+  clearTimeout(pvShowTimer); clearTimeout(pvHideTimer);
+  if (pvEl) pvEl.style.display = 'none';
+  pvLink = null;
+}
+
+function showPreview(a) {
+  const e = byTerm.get(decodeURIComponent(a.getAttribute('href').slice(3)).toLowerCase());
+  if (!e) return;
+  if (!pvEl) {
+    pvEl = document.createElement('div');
+    pvEl.className = 'pv';
+    pvEl.addEventListener('mouseenter', () => clearTimeout(pvHideTimer));
+    pvEl.addEventListener('mouseleave', () => { pvHideTimer = setTimeout(hidePreview, 250); });
+    document.body.appendChild(pvEl);
+  }
+  pvLink = a;
+  pvEl.innerHTML = previewHtml(e);
+  pvEl.style.display = 'block';
+  const r = a.getBoundingClientRect();
+  const w = pvEl.offsetWidth, h = pvEl.offsetHeight;
+  const left = Math.max(8, Math.min(r.left, window.innerWidth - w - 8));
+  const below = (window.innerHeight - r.bottom >= h + 16) || r.top < h + 16;
+  pvEl.className = 'pv ' + (below ? 'below' : 'above');
+  pvEl.style.left = (window.scrollX + left) + 'px';
+  pvEl.style.top = (window.scrollY + (below ? r.bottom + 10 : r.top - h - 10)) + 'px';
+  pvEl.style.setProperty('--arrow', Math.max(12, Math.min(r.left + r.width / 2 - left - 5, w - 24)) + 'px');
+}
+
+document.addEventListener('mouseover', (ev) => {
+  const a = ev.target.closest && ev.target.closest('main a[href^="#w="]');
+  if (!a) return;
+  clearTimeout(pvHideTimer);
+  if (a === pvLink) return;
+  clearTimeout(pvShowTimer);
+  pvShowTimer = setTimeout(() => showPreview(a), 350);
+});
+document.addEventListener('mouseout', (ev) => {
+  const a = ev.target.closest && ev.target.closest('main a[href^="#w="]');
+  if (!a) return;
+  clearTimeout(pvShowTimer);
+  pvHideTimer = setTimeout(hidePreview, 250);
+});
+document.addEventListener('click', hidePreview);
+window.addEventListener('hashchange', hidePreview);
 
 function syncThemeLabel() {
   document.getElementById('themeToggle').textContent = document.documentElement.dataset.theme === 'dark' ? 'Light mode' : 'Dark mode';

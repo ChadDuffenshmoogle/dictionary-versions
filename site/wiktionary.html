@@ -395,7 +395,7 @@ function isSignedIn() { try { return !!localStorage.getItem('ghToken'); } catch 
 
 function normalizeCats(j) {
   return ((j && j.categories) || []).filter(c => c && c.name)
-    .map(c => ({ name: String(c.name), words: Array.isArray(c.words) ? c.words.map(String) : [] }));
+    .map(c => ({ name: String(c.name), parent: c.parent ? String(c.parent) : '', words: Array.isArray(c.words) ? c.words.map(String) : [] }));
 }
 
 async function loadCustomCategories() {
@@ -434,7 +434,7 @@ async function saveCategories(mutate, message) {
   }
   const cats = normalizeCats(data);
   mutate(cats);
-  const body = { message, content: toBase64(JSON.stringify({ categories: cats }, null, 2) + '\n'), branch: BRANCH };
+  const body = { message, content: toBase64(JSON.stringify({ categories: cats.map(c => c.parent ? c : { name: c.name, words: c.words }) }, null, 2) + '\n'), branch: BRANCH };
   if (sha) body.sha = sha;
   const put = await fetch(url, { method: 'PUT', headers: { ...ghHeaders(token), 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
   if (put.status === 401 || put.status === 403) {
@@ -459,28 +459,42 @@ async function syncCatsForWord(oldTerm, newTerm) {
   }), newTerm ? `Edit categories: rename '${oldTerm}' to '${newTerm}'` : `Edit categories: remove '${oldTerm}'`);
 }
 
-function newCategoryPrompt(thenAddTerm) {
-  const name = (prompt('Name of the new category:') || '').trim();
+function newCategoryPrompt(thenAddTerm, parent) {
+  const name = (prompt(parent ? `Name of the new subcategory inside "${parent}":` : 'Name of the new category:') || '').trim();
   if (!name) return;
   if (findCat(customCats, name)) { alert('That category already exists.'); return; }
   catAction(cats => {
-    if (!findCat(cats, name)) cats.push({ name, words: thenAddTerm ? [thenAddTerm] : [] });
+    if (!findCat(cats, name)) cats.push({ name, parent: parent || '', words: thenAddTerm ? [thenAddTerm] : [] });
   }, thenAddTerm ? `Edit categories: add '${thenAddTerm}' to new '${name}'` : `Edit categories: create '${name}'`);
+}
+
+function catKids(cats, name) { return cats.filter(k => (k.parent || '').toLowerCase() === name.toLowerCase()); }
+function catDescendants(cats, name) {
+  const out = [], queue = [name];
+  while (queue.length && out.length < 500) {
+    catKids(cats, queue.shift()).forEach(k => { out.push(k.name); queue.push(k.name); });
+  }
+  return out;
 }
 
 function showCategoryIndex() {
   const auto = allCategories().filter(c => !c.custom);
-  const custom = allCategories().filter(c => c.custom);
   const li = c => `<li><a href="#c=${encodeURIComponent(c.key)}">${esc(c.label)}</a> <span class="muted">(${entries.filter(c.test).length})</span></li>`;
+  const tree = (parent, depth) => {
+    const kids = parent === null ? customCats.filter(k => !k.parent || !findCat(customCats, k.parent)) : catKids(customCats, parent);
+    if (!kids.length || depth > 10) return '';
+    return '<ul class="cat-index">' + kids.map(k =>
+      `<li><a href="#c=${encodeURIComponent('custom:' + k.name)}">${esc(k.name)}</a> <span class="muted">(${entries.filter(e => hasWord(k, e.term)).length})</span>${tree(k.name, depth + 1)}</li>`).join('') + '</ul>';
+  };
   view.innerHTML = `
     <h1>Categories</h1>
     <h2>Custom categories</h2>
-    ${custom.length ? `<ul class="cat-index">${custom.map(li).join('')}</ul>` : '<p class="muted">None yet.</p>'}
+    ${customCats.length ? tree(null, 0) : '<p class="muted">None yet.</p>'}
     ${isSignedIn() ? '<button id="newCat" type="button">+ New category</button>' : ''}
     <h2>Automatic categories</h2>
     <ul class="cat-index">${auto.map(li).join('')}</ul>`;
   const nb = document.getElementById('newCat');
-  if (nb) nb.onclick = () => newCategoryPrompt(null);
+  if (nb) nb.onclick = () => newCategoryPrompt(null, null);
 }
 
 function showCategory(key) {
@@ -488,20 +502,34 @@ function showCategory(key) {
   if (!c) { view.innerHTML = '<h1>Category</h1><p>No category with this name.</p>'; return; }
   const list = entries.filter(c.test);
   const editing = c.custom && isSignedIn();
+  const name = c.label;
+  const cat = c.custom ? findCat(customCats, name) : null;
+  const kids = cat ? catKids(customCats, cat.name) : [];
+  const crumbs = [];
+  for (let p = cat && cat.parent ? findCat(customCats, cat.parent) : null; p && crumbs.length < 10; p = p.parent ? findCat(customCats, p.parent) : null) crumbs.unshift(p);
+  const blocked = cat ? [cat.name, ...catDescendants(customCats, cat.name)].map(n => n.toLowerCase()) : [];
   view.innerHTML = `
     <h1>${esc(c.label)}</h1>
-    <p class="muted">${list.length} entries · <a href="#c=">All categories</a></p>
+    <p class="muted">${list.length} entries · <a href="#c=">All categories</a>${crumbs.map(p => ` › <a href="#c=${encodeURIComponent('custom:' + p.name)}">${esc(p.name)}</a>`).join('')}</p>
+    ${kids.length ? `<h2>Subcategories</h2><ul class="cat-index">${kids.map(k => `<li><a href="#c=${encodeURIComponent('custom:' + k.name)}">${esc(k.name)}</a> <span class="muted">(${entries.filter(e => hasWord(k, e.term)).length})</span></li>`).join('')}</ul>` : ''}
+    ${kids.length ? '<h2>Words</h2>' : ''}
     <ul class="word-list">${list.map(e => `<li>${wordLink(e.term)}${editing ? ` <a href="#" class="rm-word" data-t="${esc(e.term)}" title="Remove from this category">✕</a>` : ''}</li>`).join('')}</ul>
     ${editing ? `
       <div class="cat-edit">
         <input id="catAddWord" list="allTerms" placeholder="Add a word…">
         <datalist id="allTerms">${entries.map(e => `<option value="${esc(e.term)}">`).join('')}</datalist>
         <button id="catAddBtn" type="button">Add</button>
+      </div>
+      <div class="cat-edit">
+        Inside: <select id="catParent"><option value="">(top level)</option>${customCats.filter(k => !blocked.includes(k.name.toLowerCase())).map(k => `<option value="${esc(k.name)}"${cat && cat.parent && cat.parent.toLowerCase() === k.name.toLowerCase() ? ' selected' : ''}>${esc(k.name)}</option>`).join('')}</select>
+        <button id="catParentBtn" type="button">Move</button>
+        <button id="catSubBtn" type="button">+ New subcategory</button>
+      </div>
+      <div class="cat-edit">
         <button id="catRenBtn" type="button">Rename category</button>
         <button id="catDelBtn" type="button" class="danger">Delete category</button>
       </div>` : ''}`;
   if (!editing) return;
-  const name = c.label;
   document.getElementById('catAddBtn').onclick = () => {
     const typed = document.getElementById('catAddWord').value.trim();
     const e = byTerm.get(typed.toLowerCase());
@@ -509,6 +537,11 @@ function showCategory(key) {
     if (hasWord(findCat(customCats, name), e.term)) { alert('Already in this category.'); return; }
     catAction(cats => { const k = findCat(cats, name); if (k && !hasWord(k, e.term)) k.words.push(e.term); }, `Edit categories: add '${e.term}' to '${name}'`);
   };
+  document.getElementById('catParentBtn').onclick = () => {
+    const np = document.getElementById('catParent').value;
+    catAction(cats => { const k = findCat(cats, name); if (k) k.parent = np; }, np ? `Edit categories: move '${name}' inside '${np}'` : `Edit categories: move '${name}' to top level`);
+  };
+  document.getElementById('catSubBtn').onclick = () => newCategoryPrompt(null, name);
   document.getElementById('catRenBtn').onclick = async () => {
     const nn = (prompt('New name for this category:', name) || '').trim();
     if (!nn || nn === name) return;
@@ -516,15 +549,25 @@ function showCategory(key) {
       alert('A category with that name already exists.'); return;
     }
     try {
-      await saveCategories(cats => { const k = findCat(cats, name); if (k) k.name = nn; }, `Edit categories: rename '${name}' to '${nn}'`);
+      await saveCategories(cats => {
+        const k = findCat(cats, name);
+        if (k) k.name = nn;
+        cats.forEach(o => { if ((o.parent || '').toLowerCase() === name.toLowerCase()) o.parent = nn; });
+      }, `Edit categories: rename '${name}' to '${nn}'`);
       location.hash = 'c=' + encodeURIComponent('custom:' + nn);
     } catch (err) {
       if (err.message !== 'Cancelled.') alert(err.message);
     }
   };
   document.getElementById('catDelBtn').onclick = () => {
-    if (!confirm(`Delete the category "${name}"? The words themselves are not deleted.`)) return;
-    catAction(cats => { const i = cats.findIndex(k => k.name.toLowerCase() === name.toLowerCase()); if (i >= 0) cats.splice(i, 1); }, `Edit categories: delete '${name}'`);
+    if (!confirm(`Delete the category "${name}"? The words themselves are not deleted.${kids.length ? ' Its subcategories move up one level.' : ''}`)) return;
+    catAction(cats => {
+      const i = cats.findIndex(k => k.name.toLowerCase() === name.toLowerCase());
+      if (i < 0) return;
+      const up = cats[i].parent || '';
+      cats.forEach(o => { if ((o.parent || '').toLowerCase() === name.toLowerCase()) o.parent = up; });
+      cats.splice(i, 1);
+    }, `Edit categories: delete '${name}'`);
     location.hash = 'c=';
   };
   view.querySelectorAll('.rm-word').forEach(a => a.onclick = (ev) => {
@@ -550,7 +593,7 @@ function renderCatEdit(e) {
   document.getElementById('catPick').onchange = (ev) => {
     const v = ev.target.value;
     if (!v) return;
-    if (v === '__new__') { newCategoryPrompt(e.term); return; }
+    if (v === '__new__') { newCategoryPrompt(e.term, null); return; }
     catAction(cats => { const k = findCat(cats, v); if (k && !hasWord(k, e.term)) k.words.push(e.term); }, `Edit categories: add '${e.term}' to '${v}'`);
   };
   box.querySelectorAll('.rm-cat').forEach(a => a.onclick = (ev) => {

@@ -357,7 +357,10 @@ carzone (n.) - an Italitan turnover filled with chipped paint, vulcanized rubber
 
 caseine/caseose (adj.) - possessing the attributes of or marked by cheese
 
-casseroke (v.) - to use intensive cooking as an excuse to avoid social activities, or (n.) - an instance thereof
+---------------------------------------------
+casseroke (v.) - to use intensive cooking as an excuse to avoid social activities
+casseroke (n.) - an instance thereof
+---------------------------------------------
 
 C. D. Pough / HS C. D. Pough (n.) - a convenience shop with assorted items such as calzones
 

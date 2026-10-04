@@ -98,7 +98,7 @@
   .cat-edit .danger { color:var(--error); border-color:var(--error); }
   .rm-word, .rm-cat { color:var(--error); }
   /* hover preview card, styled after Wiktionary's page previews */
-  .pv { position:absolute; z-index:1000; display:none; width:360px; max-width:calc(100vw - 16px); background:var(--bg); color:var(--text);
+  .pv { box-sizing:border-box; overflow-wrap:anywhere; position:absolute; z-index:1000; display:none; width:360px; max-width:calc(100vw - 16px); background:var(--bg); color:var(--text);
         border:1px solid var(--line); border-radius:2px; padding:12px 16px; font-size:0.9rem; line-height:1.55;
         box-shadow:0 30px 90px -20px rgba(0,0,0,0.3), 0 0 1px 1px rgba(0,0,0,0.05); }
   .pv::before { content:""; position:absolute; left:var(--arrow,20px); width:10px; height:10px; background:var(--bg); transform:rotate(45deg); }

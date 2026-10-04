@@ -2,6 +2,7 @@
   "categories": [
     {
       "name": "Sandwiches",
+      "parent": "Cuisine",
       "words": [
         "baceggchebag",
         "croiseggchesaus"

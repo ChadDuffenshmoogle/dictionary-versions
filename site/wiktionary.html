@@ -83,6 +83,7 @@
     #sidebar ul { display:flex; flex-wrap:wrap; gap:6px 16px; }
   }
   .cat-index { line-height:1.9; }
+  button.speak { font-size:1rem; padding:0 6px; margin-left:6px; cursor:pointer; vertical-align:middle; }
   .cat-edit { margin-top:8px; font-size:0.9rem; }
   .cat-edit input { padding:5px 8px; width:220px; max-width:100%; }
   .cat-edit .danger { color:var(--error); border-color:var(--error); }
@@ -668,6 +669,35 @@ function entryBodyHtml(e) {
   return html;
 }
 
+// ---- read aloud: the browser's own voice reads a spelled-out version of the pronunciation, or else the word ----
+const IPA_TOKENS = [
+  ['tʃ', 'ch'], ['dʒ', 'j'], ['eɪ', 'ay'], ['aɪ', 'eye'], ['ɔɪ', 'oy'], ['aʊ', 'ow'], ['oʊ', 'oh'], ['əʊ', 'oh'],
+  ['ʃ', 'sh'], ['ʒ', 'zh'], ['θ', 'th'], ['ð', 'th'], ['ŋ', 'ng'], ['j', 'y'], ['ɹ', 'r'], ['ɾ', 'r'], ['ɡ', 'g'], ['ɫ', 'l'],
+  ['æ', 'a'], ['ɑ', 'ah'], ['ɒ', 'o'], ['ɛ', 'eh'], ['e', 'eh'], ['ɪ', 'ih'], ['i', 'ee'], ['ʊ', 'uu'], ['u', 'oo'],
+  ['ʌ', 'uh'], ['ə', 'uh'], ['ɐ', 'uh'], ['ɜ', 'er'], ['ɝ', 'er'], ['ɚ', 'er'], ['ɔ', 'aw'], ['o', 'oh'], ['a', 'ah'],
+  ['ʔ', ''], ['ˈ', ''], ['ˌ', ''], ['ː', ''], ['ˑ', ''], ['.', ' '], [':', ''],
+];
+
+function pronunciationToSpeech(pron) {
+  const inner = pron.replace(/[\/\[\]]/g, '').trim();
+  if (!/[^\x00-\x7f]/.test(inner)) return inner;   // plain letters: read as written
+  let out = '', i = 0;
+  while (i < inner.length) {
+    const hit = IPA_TOKENS.find(([ipa]) => inner.startsWith(ipa, i));
+    if (hit) { out += hit[1]; i += hit[0].length; } else { out += inner[i]; i++; }
+  }
+  return out.trim();
+}
+
+function speakEntry(e) {
+  if (!('speechSynthesis' in window)) { alert('This browser cannot read words aloud.'); return; }
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance((e.pronunciation && pronunciationToSpeech(e.pronunciation)) || e.term);
+  u.lang = 'en-US';
+  u.rate = 0.9;
+  speechSynthesis.speak(u);
+}
+
 function showEntry(term) {
   const idx = entries.findIndex(e => e.term === term);
   if (idx === -1) {
@@ -678,7 +708,7 @@ function showEntry(term) {
   const prev = entries[idx - 1];
   const next = entries[idx + 1];
   view.innerHTML = `
-    <h1>${esc(e.term)}</h1>
+    <h1>${esc(e.term)} <button type="button" id="speakBtn" class="speak" title="Read aloud" aria-label="Read aloud">🔊</button></h1>
     <div class="from">From the Unicyclist Dictionary</div>
     <h2>English <a href="#" class="edit-link" id="editLink">[edit]</a></h2>
     ${entryBodyHtml(e)}
@@ -695,6 +725,7 @@ function showEntry(term) {
       <div id="catEdit" class="cat-edit"></div>
     </div>`;
   renderCatEdit(e);
+  document.getElementById('speakBtn').onclick = () => speakEntry(e);
   document.getElementById('editLink').onclick = (ev) => {
     ev.preventDefault();
     openEditor(e);

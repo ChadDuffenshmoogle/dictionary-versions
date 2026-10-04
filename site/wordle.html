@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Daily Word Game - Unicyclist Dictionary</title>
+<script>try { var t = localStorage.getItem('theme') || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'); document.documentElement.dataset.theme = t; } catch (e) {}</script>
+<style>
+  :root {
+    --bg:#ffffff; --text:#1a1a1b; --tile-border:#d3d6da; --tile-filled:#878a8c; --key-bg:#d3d6da; --key-text:#1a1a1b;
+    --correct:#6aaa64; --present:#c9b458; --absent:#787c7e; --line:#d3d6da; --toast-bg:#121213; --toast-text:#ffffff; --muted:#787c7e;
+  }
+  html[data-theme="dark"] {
+    --bg:#121213; --text:#ffffff; --tile-border:#3a3a3c; --tile-filled:#565758; --key-bg:#818384; --key-text:#ffffff;
+    --correct:#538d4e; --present:#b59f3b; --absent:#3a3a3c; --line:#3a3a3c; --toast-bg:#ffffff; --toast-text:#121213; --muted:#818384;
+  }
+  * { box-sizing:border-box; }
+  html, body { height:100%; margin:0; }
+  body { background:var(--bg); color:var(--text); font-family:'Clear Sans','Helvetica Neue',Arial,sans-serif; display:flex; flex-direction:column; overflow:hidden; }
+  header { display:flex; align-items:center; justify-content:space-between; height:50px; padding:0 16px; border-bottom:1px solid var(--line); flex:none; }
+  header .side { display:flex; gap:6px; min-width:90px; }
+  header .side.right { justify-content:flex-end; }
+  header h1 { margin:0; font-family:Georgia,'Times New Roman',serif; font-weight:bold; font-size:1.7rem; letter-spacing:0.01em; text-align:center; }
+  .icon { background:none; border:none; color:var(--text); font-size:1.25rem; cursor:pointer; padding:4px 6px; text-decoration:none; line-height:1; }
+  #game { flex:1; display:flex; flex-direction:column; justify-content:space-between; align-items:center; width:100%; max-width:500px; margin:0 auto; min-height:0; }
+  #boardWrap { flex:1; display:flex; justify-content:center; align-items:center; padding:10px; min-height:0; }
+  #board { display:grid; grid-template-rows:repeat(6, auto); gap:5px; }
+  .row { display:grid; gap:5px; grid-template-columns:repeat(var(--len), var(--tile)); }
+  .tile { width:var(--tile); height:var(--tile); border:2px solid var(--tile-border); display:flex; justify-content:center; align-items:center;
+          font-size:calc(var(--tile) * 0.55); font-weight:bold; text-transform:uppercase; user-select:none; color:var(--text); }
+  .tile[data-state="tbd"] { border-color:var(--tile-filled); }
+  .tile[data-state="correct"] { background:var(--correct); border-color:var(--correct); color:#fff; }
+  .tile[data-state="present"] { background:var(--present); border-color:var(--present); color:#fff; }
+  .tile[data-state="absent"] { background:var(--absent); border-color:var(--absent); color:#fff; }
+  .tile.pop { animation:pop 0.1s; }
+  .tile.flip-in { animation:flipIn 0.25s ease-in forwards; }
+  .tile.flip-out { animation:flipOut 0.25s ease-in forwards; }
+  .tile.bounce { animation:bounce 1s ease-in-out; }
+  .row.shake { animation:shake 0.6s; }
+  @keyframes pop { from { transform:scale(0.8); opacity:0; } 40% { transform:scale(1.1); opacity:1; } }
+  @keyframes flipIn { 0% { transform:rotateX(0); } 100% { transform:rotateX(-90deg); } }
+  @keyframes flipOut { 0% { transform:rotateX(-90deg); } 100% { transform:rotateX(0); } }
+  @keyframes shake { 10%,90% { transform:translateX(-1px); } 20%,80% { transform:translateX(2px); } 30%,50%,70% { transform:translateX(-4px); } 40%,60% { transform:translateX(4px); } }
+  @keyframes bounce { 0%,20% { transform:translateY(0); } 40% { transform:translateY(-30px); } 50% { transform:translateY(5px); } 60% { transform:translateY(-15px); } 80% { transform:translateY(2px); } 100% { transform:translateY(0); } }
+  #keyboard { width:100%; padding:0 8px 8px 8px; flex:none; }
+  .krow { display:flex; width:100%; margin:0 auto 8px; touch-action:manipulation; }
+  .key { flex:1; height:58px; margin:0 3px; border:0; border-radius:4px; background:var(--key-bg); color:var(--key-text); font-weight:bold; font-size:0.85rem;
+         font-family:inherit; text-transform:uppercase; cursor:pointer; padding:0; touch-action:manipulation; user-select:none; }
+  .key.wide { flex:1.5; font-size:0.72rem; }
+  .key[data-state="correct"] { background:var(--correct); color:#fff; }
+  .key[data-state="present"] { background:var(--present); color:#fff; }
+  .key[data-state="absent"] { background:var(--absent); color:#fff; }
+  .spacer { flex:0.5; }
+  #toasts { position:fixed; top:70px; left:50%; transform:translateX(-50%); z-index:50; display:flex; flex-direction:column; align-items:center; gap:10px; pointer-events:none; }
+  .toast { background:var(--toast-bg); color:var(--toast-text); padding:12px 14px; border-radius:4px; font-weight:bold; font-size:0.9rem; transition:opacity 0.3s; opacity:1; }
+  .toast.out { opacity:0; }
+  #overlay { position:fixed; inset:0; z-index:40; background:rgba(0,0,0,0.5); display:flex; justify-content:center; align-items:flex-start; padding-top:60px; overflow:auto; }
+  #overlay[hidden] { display:none; }
+  .modal { position:relative; background:var(--bg); color:var(--text); border-radius:8px; width:min(500px, 92vw); padding:20px 24px 24px; box-shadow:0 4px 23px rgba(0,0,0,0.2); margin-bottom:30px; }
+  .modal .close { position:absolute; top:12px; right:14px; background:none; border:none; color:var(--text); font-size:1.2rem; cursor:pointer; }
+  .modal h2 { text-align:center; font-size:1rem; letter-spacing:0.05em; text-transform:uppercase; margin:14px 0 10px; }
+  .modal h2:first-of-type { margin-top:4px; }
+  .modal p { margin:8px 0; font-size:0.9rem; line-height:1.4; }
+  .modal .muted { color:var(--muted); }
+  .stats-row { display:flex; justify-content:center; text-align:center; }
+  .stat { flex:1; }
+  .stat .num { font-size:2rem; }
+  .stat .lbl { font-size:0.7rem; }
+  .dist { display:flex; align-items:center; gap:6px; margin:3px 0; font-size:0.85rem; }
+  .dist .bar { background:var(--absent); color:#fff; min-width:18px; padding:1px 6px; text-align:right; font-weight:bold; font-size:0.8rem; }
+  .dist .bar.now { background:var(--correct); }
+  .word-reveal { text-align:center; border-top:1px solid var(--line); margin-top:16px; padding-top: 12px; }
+  .word-reveal .w { font-size:1.4rem; font-weight:bold; text-transform:uppercase; letter-spacing:0.05em; }
+  .word-reveal a { color:var(--text); }
+  .bottom { display:flex; align-items:center; justify-content:center; gap:20px; margin-top:16px; }
+  .bottom .next { text-align:center; font-size:0.75rem; text-transform:uppercase; font-weight:bold; }
+  .bottom .next .t { font-size:1.6rem; font-weight:normal; }
+  .share { background:var(--correct); color:#fff; border:0; border-radius:4px; font-size:1.1rem; font-weight:bold; padding:14px 26px; cursor:pointer; text-transform:uppercase; font-family:inherit; }
+  .ex-row { display:grid; grid-template-columns:repeat(5, 40px); gap:5px; margin:8px 0; }
+  .ex-row .tile { width:40px; height:40px; font-size:1.3rem; }
+</style>
+</head>
+<body>
+<header>
+  <div class="side"><a class="icon" href="index.html" title="Back to stats" aria-label="Back to stats">&#8592;</a><button class="icon" id="helpBtn" title="How to play" aria-label="How to play">?</button></div>
+  <h1>Daily Word Game</h1>
+  <div class="side right"><button class="icon" id="statsBtn" title="Statistics" aria-label="Statistics">&#128202;</button><button class="icon" id="themeBtn" title="Dark / light" aria-label="Toggle dark mode">&#9680;</button></div>
+</header>
+<div id="toasts"></div>
+<div id="game">
+  <div id="boardWrap"><div id="board"></div></div>
+  <div id="keyboard"></div>
+</div>
+<div id="overlay" hidden><div class="modal"><button class="close" id="closeModal" aria-label="Close">&#10005;</button><div id="modalBody"></div></div></div>
+
+<script>
+const MAX_GUESSES = 6;
+const WIN_WORDS = ['Genius', 'Magnificent', 'Impressive', 'Splendid', 'Great', 'Phew'];
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+function fnv(str) {
+  let h = 2166136261;
+  for (let i = 0; i < str.length; i++) h = Math.imul(h ^ str.charCodeAt(i), 16777619);
+  return h >>> 0;
+}
+function dayString(d) {
+  d = d || new Date();
+  const p = (n) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+}
+function load(key, fallback) { try { return JSON.parse(localStorage.getItem(key)) || fallback; } catch (e) { return fallback; } }
+function save(key, value) { try { localStorage.setItem(key, JSON.stringify(value)); } catch (e) {} }
+
+const today = dayString();
+let answer = '', answerTerm = '', definition = '', len = 5;
+let valid = new Set(), looseMode = false;
+let state = null, current = '', busy = false;
+let stats = load('dwg-stats', { played: 0, wins: 0, streak: 0, maxStreak: 0, lastWinDay: '', dist: [0, 0, 0, 0, 0, 0] });
+const keyState = {};
+
+// ---------- toasts and modal ----------
+function toast(text, ms) {
+  const el = document.createElement('div');
+  el.className = 'toast';
+  el.textContent = text;
+  $('toasts').prepend(el);
+  setTimeout(() => { el.classList.add('out'); setTimeout(() => el.remove(), 300); }, ms || 1000);
+}
+function openModal(html) { $('modalBody').innerHTML = html; $('overlay').hidden = false; }
+function closeModal() { $('overlay').hidden = true; clearInterval(timerId); }
+$('closeModal').onclick = closeModal;
+$('overlay').addEventListener('click', (e) => { if (e.target === $('overlay')) closeModal(); });
+
+// ---------- board ----------
+function fit() {
+  const availW = Math.min(window.innerWidth, 500) - 28;
+  const availH = $('boardWrap').clientHeight - 20;
+  const byW = Math.floor((availW - (len - 1) * 5) / len);
+  const byH = Math.floor((availH - 5 * 5) / MAX_GUESSES);
+  const tile = Math.max(18, Math.min(62, byW, byH));
+  document.documentElement.style.setProperty('--tile', tile + 'px');
+  document.documentElement.style.setProperty('--len', len);
+}
+function buildBoard() {
+  const board = $('board');
+  board.innerHTML = '';
+  for (let r = 0; r < MAX_GUESSES; r++) {
+    const row = document.createElement('div');
+    row.className = 'row';
+    for (let c = 0; c < len; c++) {
+      const t = document.createElement('div');
+      t.className = 'tile';
+      row.appendChild(t);
+    }
+    board.appendChild(row);
+  }
+  fit();
+}
+const rowEl = (r) => $('board').children[r];
+
+function showCurrent() {
+  const row = rowEl(state.guesses.length);
+  if (!row) return;
+  const tiles = row.children;
+  for (let i = 0; i < len; i++) {
+    const t = tiles[i], ch = current[i] || '';
+    if (t.textContent !== ch) { t.textContent = ch; if (ch) { t.classList.remove('pop'); void t.offsetWidth; t.classList.add('pop'); } }
+    t.dataset.state = ch ? 'tbd' : '';
+  }
+}
+
+// ---------- keyboard ----------
+const KB_ROWS = ['qwertyuiop', 'asdfghjkl', '*zxcvbnm#'];
+function buildKeyboard() {
+  const kb = $('keyboard');
+  kb.innerHTML = '';
+  KB_ROWS.forEach((r, ri) => {
+    const row = document.createElement('div');
+    row.className = 'krow';
+    if (ri === 1) { const s = document.createElement('div'); s.className = 'spacer'; row.appendChild(s); }
+    [...r].forEach(ch => {
+      const b = document.createElement('button');
+      b.className = 'key';
+      b.type = 'button';
+      if (ch === '*') { b.classList.add('wide'); b.textContent = 'enter'; b.dataset.key = 'Enter'; }
+      else if (ch === '#') { b.classList.add('wide'); b.innerHTML = '&#9003;'; b.dataset.key = 'Backspace'; b.setAttribute('aria-label', 'backspace'); }
+      else { b.textContent = ch; b.dataset.key = ch; }
+      b.addEventListener('mousedown', (e) => e.preventDefault());   // keep focus off the button
+      b.addEventListener('click', () => press(b.dataset.key));
+      row.appendChild(b);
+    });
+    if (ri === 1) { const s = document.createElement('div'); s.className = 'spacer'; row.appendChild(s); }
+    kb.appendChild(row);
+  });
+}
+const RANK = { absent: 1, present: 2, correct: 3 };
+function markKey(letter, st) {
+  if ((RANK[keyState[letter]] || 0) >= RANK[st]) return;
+  keyState[letter] = st;
+  const k = $('keyboard').querySelector(`[data-key="${letter}"]`);
+  if (k) k.dataset.state = st;
+}
+
+// ---------- game logic ----------
+function evaluate(guess, ans) {
+  const res = Array(guess.length).fill('absent');
+  const left = {};
+  for (let i = 0; i < ans.length; i++) { if (guess[i] === ans[i]) res[i] = 'correct'; else left[ans[i]] = (left[ans[i]] || 0) + 1; }
+  for (let i = 0; i < guess.length; i++) {
+    if (res[i] === 'correct') continue;
+    if (left[guess[i]] > 0) { res[i] = 'present'; left[guess[i]]--; }
+  }
+  return res;
+}
+
+function press(key) {
+  if (busy || !state || state.status !== 'playing' || !$('overlay').hidden) return;
+  if (key === 'Enter') return submit();
+  if (key === 'Backspace') { current = current.slice(0, -1); return showCurrent(); }
+  if (/^[a-z]$/.test(key) && current.length < len) { current += key; showCurrent(); }
+}
+
+function shakeRow(msg) {
+  const row = rowEl(state.guesses.length);
+  row.classList.remove('shake'); void row.offsetWidth; row.classList.add('shake');
+  toast(msg);
+}
+
+function reveal(r, st, animate) {
+  const tiles = [...rowEl(r).children];
+  if (!animate) {
+    tiles.forEach((t, i) => { t.textContent = state.guesses[r][i]; t.dataset.state = st[i]; markKey(state.guesses[r][i], st[i]); });
+    return Promise.resolve();
+  }
+  const step = Math.min(300, Math.floor(2400 / len));
+  return new Promise(resolve => {
+    tiles.forEach((t, i) => setTimeout(() => {
+      t.classList.add('flip-in');
+      setTimeout(() => { t.dataset.state = st[i]; t.classList.remove('flip-in'); t.classList.add('flip-out'); markKey(state.guesses[r][i], st[i]); }, 250);
+    }, i * step));
+    setTimeout(resolve, (len - 1) * step + 520);
+  });
+}
+
+async function submit() {
+  if (current.length < len) return shakeRow('Not enough letters');
+  if (!looseMode && !valid.has(current)) return shakeRow('Not in word list');
+  busy = true;
+  const r = state.guesses.length;
+  const guess = current;
+  state.guesses.push(guess);
+  current = '';
+  const st = evaluate(guess, answer);
+  await reveal(r, st, true);
+  const won = guess === answer;
+  if (won) state.status = 'won'; else if (state.guesses.length >= MAX_GUESSES) state.status = 'lost';
+  save('dwg-state', state);
+  if (state.status !== 'playing') {
+    recordResult(won, state.guesses.length);
+    if (won) {
+      toast(WIN_WORDS[Math.min(state.guesses.length, 6) - 1], 1800);
+      [...rowEl(r).children].forEach((t, i) => { t.style.animationDelay = (i * 100) + 'ms'; t.classList.add('bounce'); });
+    } else {
+      toast(answerTerm.toUpperCase(), 6000);
+    }
+    setTimeout(showStats, 2200);
+  }
+  busy = false;
+}
+
+function recordResult(won, n) {
+  stats.played++;
+  if (won) {
+    stats.wins++;
+    stats.dist[n - 1]++;
+    const y = new Date(); y.setDate(y.getDate() - 1);
+    stats.streak = stats.lastWinDay === dayString(y) ? stats.streak + 1 : 1;
+    stats.lastWinDay = today;
+    stats.maxStreak = Math.max(stats.maxStreak, stats.streak);
+  } else {
+    stats.streak = 0;
+  }
+  save('dwg-stats', stats);
+}
+
+// ---------- stats / help / share ----------
+let timerId = null;
+function shareText() {
+  const rows = state.guesses.map(g => evaluate(g, answer).map(s => ({ correct: '\u{1F7E9}', present: '\u{1F7E8}', absent: '\u2B1B' }[s])).join(''));
+  const score = state.status === 'won' ? state.guesses.length : 'X';
+  return `Unicyclist Daily Word Game ${today} (${len} letters) ${score}/${MAX_GUESSES}\n\n${rows.join('\n')}`;
+}
+async function copyShare() {
+  try { await navigator.clipboard.writeText(shareText()); toast('Copied results to clipboard'); }
+  catch (e) { toast('Could not copy'); }
+}
+function tickTimer() {
+  const el = $('nextTimer');
+  if (!el) return;
+  const now = new Date(), next = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+  const s = Math.max(0, Math.floor((next - now) / 1000)), p = (n) => String(n).padStart(2, '0');
+  el.textContent = `${p(Math.floor(s / 3600))}:${p(Math.floor(s / 60) % 60)}:${p(s % 60)}`;
+}
+function showStats() {
+  const over = state && state.status !== 'playing';
+  const max = Math.max(1, ...stats.dist);
+  const pct = stats.played ? Math.round(stats.wins / stats.played * 100) : 0;
+  const nowIdx = over && state.status === 'won' ? state.guesses.length - 1 : -1;
+  let html = `<h2>Statistics</h2>
+    <div class="stats-row">
+      <div class="stat"><div class="num">${stats.played}</div><div class="lbl">Played</div></div>
+      <div class="stat"><div class="num">${pct}</div><div class="lbl">Win %</div></div>
+      <div class="stat"><div class="num">${stats.streak}</div><div class="lbl">Current Streak</div></div>
+      <div class="stat"><div class="num">${stats.maxStreak}</div><div class="lbl">Max Streak</div></div>
+    </div>
+    <h2>Guess Distribution</h2>
+    ${stats.dist.map((n, i) => `<div class="dist"><div>${i + 1}</div><div class="bar${i === nowIdx ? ' now' : ''}" style="width:${Math.max(7, Math.round(n / max * 100))}%">${n}</div></div>`).join('')}`;
+  if (over) {
+    html += `<div class="word-reveal">
+      <div class="muted">${state.status === 'won' ? 'You got it!' : 'The word was'}</div>
+      <div class="w">${esc(answerTerm)}</div>
+      <p>${esc(definition)}</p>
+      <p><a href="wiktionary.html#w=${encodeURIComponent(answerTerm)}">See it in the dictionary</a></p>
+    </div>
+    <div class="bottom">
+      <div class="next">Next word<div class="t" id="nextTimer"></div></div>
+      <button class="share" id="shareBtn">Share</button>
+    </div>`;
+  }
+  openModal(html);
+  if (over) { $('shareBtn').onclick = copyShare; tickTimer(); timerId = setInterval(tickTimer, 1000); }
+}
+function showHelp() {
+  const ex = (word, idx, st) => `<div class="ex-row">${[...word].map((c, i) => `<div class="tile" ${i === idx ? `data-state="${st}"` : ''}>${c}</div>`).join('')}</div>`;
+  openModal(`<h2>How to play</h2>
+    <p>Guess the dictionary word in ${MAX_GUESSES} tries. The word can be any length, so count the boxes.</p>
+    <p>Each guess must be a real word (a dictionary word or a Scrabble word). Hit enter to submit.</p>
+    <p>After each guess, the color of the tiles shows how close your guess was.</p>
+    <hr style="border:0;border-top:1px solid var(--line)">
+    <p><b>Examples</b></p>
+    ${ex('wheel', 0, 'correct')}<p><b>W</b> is in the word and in the correct spot.</p>
+    ${ex('pedal', 1, 'present')}<p><b>E</b> is in the word but in the wrong spot.</p>
+    ${ex('chain', 3, 'absent')}<p><b>I</b> is not in the word in any spot.</p>
+    <hr style="border:0;border-top:1px solid var(--line)">
+    <p>A new word every day, the same for everyone.</p>`);
+}
+$('statsBtn').onclick = showStats;
+$('helpBtn').onclick = showHelp;
+$('themeBtn').onclick = () => {
+  const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+  document.documentElement.dataset.theme = next;
+  try { localStorage.setItem('theme', next); } catch (e) {}
+};
+
+document.addEventListener('keydown', (e) => {
+  if (e.ctrlKey || e.metaKey || e.altKey) return;
+  if (e.key === 'Escape') return closeModal();
+  if (e.key === 'Enter') { e.preventDefault(); return press('Enter'); }
+  if (e.key === 'Backspace' || e.key === 'Delete') return press('Backspace');
+  if (/^[a-zA-Z]$/.test(e.key)) press(e.key.toLowerCase());
+});
+window.addEventListener('resize', fit);
+
+// ---------- start ----------
+async function init() {
+  buildKeyboard();
+  let data;
+  try { data = await (await fetch('stats.json?x=' + Date.now(), { cache: 'no-store' })).json(); }
+  catch (e) { toast('Could not load the word list', 5000); return; }
+  const rows = (data.definitions_by_length_asc || []).filter(r => /^[A-Za-z]{3,15}$/.test(r.term));
+  if (!rows.length) { toast('No words available yet', 5000); return; }
+
+  // the same word for everyone: the word with the lowest score for today's date
+  const score = (r) => fnv(today + '|' + r.term.toLowerCase());
+  const pick = rows.reduce((best, r) => (!best || score(r) < score(best)) ? r : best, null);
+  answerTerm = pick.term;
+  answer = pick.term.toLowerCase();
+  len = answer.length;
+  const first = pick.senses && pick.senses[0] && pick.senses[0].defs[0];
+  definition = (first ? first.text : pick.definition) || '';
+
+  valid = new Set(rows.map(r => r.term.toLowerCase()).filter(t => t.length === len));
+  try {
+    const res = await fetch(`wordlist/${len}.txt`);
+    if (!res.ok) throw new Error('missing');
+    (await res.text()).split('\n').forEach(w => { w = w.trim(); if (w) valid.add(w); });
+  } catch (e) { looseMode = true; }   // no Scrabble list yet: accept any letters
+
+  state = load('dwg-state', null);
+  if (!state || state.day !== today || state.answer !== answer) state = { day: today, answer, guesses: [], status: 'playing' };
+  buildBoard();
+  state.guesses.forEach((g, r) => reveal(r, evaluate(g, answer), false));
+  if (state.status !== 'playing') setTimeout(showStats, 300);
+  else if (!load('dwg-seen', false)) { save('dwg-seen', true); showHelp(); }
+  showCurrent();
+}
+init();
+</script>
+</body>
+</html>

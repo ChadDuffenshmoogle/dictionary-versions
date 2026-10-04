@@ -318,6 +318,35 @@ document.addEventListener('mouseout', (ev) => {
 document.addEventListener('click', hidePreview);
 window.addEventListener('hashchange', hidePreview);
 
+// ---- keyboard shortcuts: / search, Esc close, left/right arrows = previous/next word ----
+document.addEventListener('keydown', (ev) => {
+  if (ev.ctrlKey || ev.metaKey || ev.altKey) return;
+  const tag = (ev.target.tagName || '').toLowerCase();
+  const typing = tag === 'input' || tag === 'textarea' || tag === 'select' || ev.target.isContentEditable;
+
+  if (ev.key === 'Escape') {
+    hidePreview();
+    const panel = document.getElementById('editPanel');
+    if (panel && panel.innerHTML) panel.innerHTML = '';
+    if (typing) ev.target.blur();
+    return;
+  }
+  if (typing) return;
+
+  if (ev.key === '/') {
+    ev.preventDefault();
+    document.getElementById('search').focus();
+    return;
+  }
+  if (ev.key === 'ArrowLeft' || ev.key === 'ArrowRight') {
+    const hash = decodeURIComponent(location.hash.slice(1));
+    if (!hash.startsWith('w=')) return;
+    const idx = entries.findIndex(e => e.term === hash.slice(2));
+    const target = entries[idx + (ev.key === 'ArrowLeft' ? -1 : 1)];
+    if (idx !== -1 && target) location.hash = 'w=' + encodeURIComponent(target.term);
+  }
+});
+
 function syncSignInLabel() {
   document.getElementById('signInLink').textContent = isSignedIn() ? 'Sign out' : 'Sign in to edit';
 }

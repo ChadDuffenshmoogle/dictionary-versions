@@ -262,7 +262,9 @@
     {
       "name": "Beverages",
       "parent": "Cuisine",
-      "words": []
+      "words": [
+        "Bep!"
+      ]
     }
   ]
 }

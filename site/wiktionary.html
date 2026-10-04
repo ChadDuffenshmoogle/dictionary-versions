@@ -375,9 +375,11 @@ function pluralize(w) {
 }
 
 function allCategories() {
+  const tagSet = [...new Set(entries.flatMap(e => e.tags || []))].sort();
   const posSet = [...new Set(entries.flatMap(e => e.pos_list || []))].filter(p => p && p !== '(no pos)').sort();
   return CATEGORIES
     .concat(posSet.map(p => ({ key: 'pos:' + p, label: pluralize(p), test: e => (e.pos_list || []).includes(p) })))
+    .concat(tagSet.map(t => ({ key: 'tag:' + t, label: t, test: e => (e.tags || []).includes(t) })))
     .concat(customCats.map(c => ({ key: 'custom:' + c.name, label: c.name, custom: true, test: e => hasWord(c, e.term) })));
 }
 

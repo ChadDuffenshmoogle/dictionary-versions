@@ -1854,7 +1854,10 @@ quopped (adj.) - boneless
 
 quor (v.) - to ask or answer questions on Quora
 
-racontue (n.) - to continue a story from where someone else left off, possibly without prior context; to play Raconteur
+---------------------------------------------
+racontue (n.) - 1. to continue a story from where someone else left off, possibly without prior context
+2. to play Raconteur
+---------------------------------------------
 
 racontuer (n.) - one who plays Raconteur
 

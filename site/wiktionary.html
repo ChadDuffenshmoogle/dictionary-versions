@@ -83,6 +83,11 @@
     #sidebar ul { display:flex; flex-wrap:wrap; gap:6px 16px; }
   }
   .cat-index { line-height:1.9; }
+  @keyframes slideInNext { from { opacity:0; transform:translateX(36px); } to { opacity:1; transform:none; } }
+  @keyframes slideInPrev { from { opacity:0; transform:translateX(-36px); } to { opacity:1; transform:none; } }
+  .anim-next { animation: slideInNext 0.22s ease-out; }
+  .anim-prev { animation: slideInPrev 0.22s ease-out; }
+  @media (prefers-reduced-motion: reduce) { .anim-next, .anim-prev { animation:none; } }
   .from-row { display:flex; justify-content:space-between; align-items:center; gap:10px; }
   button.speak.share { font-size:0.8rem; margin-left:0; vertical-align:baseline; }
   button.speak { font-size:1rem; padding:0 6px; margin-left:6px; cursor:pointer; vertical-align:middle; }
@@ -341,14 +346,35 @@ document.addEventListener('keydown', (ev) => {
     document.getElementById('search').focus();
     return;
   }
-  if (ev.key === 'ArrowLeft' || ev.key === 'ArrowRight') {
-    const hash = decodeURIComponent(location.hash.slice(1));
-    if (!hash.startsWith('w=')) return;
-    const idx = entries.findIndex(e => e.term === hash.slice(2));
-    const target = entries[idx + (ev.key === 'ArrowLeft' ? -1 : 1)];
-    if (idx !== -1 && target) location.hash = 'w=' + encodeURIComponent(target.term);
-  }
+  if (ev.key === 'ArrowLeft') goWord(-1);
+  if (ev.key === 'ArrowRight') goWord(1);
 });
+
+// ---- go to the previous (-1) or next (+1) word, with a small slide-in animation ----
+function goWord(step) {
+  const hash = decodeURIComponent(location.hash.slice(1));
+  if (!hash.startsWith('w=')) return;
+  const idx = entries.findIndex(e => e.term === hash.slice(2));
+  const target = entries[idx + step];
+  if (idx === -1 || !target) return;
+  navDir = step > 0 ? 'next' : 'prev';
+  location.hash = 'w=' + encodeURIComponent(target.term);
+}
+
+// ---- swipe left = next word, swipe right = previous word (phones) ----
+let touchStart = null;
+document.addEventListener('touchstart', (ev) => {
+  const tag = (ev.target.tagName || '').toLowerCase();
+  if (ev.touches.length !== 1 || ['input', 'textarea', 'select'].includes(tag) || (ev.target.closest && ev.target.closest('#editPanel, .pv'))) { touchStart = null; return; }
+  touchStart = { x: ev.touches[0].clientX, y: ev.touches[0].clientY };
+}, { passive: true });
+document.addEventListener('touchend', (ev) => {
+  if (!touchStart) return;
+  const dx = ev.changedTouches[0].clientX - touchStart.x, dy = ev.changedTouches[0].clientY - touchStart.y;
+  touchStart = null;
+  if (Math.abs(dx) < 70 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
+  goWord(dx < 0 ? 1 : -1);
+}, { passive: true });
 
 function syncSignInLabel() {
   document.getElementById('signInLink').textContent = isSignedIn() ? 'Sign out' : 'Sign in to edit';
@@ -779,6 +805,8 @@ function speakEntry(e) {
   speechSynthesis.speak(u);
 }
 
+let navDir = null;   // 'next' or 'prev' while moving between words, so the page can slide in
+
 function showEntry(term) {
   const idx = entries.findIndex(e => e.term === term);
   if (idx === -1) {
@@ -806,6 +834,12 @@ function showEntry(term) {
       <div id="catEdit" class="cat-edit"></div>
     </div>`;
   renderCatEdit(e);
+  if (navDir) {
+    view.classList.remove('anim-next', 'anim-prev');
+    void view.offsetWidth;
+    view.classList.add('anim-' + navDir);
+    navDir = null;
+  }
   document.getElementById('speakBtn').onclick = () => speakEntry(e);
   document.getElementById('shareBtn').onclick = (ev) => copyShareCard(e, ev.currentTarget);
   document.getElementById('editLink').onclick = (ev) => {

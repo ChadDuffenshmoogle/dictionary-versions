@@ -701,7 +701,16 @@ function entryBodyHtml(e) {
 
 // ---- share card: draws the entry onto a picture and copies it to the clipboard ----
 function wrapLines(ctx, text, maxWidth) {
-  const words = String(text).split(/\s+/), lines = [];
+  const words = [];
+  String(text).split(/\s+/).forEach(w => {
+    if (ctx.measureText(w).width <= maxWidth) { words.push(w); return; }
+    let chunk = '';   // a single word wider than the card: split it by letters
+    for (const ch of w) {
+      if (chunk && ctx.measureText(chunk + ch).width > maxWidth) { words.push(chunk); chunk = ch; } else chunk += ch;
+    }
+    if (chunk) words.push(chunk);
+  });
+  const lines = [];
   let line = '';
   words.forEach(w => {
     const test = line ? line + ' ' + w : w;
@@ -765,16 +774,16 @@ async function copyShareCard(e, btn) {
     const blobPromise = new Promise((resolve, reject) => canvas.toBlob(b => b ? resolve(b) : reject(new Error('no image')), 'image/png'));
     if (navigator.clipboard && window.ClipboardItem) {
       await navigator.clipboard.write([new ClipboardItem({ 'image/png': blobPromise })]);
-      say('Copied!');
+      say('[copied!]');
     } else {   // browser cannot copy images: download it instead
       const a = document.createElement('a');
       a.href = URL.createObjectURL(await blobPromise);
       a.download = e.term + '.png';
       a.click();
-      say('Saved as a file');
+      say('[saved as a file]');
     }
   } catch (err) {
-    say('Could not copy');
+    say('[could not copy]');
   }
 }
 
@@ -820,7 +829,7 @@ function showEntry(term) {
   const next = entries[idx + 1];
   view.innerHTML = `
     <h1>${esc(e.term)} <button type="button" id="speakBtn" class="speak" title="Read aloud" aria-label="Read aloud">🔊</button></h1>
-    <div class="from-row"><div class="from">From the Unicyclist Dictionary</div><button type="button" id="shareBtn" class="speak share" title="Copy a picture of this entry">Copy card</button></div>
+    <div class="from-row"><div class="from">From the Unicyclist Dictionary</div><a href="#" id="shareBtn" class="edit-link" title="Copy a picture of this entry">[copy card]</a></div>
     <h2>English <a href="#" class="edit-link" id="editLink">[edit]</a></h2>
     ${entryBodyHtml(e)}
     <div id="editPanel"></div>
@@ -843,7 +852,7 @@ function showEntry(term) {
     navDir = null;
   }
   document.getElementById('speakBtn').onclick = () => speakEntry(e);
-  document.getElementById('shareBtn').onclick = (ev) => copyShareCard(e, ev.currentTarget);
+  document.getElementById('shareBtn').onclick = (ev) => { ev.preventDefault(); copyShareCard(e, ev.currentTarget); };
   document.getElementById('editLink').onclick = (ev) => {
     ev.preventDefault();
     openEditor(e);

@@ -101,7 +101,18 @@
 
 <script>
 const MAX_GUESSES = 6;
-const WIN_WORDS = ['Genius', 'Magnificent', 'Impressive', 'Splendid', 'Great', 'Phew'];
+// Praise comes from the dictionary itself: the 1st entry is for a 1-guess win ... the 6th for a 6-guess win.
+// If a word is ever removed from the dictionary, the plain fallback is used instead.
+const PRAISE = ['babingo', 'seil / seyl', 'kill a fly with a gun', 'many graditudinal appreciations', 'cracked on the lanes', 'a sound for sore ears'];
+const FALLBACK_PRAISE = ['Genius', 'Magnificent', 'Impressive', 'Splendid', 'Great', 'Phew'];
+let dictTerms = new Map();   // lowercase term -> term as written in the dictionary
+function praiseFor(n) {
+  const i = Math.min(n, 6) - 1;
+  const term = dictTerms.get(PRAISE[i]);
+  if (!term) return FALLBACK_PRAISE[i];
+  const first = term.split(' / ')[0];
+  return first.charAt(0).toUpperCase() + first.slice(1) + '!';
+}
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
@@ -210,7 +221,7 @@ function buildKeyboard() {
       else if (ch === '#') { b.classList.add('wide'); b.innerHTML = '&#9003;'; b.dataset.key = 'Backspace'; b.setAttribute('aria-label', 'backspace'); }
       else { b.textContent = ch; b.dataset.key = ch; }
       b.addEventListener('mousedown', (e) => e.preventDefault());   // keep focus off the button
-      b.addEventListener('click', () => press(b.dataset.key));
+      b.addEventListener('click', () => { try { if (navigator.vibrate) navigator.vibrate(8); } catch (e) {} press(b.dataset.key); });
       row.appendChild(b);
     });
     if (ri === 1) { const s = document.createElement('div'); s.className = 'spacer'; row.appendChild(s); }
@@ -284,7 +295,7 @@ async function submit() {
   if (state.status !== 'playing') {
     recordResult(won, state.guesses.length);
     if (won) {
-      toast(WIN_WORDS[Math.min(state.guesses.length, 6) - 1], 1800);
+      toast(praiseFor(state.guesses.length), 2200);
       confetti();
       try { if (navigator.vibrate) navigator.vibrate([120, 60, 120, 60, 240]); } catch (e) {}
       [...rowEl(r).children].forEach((t, i) => { t.style.animationDelay = (i * 100) + 'ms'; t.classList.add('bounce'); });
@@ -433,7 +444,9 @@ async function init() {
   let data;
   try { data = await (await fetch('stats.json?x=' + Date.now(), { cache: 'no-store' })).json(); }
   catch (e) { toast('Could not load the word list', 5000); return; }
-  const rows = (data.definitions_by_length_asc || []).filter(r => /^[A-Za-z]{3,15}$/.test(r.term));
+  const allRows = data.definitions_by_length_asc || [];
+  allRows.forEach(r => dictTerms.set(r.term.toLowerCase(), r.term));
+  const rows = allRows.filter(r => /^[A-Za-z]{3,15}$/.test(r.term));
   if (!rows.length) { toast('No words available yet', 5000); return; }
 
   // the same word for everyone: the word with the lowest score for today's date

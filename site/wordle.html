@@ -32,6 +32,11 @@
   .tile[data-state="correct"] { background:var(--correct); border-color:var(--correct); color:#fff; }
   .tile[data-state="present"] { background:var(--present); border-color:var(--present); color:#fff; }
   .tile[data-state="absent"] { background:var(--absent); border-color:var(--absent); color:#fff; }
+  .tile { position:relative; isolation:isolate; }
+  .tile[data-hint]::before { content:''; position:absolute; inset:-2px; z-index:-1; opacity:0.5; }
+  .tile[data-hint="correct"]::before { background:var(--correct); }
+  .tile[data-hint="present"]::before { background:var(--present); }
+  .tile[data-hint="absent"]::before { background:var(--absent); }
   .tile.pop { animation:pop 0.1s; }
   .tile.flip-in { animation:flipIn 0.25s ease-in forwards; }
   .tile.flip-out { animation:flipOut 0.25s ease-in forwards; }
@@ -159,12 +164,29 @@ function buildBoard() {
 }
 const rowEl = (r) => $('board').children[r];
 
+// What earlier guesses already told us, shown as a faint preview while typing:
+// gray letters anywhere, yellow/green letters only in the column where they were yellow/green.
+function previewHints() {
+  const spot = { correct: new Set(), present: new Set() }, known = new Set(), gray = new Set();
+  state.guesses.forEach(g => evaluate(g, answer).forEach((st, i) => {
+    if (st === 'absent') gray.add(g[i]); else { known.add(g[i]); spot[st].add(i + ':' + g[i]); }
+  }));
+  return (i, ch) => {
+    if (spot.correct.has(i + ':' + ch)) return 'correct';
+    if (spot.present.has(i + ':' + ch)) return 'present';
+    if (gray.has(ch) && !known.has(ch)) return 'absent';
+    return '';
+  };
+}
+
 function showCurrent() {
   const row = rowEl(state.guesses.length);
   if (!row) return;
-  const tiles = row.children;
+  const tiles = row.children, hintFor = previewHints();
   for (let i = 0; i < len; i++) {
     const t = tiles[i], ch = current[i] || '';
+    const hint = ch ? hintFor(i, ch) : '';
+    if (hint) t.dataset.hint = hint; else delete t.dataset.hint;
     if (t.textContent !== ch) { t.textContent = ch; if (ch) { t.classList.remove('pop'); void t.offsetWidth; t.classList.add('pop'); } }
     t.dataset.state = ch ? 'tbd' : '';
   }
@@ -252,6 +274,7 @@ async function submit() {
   state.guesses.push(guess);
   current = '';
   const st = evaluate(guess, answer);
+  [...rowEl(r).children].forEach(t => delete t.dataset.hint);
   await reveal(r, st, true);
   const won = guess === answer;
   if (won) state.status = 'won'; else if (state.guesses.length >= MAX_GUESSES) state.status = 'lost';

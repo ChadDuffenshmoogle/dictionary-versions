@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script>try { var t = localStorage.getItem('theme') || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'); document.documentElement.dataset.theme = t; } catch (e) {}</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Unicyclist Strands</title>
+<style>
+  :root { --bg:#fff; --text:#202122; --muted:#54595d; --link:#0645ad; --line:#a2a9b1; --panel:#f8f9fa;
+          --theme:#aedfee; --span:#f8cd05; --sel:#d0d3d8; --hint:#3b7de0; --error:#b32424; }
+  html[data-theme="dark"] { color-scheme:dark; --bg:#14171a; --text:#e3e5e8; --muted:#a0a7b0; --link:#6ea8fe; --line:#3d444d; --panel:#1d2127;
+          --theme:#2c6b82; --span:#b8920a; --sel:#3a4048; --hint:#6ea8fe; --error:#ff7b72; }
+  html[data-theme="dark"] button { background:var(--panel); color:var(--text); border:1px solid var(--line); }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); font-family:sans-serif; line-height:1.5; }
+  a { color:var(--link); text-decoration:none; }
+  a:hover { text-decoration:underline; }
+  header { background:var(--panel); border-bottom:1px solid var(--line); padding:12px 20px; display:flex; gap:16px; align-items:center; flex-wrap:wrap; }
+  header .brand { font-family:Georgia, serif; font-size:1.4rem; font-weight:bold; color:var(--text); }
+  header .links { margin-left:auto; font-size:0.9rem; display:flex; gap:14px; }
+  main { max-width:460px; margin:0 auto; padding:16px 12px 40px; text-align:center; }
+  .theme-box { border:1px solid var(--line); background:var(--panel); padding:8px 12px; border-radius:4px; }
+  .theme-label { font-size:0.8rem; text-transform:uppercase; letter-spacing:0.05em; color:var(--muted); }
+  .theme-name { font-family:Georgia, serif; font-size:1.4rem; font-weight:bold; overflow-wrap:anywhere; }
+  .progress { margin:10px 0 0 0; color:var(--muted); font-size:0.9rem; }
+  #current { min-height:2rem; margin-top:10px; font-size:1.3rem; font-weight:bold; letter-spacing:0.08em; }
+  #msg { min-height:1.4rem; color:var(--muted); font-size:0.9rem; }
+  #board { position:relative; width:min(92vw, 360px); aspect-ratio:6 / 8; margin:8px auto; touch-action:none; user-select:none; -webkit-user-select:none; }
+  #lines { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; z-index:1; }
+  #cells { position:absolute; inset:0; display:grid; grid-template-columns:repeat(6, 1fr); grid-template-rows:repeat(8, 1fr); z-index:2; }
+  .cell { display:flex; align-items:center; justify-content:center; }
+  .dot { width:82%; aspect-ratio:1; border-radius:50%; display:flex; align-items:center; justify-content:center;
+         font-weight:bold; font-size:clamp(1rem, 5.2vw, 1.5rem); cursor:pointer; }
+  .dot.theme { background:var(--theme); }
+  .dot.span { background:var(--span); color:#14171a; }
+  .dot.sel { background:var(--sel); }
+  .dot.hint { box-shadow:0 0 0 3px var(--hint); }
+  .btn-row { display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin-top:10px; }
+  button { padding:7px 14px; font-size:0.95rem; cursor:pointer; border-radius:4px; }
+  button:disabled { opacity:0.45; cursor:default; }
+  #foundList { margin-top:14px; display:flex; flex-wrap:wrap; gap:6px 14px; justify-content:center; }
+  #foundList .sp { font-weight:bold; }
+  .small { color:var(--muted); font-size:0.85rem; margin-top:14px; }
+</style>
+</head>
+<body>
+<header>
+  <span class="brand">Unicyclist Strands</span>
+  <span class="links"><a href="wiktionary.html">Wiki</a><a href="index.html">Stats</a></span>
+</header>
+<main>
+  <div class="theme-box">
+    <div class="theme-label" id="modeLabel">Today's theme</div>
+    <div class="theme-name" id="themeName">Loading…</div>
+  </div>
+  <p class="progress" id="progress"></p>
+  <div id="current"></div>
+  <div id="msg"></div>
+
+  <div id="board">
+    <svg id="lines" viewBox="0 0 6 8" preserveAspectRatio="none"></svg>
+    <div id="cells"></div>
+  </div>
+
+  <div class="btn-row">
+    <button id="hintBtn" type="button">Hint (0)</button>
+    <button id="clearBtn" type="button">Clear</button>
+    <button id="revealBtn" type="button">Show answers</button>
+    <button id="modeBtn" type="button">Random puzzle</button>
+  </div>
+
+  <div id="foundList"></div>
+  <p class="small">Find the words that fit the theme. Drag across touching letters, or tap letters one by one and tap the last one again to submit. The longest word reaching from the left edge to the right edge is the gold spangram. Find 3 other dictionary words to earn a hint.</p>
+</main>
+
+<script>
+const COLS = 6, ROWS = 8;
+const FILL = 'EEEEEEEEEEEEAAAAAAAAARRRRRRIIIIIIOOOOOOTTTTTTNNNNNNSSSSSSLLLLCCCUUUDDDPPPMMMHHHGGBBFFYYWKVXZJQ';
+
+let entries = [], cats = [], themes = [], dictSet = new Set();
+let puzzle = null, grid = [], theme = null, daily = true, dateKey = '';
+let sel = [], dragging = false, dragMoved = false;
+let found = [], extras = new Set(), hintsUsed = 0, hintWord = '', revealed = false, message = '';
+
+const $ = (id) => document.getElementById(id);
+
+function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+function clean(t) { return String(t).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase().replace(/[^A-Z]/g, ''); }
+function hashStr(s) { let h = 1779033703 ^ s.length; for (let i = 0; i < s.length; i++) { h = Math.imul(h ^ s.charCodeAt(i), 3432918353); h = (h << 13) | (h >>> 19); } return h >>> 0; }
+function mulberry32(a) { return function () { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+function shuffle(arr, rand) { for (let i = arr.length - 1; i > 0; i--) { const j = Math.floor(rand() * (i + 1)); [arr[i], arr[j]] = [arr[j], arr[i]]; } return arr; }
+
+// ---------- themes (custom categories and tags from the wiki) ----------
+function normalizeCats(j) {
+  return ((j && j.categories) || []).filter(c => c && c.name)
+    .map(c => ({ name: String(c.name), parent: c.parent ? String(c.parent) : '', words: Array.isArray(c.words) ? c.words.map(String) : [] }));
+}
+
+function descendants(name) {
+  const out = [], queue = [name];
+  while (queue.length && out.length < 500) {
+    const n = queue.shift();
+    cats.filter(c => (c.parent || '').toLowerCase() === n.toLowerCase()).forEach(k => { out.push(k.name); queue.push(k.name); });
+  }
+  return out;
+}
+
+function buildThemes() {
+  const byTerm = new Map(entries.map(e => [e.term, e]));
+  const list = [];
+  function make(name, terms) {
+    const seen = new Set(), words = [];
+    terms.forEach(t => {
+      const e = byTerm.get(t);
+      if (!e) return;
+      const letters = clean(e.term);
+      if (letters.length < 4 || letters.length > 12 || seen.has(letters)) return;
+      seen.add(letters);
+      words.push({ term: e.term, letters });
+    });
+    if (words.length >= 4) list.push({ name, words });
+  }
+  cats.forEach(c => {
+    const names = [c.name, ...descendants(c.name)];
+    make(c.name, names.flatMap(n => (cats.find(x => x.name === n) || { words: [] }).words));
+  });
+  const tagMap = new Map();
+  entries.forEach(e => (e.tags || []).forEach(t => { if (!tagMap.has(t)) tagMap.set(t, []); tagMap.get(t).push(e.term); }));
+  tagMap.forEach((terms, t) => make(t, terms));
+  list.sort((a, b) => a.name.localeCompare(b.name));
+  return list;
+}
+
+// ---------- puzzle generation ----------
+function neighbors(r, c) {
+  const out = [];
+  for (let dr = -1; dr <= 1; dr++) for (let dc = -1; dc <= 1; dc++) {
+    if (!dr && !dc) continue;
+    const nr = r + dr, nc = c + dc;
+    if (nr >= 0 && nr < ROWS && nc >= 0 && nc < COLS) out.push([nr, nc]);
+  }
+  return out;
+}
+
+function walk(len, used, rand, span) {   // random path of len touching cells; span = left edge to right edge
+  const path = [];
+  let nodes = 0;
+  function go(r, c) {
+    if (++nodes > 4000) return false;
+    path.push([r, c]); used.add(r * COLS + c);
+    if (path.length === len) {
+      if (!span || c === COLS - 1) return true;
+    } else {
+      const stepsLeft = len - path.length;
+      const opts = neighbors(r, c).filter(([nr, nc]) => !used.has(nr * COLS + nc) && (!span || (COLS - 1 - nc) <= stepsLeft - 1));
+      shuffle(opts, rand);
+      for (const [nr, nc] of opts) if (go(nr, nc)) return true;
+    }
+    path.pop(); used.delete(r * COLS + c);
+    return false;
+  }
+  const starts = [];
+  for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) {
+    if (!used.has(r * COLS + c) && (!span || c === 0)) starts.push([r, c]);
+  }
+  shuffle(starts, rand);
+  for (const [r, c] of starts) {
+    nodes = 0;
+    if (go(r, c)) return path;
+  }
+  return null;
+}
+
+function tryPlace(chosen, rand) {
+  const used = new Set(), placed = [];
+  const order = chosen.slice().sort((a, b) => (b.spangram - a.spangram) || (b.letters.length - a.letters.length));
+  for (const w of order) {
+    const path = walk(w.letters.length, used, rand, w.spangram);
+    if (!path) return null;
+    placed.push({ term: w.term, letters: w.letters, spangram: w.spangram, cells: path.map(([r, c]) => r * COLS + c) });
+  }
+  return placed;
+}
+
+function buildPuzzle(th, seedStr) {
+  const rand = mulberry32(hashStr(seedStr));
+  const pool = shuffle(th.words.slice(), rand);
+  const chosen = [];
+  let total = 0;
+  for (const w of pool) {
+    if (chosen.length >= 7) break;
+    if (total + w.letters.length > 38) continue;
+    chosen.push({ term: w.term, letters: w.letters, spangram: false });
+    total += w.letters.length;
+  }
+  if (chosen.length < 3) return null;
+  const longest = chosen.filter(w => w.letters.length >= 6).sort((a, b) => b.letters.length - a.letters.length)[0];
+  if (longest) longest.spangram = true;
+
+  for (let round = 0; round < 4; round++) {
+    for (let attempt = 0; attempt < 40; attempt++) {
+      const placed = tryPlace(chosen, rand);
+      if (placed) {
+        const letters = new Array(ROWS * COLS).fill('');
+        placed.forEach(w => w.cells.forEach((cell, k) => { letters[cell] = w.letters[k]; }));
+        for (let i = 0; i < letters.length; i++) {
+          if (!letters[i]) letters[i] = FILL[Math.floor(rand() * FILL.length)];
+        }
+        return { words: placed, grid: letters };
+      }
+    }
+    if (chosen.some(w => w.spangram)) {
+      chosen.forEach(w => { w.spangram = false; });
+    } else if (chosen.length > 3) {
+      const longestIdx = chosen.reduce((best, w, i) => (w.letters.length > chosen[best].letters.length ? i : best), 0);
+      chosen.splice(longestIdx, 1);
+    }
+  }
+  return null;
+}
+
+// ---------- saving (daily puzzle only) ----------
+function saveKey() { return 'strands:' + dateKey; }
+
+function save() {
+  if (!daily) return;
+  try {
+    localStorage.setItem(saveKey(), JSON.stringify({
+      theme: theme.name, found: found.map(w => w.letters), extras: [...extras], hintsUsed, hintWord, revealed,
+    }));
+  } catch (e) {}
+}
+
+function load() {
+  try {
+    const s = JSON.parse(localStorage.getItem(saveKey()) || 'null');
+    if (!s || s.theme !== theme.name) return;
+    found = puzzle.words.filter(w => s.found.includes(w.letters));
+    extras = new Set(s.extras || []);
+    hintsUsed = s.hintsUsed || 0;
+    hintWord = s.hintWord || '';
+    revealed = !!s.revealed;
+  } catch (e) {}
+}
+
+// ---------- starting a puzzle ----------
+function setPuzzle(th, p, isDaily) {
+  theme = th; puzzle = p; grid = p.grid; daily = isDaily;
+  sel = []; dragging = false; dragMoved = false;
+  found = []; extras = new Set(); hintsUsed = 0; hintWord = ''; revealed = false; message = '';
+  if (isDaily) load();
+  $('modeLabel').textContent = isDaily ? "Today's theme" : 'Random puzzle theme';
+  $('themeName').textContent = th.name;
+  $('modeBtn').textContent = isDaily ? 'Random puzzle' : 'Back to daily';
+  render();
+}
+
+function startDaily() {
+  const now = new Date();
+  dateKey = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
+  const dayNumber = Math.floor(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()) / 86400000);
+  for (let k = 0; k < themes.length; k++) {
+    const th = themes[(dayNumber + k) % themes.length];
+    const p = buildPuzzle(th, dateKey + '|' + th.name);
+    if (p) return setPuzzle(th, p, true);
+  }
+  $('themeName').textContent = 'No puzzle could be built.';
+}
+
+function startRandom() {
+  const order = shuffle(themes.slice(), Math.random);
+  for (const th of order) {
+    const p = buildPuzzle(th, String(Math.random()));
+    if (p) return setPuzzle(th, p, false);
+  }
+  message = 'No puzzle could be built.';
+  render();
+}
+
+// ---------- playing ----------
+function adjacent(a, b) {
+  const ar = Math.floor(a / COLS), ac = a % COLS, br = Math.floor(b / COLS), bc = b % COLS;
+  return a !== b && Math.abs(ar - br) <= 1 && Math.abs(ac - bc) <= 1;
+}
+
+function clearSel() { sel = []; dragging = false; dragMoved = false; }
+
+function submit() {
+  const word = sel.map(i => grid[i]).join('');
+  clearSel();
+  if (word.length < 4) { message = 'Words need at least 4 letters.'; return render(); }
+  const tw = puzzle.words.find(w => w.letters === word);
+  if (tw) {
+    if (found.some(f => f.letters === tw.letters)) {
+      message = 'Already found.';
+    } else {
+      found.push(tw);
+      if (hintWord === tw.letters) hintWord = '';
+      message = found.length === puzzle.words.length ? 'Solved! Nicely done.' : (tw.spangram ? 'Spangram!' : 'Theme word!');
+      save();
+    }
+  } else if (dictSet.has(word)) {
+    if (extras.has(word)) {
+      message = 'Already found.';
+    } else {
+      extras.add(word);
+      message = 'A dictionary word, but not part of the theme.';
+      save();
+    }
+  } else {
+    message = 'Not in the word list.';
+  }
+  render();
+}
+
+function handleDown(i) {
+  if (sel.length === 0) {
+    sel = [i]; dragging = true; dragMoved = false;
+  } else if (!dragging) {
+    const last = sel[sel.length - 1];
+    if (i === last) {
+      if (sel.length === 1) clearSel(); else submit();
+      return render();
+    } else if (sel.includes(i)) {
+      sel = sel.slice(0, sel.indexOf(i) + 1);
+    } else if (adjacent(last, i)) {
+      sel.push(i); dragging = true; dragMoved = false;
+    } else {
+      sel = [i]; dragging = true; dragMoved = false;
+    }
+  }
+  message = '';
+  render();
+}
+
+function extend(i) {
+  const last = sel[sel.length - 1];
+  if (i === last) return;
+  if (sel.length >= 2 && i === sel[sel.length - 2]) { sel.pop(); dragMoved = true; }
+  else if (!sel.includes(i) && adjacent(last, i)) { sel.push(i); dragMoved = true; }
+  else return;
+  render();
+}
+
+function cellAt(x, y) {
+  const el = document.elementFromPoint(x, y);
+  const dot = el && el.closest ? el.closest('.dot') : null;
+  return dot ? Number(dot.parentElement.dataset.i) : -1;
+}
+
+function hintsAvailable() { return Math.floor(extras.size / 3) - hintsUsed; }
+
+function render() {
+  const foundCells = new Map();
+  found.forEach(w => w.cells.forEach(i => foundCells.set(i, w.spangram ? 'span' : 'theme')));
+  const hintWordObj = hintWord ? puzzle.words.find(w => w.letters === hintWord) : null;
+  const hintSet = new Set(hintWordObj && !found.includes(hintWordObj) ? hintWordObj.cells : []);
+
+  $('cells').innerHTML = grid.map((ch, i) =>
+    `<div class="cell" data-i="${i}"><span class="dot ${foundCells.get(i) || ''}${sel.includes(i) ? ' sel' : ''}${hintSet.has(i) ? ' hint' : ''}">${ch}</span></div>`
+  ).join('');
+
+  const pt = (i) => `${(i % COLS) + 0.5},${Math.floor(i / COLS) + 0.5}`;
+  let lines = '';
+  found.forEach(w => {
+    lines += `<polyline points="${w.cells.map(pt).join(' ')}" fill="none" stroke-width="0.16" stroke-linecap="round" stroke-linejoin="round" style="stroke:var(${w.spangram ? '--span' : '--theme'})"/>`;
+  });
+  if (sel.length > 1) {
+    lines += `<polyline points="${sel.map(pt).join(' ')}" fill="none" stroke-width="0.16" stroke-linecap="round" stroke-linejoin="round" style="stroke:var(--sel)"/>`;
+  }
+  $('lines').innerHTML = lines;
+
+  $('current').textContent = sel.map(i => grid[i]).join('');
+  $('msg').textContent = message;
+  const total = puzzle.words.length;
+  $('progress').textContent = `${found.length} of ${total} theme words found · ${extras.size} extra word${extras.size === 1 ? '' : 's'}`;
+  $('hintBtn').textContent = `Hint (${Math.max(0, hintsAvailable())})`;
+  $('hintBtn').disabled = hintsAvailable() < 1 || found.length === total;
+  $('revealBtn').disabled = found.length === total;
+
+  $('foundList').innerHTML = found.map(w =>
+    `<a href="wiktionary.html#w=${encodeURIComponent(w.term)}" class="${w.spangram ? 'sp' : ''}">${esc(w.term)}</a>`
+  ).join('');
+}
+
+// ---------- events ----------
+const board = $('board');
+board.addEventListener('pointerdown', (ev) => {
+  const i = cellAt(ev.clientX, ev.clientY);
+  if (i < 0) return;
+  ev.preventDefault();
+  try { board.setPointerCapture(ev.pointerId); } catch (e) {}
+  handleDown(i);
+});
+board.addEventListener('pointermove', (ev) => {
+  if (!dragging) return;
+  const i = cellAt(ev.clientX, ev.clientY);
+  if (i >= 0) extend(i);
+});
+window.addEventListener('pointerup', () => {
+  if (!dragging) return;
+  const moved = dragMoved;
+  dragging = false;
+  if (moved && sel.length > 1) submit();
+});
+
+$('clearBtn').onclick = () => { clearSel(); message = ''; render(); };
+$('hintBtn').onclick = () => {
+  const unfound = puzzle.words.filter(w => !found.includes(w));
+  if (!unfound.length || hintsAvailable() < 1) return;
+  hintWord = unfound[Math.floor(Math.random() * unfound.length)].letters;
+  hintsUsed++;
+  message = 'The ringed letters belong to a theme word.';
+  save(); render();
+};
+$('revealBtn').onclick = () => {
+  if (!confirm('Show all the answers?')) return;
+  found = puzzle.words.slice();
+  revealed = true;
+  message = 'Answers shown.';
+  save(); render();
+};
+$('modeBtn').onclick = () => { if (daily) startRandom(); else startDaily(); };
+
+// ---------- start ----------
+(async function init() {
+  try {
+    const res = await fetch('stats.json', { cache: 'no-store' });
+    if (!res.ok) throw new Error('stats.json not found (' + res.status + ')');
+    entries = (await res.json()).definitions_by_length_asc || [];
+  } catch (err) {
+    $('themeName').textContent = 'Could not load the dictionary.';
+    return;
+  }
+  try {
+    const r = await fetch('categories.json?x=' + Date.now(), { cache: 'no-store' });
+    if (r.ok) cats = normalizeCats(await r.json());
+  } catch (e) {}
+  entries.forEach(e => { const l = clean(e.term); if (l.length >= 4) dictSet.add(l); });
+  themes = buildThemes();
+  if (!themes.length) {
+    $('themeName').textContent = 'Not enough categorized words yet.';
+    $('progress').textContent = 'A category or tag needs at least 4 words (4 to 12 letters each) to make a puzzle.';
+    return;
+  }
+  startDaily();
+})();
+</script>
+</body>
+</html>

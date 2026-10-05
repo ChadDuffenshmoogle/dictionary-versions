@@ -78,11 +78,16 @@
   #sidebar .side-title { font-weight:bold; border-bottom:1px solid var(--line); margin-bottom:6px; }
   #sidebar ul { list-style:none; margin:0; padding:0; }
   #sidebar li { margin-bottom:5px; }
+  #sidebar .chev { display:none; }
   .cat-box { border:1px solid var(--line); background:var(--panel); margin-top:20px; padding:6px 12px; font-size:0.9rem; }
   @media (max-width:700px) {
     .layout { display:block; }
     #sidebar { width:auto; padding:10px 20px 0 20px; position:static; }
-    #sidebar ul { display:flex; flex-wrap:wrap; gap:6px 16px; }
+    #sidebar .side-title { cursor:pointer; user-select:none; }
+    #sidebar .chev { display:inline; float:right; }
+    #sidebar ul { display:none; flex-wrap:wrap; gap:6px 16px; padding-top:4px; }
+    #sidebar.open ul { display:flex; }
+    #sidebar.open .chev { transform:rotate(180deg); }
   }
   .cat-index { line-height:1.9; }
   @keyframes slideInNext { from { opacity:0; transform:translateX(36px); } to { opacity:1; transform:none; } }
@@ -118,13 +123,14 @@
 </header>
 <div class="layout">
   <aside id="sidebar">
-    <div class="side-title">Navigation</div>
+    <div class="side-title" id="sideToggle">Navigation <span class="chev">&#9662;</span></div>
     <ul>
       <li><a href="#">Main page</a></li>
       <li><a href="#" id="randomLink">Random word</a></li>
       <li><a href="#c=">Categories</a></li>
       <li><a href="#" id="themeToggle">Dark mode</a></li>
       <li><a href="#" id="signInLink">Sign in to edit</a></li>
+      <li><a href="wordle.html">Unicyclist Wordle</a></li>
       <li><a href="index.html">Back to stats</a></li>
     </ul>
   </aside>
@@ -377,6 +383,10 @@ document.addEventListener('touchend', (ev) => {
   if (Math.abs(dx) < 70 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
   goWord(dx < 0 ? 1 : -1, true);
 }, { passive: true });
+
+// on phones the menu starts collapsed; tap "Navigation" to open it
+document.getElementById('sideToggle').onclick = () => document.getElementById('sidebar').classList.toggle('open');
+document.querySelector('#sidebar ul').addEventListener('click', (e) => { if (e.target.closest('a')) document.getElementById('sidebar').classList.remove('open'); });
 
 function syncSignInLabel() {
   document.getElementById('signInLink').textContent = isSignedIn() ? 'Sign out' : 'Sign in to edit';

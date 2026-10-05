@@ -1,0 +1,859 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Unicyclist Connections</title>
+<script>try { var t = localStorage.getItem('theme') || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'); document.documentElement.dataset.theme = t; } catch (e) {}</script>
+<style>
+  :root {
+    --bg: #ffffff;
+    --text: #121212;
+    --muted: #5a594e;
+    --line: #dcdcdc;
+    --tile: #efefe6;
+    --tile-sel: #5a594e;
+    --tile-sel-text: #ffffff;
+    --btn-border: #121212;
+    --btn-fill: #121212;
+    --btn-fill-text: #ffffff;
+    --modal-bg: #ffffff;
+    --toast-bg: #121212;
+    --toast-text: #ffffff;
+    --dot: #5a594e;
+    --yellow: #f9df6d;
+    --green: #a0c35a;
+    --blue: #b0c4ef;
+    --purple: #ba81c5;
+    --solved-text: #121212;
+  }
+  :root[data-theme="dark"] {
+    --bg: #121212;
+    --text: #f2f2f2;
+    --muted: #b5b5aa;
+    --line: #3a3a3a;
+    --tile: #2e2e2e;
+    --tile-sel: #d9d9d0;
+    --tile-sel-text: #121212;
+    --btn-border: #f2f2f2;
+    --btn-fill: #f2f2f2;
+    --btn-fill-text: #121212;
+    --modal-bg: #1c1c1c;
+    --toast-bg: #f2f2f2;
+    --toast-text: #121212;
+    --dot: #d9d9d0;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: "nyt-franklin", "Libre Franklin", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    min-height: 100vh;
+    -webkit-tap-highlight-color: transparent;
+  }
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--line);
+  }
+  header h1 { font-size: 1.35rem; font-weight: 700; margin: 0; letter-spacing: -0.01em; }
+  .head-links { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+  .head-links button, .head-links a {
+    background: none;
+    color: var(--text);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 5px 12px;
+    font: inherit;
+    font-size: 0.8rem;
+    cursor: pointer;
+    text-decoration: none;
+  }
+  .head-links button:hover, .head-links a:hover { border-color: var(--text); }
+  main { max-width: 620px; margin: 0 auto; padding: 14px 12px 40px; text-align: center; }
+  .sub { margin: 8px 0 2px; font-size: 1.05rem; }
+  .puzzle-info { color: var(--muted); font-size: 0.82rem; margin-bottom: 14px; }
+
+  #board { position: relative; }
+  .solved {
+    border-radius: 6px;
+    padding: 12px 8px;
+    margin-bottom: 8px;
+    min-height: 80px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    color: var(--solved-text);
+    overflow-wrap: anywhere;
+  }
+  .solved.flip { animation: flipIn 0.6s ease both; }
+  .solved .cat-name { font-weight: 700; text-transform: uppercase; font-size: 1rem; }
+  .solved .cat-words { text-transform: uppercase; font-size: 0.85rem; margin-top: 2px; }
+  .c-yellow { background: var(--yellow); }
+  .c-green { background: var(--green); }
+  .c-blue { background: var(--blue); }
+  .c-purple { background: var(--purple); }
+
+  .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  .tile {
+    background: var(--tile);
+    color: var(--text);
+    border: none;
+    border-radius: 6px;
+    height: 80px;
+    padding: 4px;
+    font-family: inherit;
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 1rem;
+    line-height: 1.1;
+    overflow-wrap: anywhere;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    user-select: none;
+    transition: background 0.1s, color 0.1s;
+  }
+  .tile.sel { background: var(--tile-sel); color: var(--tile-sel-text); }
+  .tile.f1 { font-size: 0.85rem; }
+  .tile.f2 { font-size: 0.7rem; }
+  .tile.f3 { font-size: 0.62rem; }
+  .tile.f4 { font-size: 0.55rem; }
+  .tile.f5 { font-size: 0.5rem; }
+  .tile.bounce { animation: bounce 0.45s ease; }
+  .tile.shake { animation: shake 0.5s ease; }
+  @media (max-width: 480px) {
+    .tile { height: 72px; font-size: 0.85rem; }
+    .tile.f1 { font-size: 0.72rem; }
+    .tile.f2 { font-size: 0.62rem; }
+    .tile.f3 { font-size: 0.55rem; }
+    .tile.f4 { font-size: 0.5rem; }
+    .tile.f5 { font-size: 0.45rem; }
+  }
+  @keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    40% { transform: translateY(-10px); }
+  }
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    15% { transform: translateX(-6px); }
+    35% { transform: translateX(6px); }
+    55% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+  }
+  @keyframes flipIn {
+    0% { transform: rotateX(90deg); opacity: 0; }
+    100% { transform: rotateX(0deg); opacity: 1; }
+  }
+
+  .mistakes { margin: 18px 0 14px; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 0.95rem; }
+  .dots { display: flex; gap: 6px; }
+  .dot { width: 14px; height: 14px; border-radius: 50%; background: var(--dot); transition: transform 0.25s, opacity 0.25s; }
+  .dot.gone { transform: scale(0); opacity: 0; }
+
+  .actions { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+  .actions button {
+    background: var(--bg);
+    color: var(--text);
+    border: 1px solid var(--btn-border);
+    border-radius: 999px;
+    padding: 13px 20px;
+    font: inherit;
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+  }
+  .actions button:disabled { opacity: 0.4; cursor: default; }
+  .actions button.primary:not(:disabled) { background: var(--btn-fill); color: var(--btn-fill-text); }
+
+  .message-box {
+    margin: 40px auto;
+    max-width: 440px;
+    padding: 24px 20px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    line-height: 1.5;
+  }
+  .message-box h2 { margin: 0 0 8px; font-size: 1.15rem; }
+  .message-box a { color: var(--text); font-weight: 600; }
+
+  #toasts {
+    position: fixed;
+    top: 70px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 300;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    align-items: center;
+    pointer-events: none;
+  }
+  .toast {
+    background: var(--toast-bg);
+    color: var(--toast-text);
+    padding: 11px 16px;
+    border-radius: 6px;
+    font-weight: 700;
+    font-size: 0.9rem;
+    animation: toastIn 0.15s ease;
+  }
+  .toast.out { opacity: 0; transition: opacity 0.35s; }
+  @keyframes toastIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+
+  .overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+  }
+  .overlay.show { display: flex; }
+  .modal {
+    background: var(--modal-bg);
+    color: var(--text);
+    border-radius: 10px;
+    max-width: 440px;
+    width: 100%;
+    max-height: 90vh;
+    overflow: auto;
+    padding: 22px 22px 20px;
+    position: relative;
+  }
+  .modal h2 { margin: 0 0 12px; font-size: 1.3rem; text-align: center; }
+  .modal .close {
+    position: absolute;
+    top: 10px;
+    right: 14px;
+    background: none;
+    border: none;
+    color: var(--text);
+    font-size: 1.6rem;
+    line-height: 1;
+    cursor: pointer;
+  }
+  .modal p, .modal li { line-height: 1.45; font-size: 0.95rem; }
+  .modal ul { padding-left: 20px; margin: 8px 0; }
+  .help-colors { display: grid; gap: 6px; margin: 10px 0; }
+  .help-colors div { border-radius: 4px; padding: 8px 10px; font-weight: 600; font-size: 0.88rem; color: #121212; }
+
+  .stat-row { display: flex; justify-content: space-between; text-align: center; margin: 6px 0 16px; gap: 6px; }
+  .stat-row div { flex: 1; }
+  .stat-num { font-size: 1.9rem; font-weight: 700; line-height: 1.1; }
+  .stat-label { font-size: 0.7rem; color: var(--muted); }
+  .dist { margin: 6px 0 14px; }
+  .dist-row { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; font-size: 0.85rem; }
+  .dist-row .lab { width: 62px; text-align: right; color: var(--muted); }
+  .dist-bar { background: var(--tile-sel); color: var(--tile-sel-text); min-width: 22px; padding: 1px 6px; border-radius: 3px; font-weight: 700; font-size: 0.8rem; text-align: right; }
+  .dist-bar.today { background: var(--green); color: #121212; }
+  .share-preview { font-size: 1.4rem; line-height: 1.25; text-align: center; margin: 8px 0 12px; letter-spacing: 1px; }
+  .next-puzzle { text-align: center; color: var(--muted); font-size: 0.85rem; margin-top: 12px; }
+  .share-btn {
+    display: block;
+    margin: 0 auto;
+    background: var(--btn-fill);
+    color: var(--btn-fill-text);
+    border: none;
+    border-radius: 999px;
+    padding: 12px 28px;
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  #confetti { position: fixed; inset: 0; pointer-events: none; z-index: 250; }
+  @media (prefers-reduced-motion: reduce) {
+    .tile.bounce, .tile.shake, .solved.flip { animation: none; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Unicyclist Connections</h1>
+  <div class="head-links">
+    <button id="helpBtn" type="button">How to play</button>
+    <button id="statsBtn" type="button">Stats</button>
+    <button id="themeBtn" type="button">Theme</button>
+    <a href="index.html">Home</a>
+  </div>
+</header>
+
+<main>
+  <div id="loading" class="message-box">Loading today's puzzle…</div>
+  <div id="game" style="display:none;">
+    <div class="sub">Create four groups of four!</div>
+    <div class="puzzle-info" id="puzzleInfo"></div>
+    <div id="board"></div>
+    <div class="mistakes" id="mistakesRow">
+      <span>Mistakes remaining:</span>
+      <div class="dots" id="dots"></div>
+    </div>
+    <div class="actions" id="actions">
+      <button type="button" id="shuffleBtn">Shuffle</button>
+      <button type="button" id="deselectBtn">Deselect All</button>
+      <button type="button" id="submitBtn" class="primary" disabled>Submit</button>
+    </div>
+  </div>
+  <div id="notEnough" class="message-box" style="display:none;"></div>
+</main>
+
+<div id="toasts"></div>
+<canvas id="confetti"></canvas>
+
+<div class="overlay" id="helpOverlay">
+  <div class="modal">
+    <button class="close" type="button" data-close="helpOverlay">&times;</button>
+    <h2>How to play</h2>
+    <p>Find groups of four dictionary words that share something in common.</p>
+    <ul>
+      <li>Pick four words and tap Submit to check them.</li>
+      <li>Each group is one category from the wiki.</li>
+      <li>Each word belongs to only one group on the board.</li>
+      <li>You can make four mistakes before the game ends.</li>
+    </ul>
+    <p><strong>Category colors</strong> go from straightforward to tricky:</p>
+    <div class="help-colors">
+      <div class="c-yellow">Yellow: the easiest</div>
+      <div class="c-green">Green</div>
+      <div class="c-blue">Blue</div>
+      <div class="c-purple">Purple: the trickiest</div>
+    </div>
+    <p>A new puzzle appears every day at midnight, and everyone gets the same one.</p>
+  </div>
+</div>
+
+<div class="overlay" id="statsOverlay">
+  <div class="modal">
+    <button class="close" type="button" data-close="statsOverlay">&times;</button>
+    <h2>Statistics</h2>
+    <div id="statsBody"></div>
+  </div>
+</div>
+
+<script>
+// ---------- settings you might want to change ----------
+const START_DATE = { y: 2026, m: 10, d: 4 };   // the day that counts as Puzzle #1
+const MAX_MISTAKES = 4;
+const MAX_TERM_LENGTH = 40;                    // longer terms are left out (they don't fit on a tile)
+const SEARCH_LIMIT = 300000;                   // safety cap for the puzzle search
+const COLORS = ['yellow', 'green', 'blue', 'purple'];
+const EMOJI = { yellow: '🟨', green: '🟩', blue: '🟦', purple: '🟪' };
+const STATE_KEY = 'unicyclistConnectionsState';
+const STATS_KEY = 'unicyclistConnectionsStats';
+
+const $ = (id) => document.getElementById(id);
+const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+
+// ---------- dates and hashing ----------
+function pad(n) { return String(n).padStart(2, '0'); }
+function dayKey(d) { return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
+function todayKey() { return dayKey(new Date()); }
+function yesterdayKey() { const d = new Date(); d.setDate(d.getDate() - 1); return dayKey(d); }
+function puzzleNumber() {
+  const now = new Date();
+  const a = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
+  const b = Date.UTC(START_DATE.y, START_DATE.m - 1, START_DATE.d);
+  return Math.max(1, Math.round((a - b) / 86400000) + 1);
+}
+// cyrb53: a small, well-spread string hash
+function hash(str) {
+  let h1 = 0xdeadbeef, h2 = 0x41c6ce57;
+  for (let i = 0; i < str.length; i++) {
+    const ch = str.charCodeAt(i);
+    h1 = Math.imul(h1 ^ ch, 2654435761);
+    h2 = Math.imul(h2 ^ ch, 1597334677);
+  }
+  h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+  h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+  return 4294967296 * (2097151 & h2) + (h1 >>> 0);
+}
+
+// ---------- building the daily puzzle ----------
+// A category's pool = its own words + the words of all its subcategories.
+// A puzzle never contains a parent together with one of its own subcategories.
+// Only words that belong to exactly one of the four chosen categories can be used,
+// so every tile has one correct home.
+function buildPuzzle(cats, validTerms, day) {
+  const byName = new Map();
+  cats.forEach(c => { const k = c.name.toLowerCase(); if (!byName.has(k)) byName.set(k, c); });
+
+  const kids = new Map();
+  byName.forEach((c, key) => {
+    const p = (c.parent || '').toLowerCase();
+    if (p && p !== key && byName.has(p)) {
+      if (!kids.has(p)) kids.set(p, []);
+      kids.get(p).push(key);
+    }
+  });
+  const fam = new Map(); // category -> itself + all descendants
+  byName.forEach((c, key) => {
+    const seen = new Set(); const stack = [key];
+    while (stack.length) {
+      const k = stack.pop();
+      if (seen.has(k)) continue;
+      seen.add(k);
+      (kids.get(k) || []).forEach(x => stack.push(x));
+    }
+    fam.set(key, seen);
+  });
+
+  const pools = new Map(); // category -> Map(lowercase word -> word to show)
+  byName.forEach((c, key) => {
+    const pool = new Map();
+    fam.get(key).forEach(k => {
+      byName.get(k).words.forEach(w => {
+        const clean = String(w).trim();
+        const lw = clean.toLowerCase();
+        if (!lw || lw.length > MAX_TERM_LENGTH) return;
+        if (validTerms && !validTerms.has(lw)) return;
+        pool.set(lw, validTerms ? validTerms.get(lw) : clean);
+      });
+    });
+    pools.set(key, pool);
+  });
+
+  const cands = [...pools.keys()]
+    .filter(k => pools.get(k).size >= 4)
+    .sort((a, b) => hash(day + '|cat|' + a) - hash(day + '|cat|' + b));
+  if (cands.length < 4) return null;
+
+  const related = (a, b) => fam.get(a).has(b) || fam.get(b).has(a);
+  const exclusive = (key, chosen) => {
+    const out = [];
+    pools.get(key).forEach((disp, lw) => {
+      if (!chosen.some(o => o !== key && pools.get(o).has(lw))) out.push(lw);
+    });
+    return out;
+  };
+
+  let nodes = 0, found = null;
+  function search(start, chosen) {
+    if (found || nodes > SEARCH_LIMIT) return;
+    if (chosen.length === 4) { found = chosen.slice(); return; }
+    for (let i = start; i < cands.length; i++) {
+      if (++nodes > SEARCH_LIMIT) return;
+      const k = cands[i];
+      if (chosen.some(o => related(o, k))) continue;
+      chosen.push(k);
+      if (chosen.every(c => exclusive(c, chosen).length >= 4)) search(i + 1, chosen);
+      chosen.pop();
+      if (found) return;
+    }
+  }
+  search(0, []);
+  if (!found) return null;
+
+  // Smaller categories count as harder: the biggest becomes yellow, the smallest purple.
+  const ranked = found.slice().sort((a, b) =>
+    (pools.get(b).size - pools.get(a).size) || (hash(day + '|rank|' + a) - hash(day + '|rank|' + b)));
+
+  const groups = ranked.map((key, i) => {
+    const ex = exclusive(key, found)
+      .sort((a, b) => hash(day + '|w|' + key + '|' + a) - hash(day + '|w|' + key + '|' + b))
+      .slice(0, 4);
+    return { name: byName.get(key).name, color: COLORS[i], words: ex.map(lw => pools.get(key).get(lw)) };
+  });
+  const all = groups.flatMap(g => g.words);
+  const startOrder = all.slice().sort((a, b) => hash(day + '|o|' + a) - hash(day + '|o|' + b));
+  const sig = groups.map(g => g.name + ':' + g.words.slice().sort().join(',')).join('|');
+  return { groups, startOrder, sig };
+}
+
+// ---------- saved state and stats ----------
+function loadJSON(key) { try { return JSON.parse(localStorage.getItem(key) || 'null'); } catch (e) { return null; } }
+function saveJSON(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); } catch (e) {} }
+function loadStats() {
+  const s = loadJSON(STATS_KEY) || {};
+  return {
+    played: s.played || 0, wins: s.wins || 0, streak: s.streak || 0, maxStreak: s.maxStreak || 0,
+    perfect: s.perfect || 0, lastPlayed: s.lastPlayed || '',
+    dist: Array.isArray(s.dist) && s.dist.length === MAX_MISTAKES + 1 ? s.dist : new Array(MAX_MISTAKES + 1).fill(0),
+  };
+}
+
+let P = null;            // today's puzzle
+let state = null;        // { day, sig, guesses: [[word x4], ...], recorded }
+let selected = new Set();
+let order = [];          // current tile order
+let shown = [];          // group indexes currently revealed
+let justSolved = -1;
+let busy = false;
+let loadedDay = todayKey();
+
+// ---------- small helpers ----------
+function groupOfGuess(g) {
+  return P.groups.findIndex(grp => g.every(w => grp.words.includes(w)));
+}
+function derive() {
+  const solved = []; let mistakes = 0;
+  state.guesses.forEach(g => {
+    const gi = groupOfGuess(g);
+    if (gi >= 0) { if (!solved.includes(gi)) solved.push(gi); } else mistakes++;
+  });
+  return { solved, mistakes };
+}
+function isOver() { const d = derive(); return d.solved.length === 4 || d.mistakes >= MAX_MISTAKES; }
+function isWon() { return derive().solved.length === 4; }
+function saveState() { saveJSON(STATE_KEY, state); }
+
+function toast(msg, ms) {
+  const el = document.createElement('div');
+  el.className = 'toast';
+  el.textContent = msg;
+  $('toasts').appendChild(el);
+  setTimeout(() => { el.classList.add('out'); setTimeout(() => el.remove(), 400); }, ms || 1700);
+}
+
+function sizeClass(word) {
+  const n = word.length;
+  if (n <= 6) return '';
+  if (n <= 9) return 'f1';
+  if (n <= 13) return 'f2';
+  if (n <= 20) return 'f3';
+  if (n <= 30) return 'f4';
+  return 'f5';
+}
+
+// ---------- drawing the page ----------
+function render() {
+  const board = $('board');
+  board.innerHTML = '';
+  shown.forEach(gi => {
+    const g = P.groups[gi];
+    const row = document.createElement('div');
+    row.className = 'solved c-' + g.color + (gi === justSolved ? ' flip' : '');
+    const name = document.createElement('div'); name.className = 'cat-name'; name.textContent = g.name;
+    const words = document.createElement('div'); words.className = 'cat-words'; words.textContent = g.words.join(', ');
+    row.append(name, words);
+    board.appendChild(row);
+  });
+  const remaining = order.filter(w => !shown.some(gi => P.groups[gi].words.includes(w)));
+  if (remaining.length) {
+    const grid = document.createElement('div');
+    grid.className = 'grid';
+    remaining.forEach(w => {
+      const t = document.createElement('button');
+      t.type = 'button';
+      t.className = 'tile ' + sizeClass(w) + (selected.has(w) ? ' sel' : '');
+      t.textContent = w;
+      t.dataset.word = w;
+      t.addEventListener('click', () => toggleTile(w));
+      grid.appendChild(t);
+    });
+    board.appendChild(grid);
+  }
+  justSolved = -1;
+  renderDots();
+  renderButtons();
+}
+
+function renderDots() {
+  const { mistakes } = derive();
+  const dots = $('dots');
+  dots.innerHTML = '';
+  for (let i = 0; i < MAX_MISTAKES; i++) {
+    const d = document.createElement('div');
+    d.className = 'dot' + (i >= MAX_MISTAKES - mistakes ? ' gone' : '');
+    dots.appendChild(d);
+  }
+}
+
+function renderButtons() {
+  const over = isOver();
+  $('mistakesRow').style.display = over ? 'none' : 'flex';
+  const actions = $('actions');
+  if (over) {
+    actions.innerHTML = '<button type="button" id="resultsBtn" class="primary">View Results</button>';
+    $('resultsBtn').addEventListener('click', openStats);
+    return;
+  }
+  if (!$('submitBtn')) {
+    actions.innerHTML = '<button type="button" id="shuffleBtn">Shuffle</button><button type="button" id="deselectBtn">Deselect All</button><button type="button" id="submitBtn" class="primary" disabled>Submit</button>';
+    wireButtons();
+  }
+  $('submitBtn').disabled = selected.size !== 4;
+  $('deselectBtn').disabled = selected.size === 0;
+}
+
+function wireButtons() {
+  $('shuffleBtn').addEventListener('click', () => {
+    if (busy || isOver()) return;
+    for (let i = order.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [order[i], order[j]] = [order[j], order[i]];
+    }
+    render();
+  });
+  $('deselectBtn').addEventListener('click', () => { if (busy) return; selected.clear(); render(); });
+  $('submitBtn').addEventListener('click', submitGuess);
+}
+
+function toggleTile(w) {
+  if (busy || isOver()) return;
+  if (selected.has(w)) selected.delete(w);
+  else if (selected.size < 4) selected.add(w);
+  else return;
+  render();
+}
+
+// ---------- guessing ----------
+async function submitGuess() {
+  if (busy || isOver() || selected.size !== 4) return;
+  const guess = [...selected];
+  const key = guess.slice().sort().join('|');
+  if (state.guesses.some(g => g.slice().sort().join('|') === key)) { toast('Already guessed!'); return; }
+
+  busy = true;
+  const tiles = [...document.querySelectorAll('.tile.sel')];
+  tiles.forEach((t, i) => { t.style.animationDelay = (i * 90) + 'ms'; t.classList.add('bounce'); });
+  await sleep(800);
+
+  const gi = groupOfGuess(guess);
+  state.guesses.push(guess);
+  saveState();
+
+  if (gi >= 0) {
+    selected.clear();
+    shown.push(gi);
+    justSolved = gi;
+    render();
+    if (isWon()) await finishGame(true);
+  } else {
+    const away = P.groups.some(g => guess.filter(w => g.words.includes(w)).length === 3);
+    tiles.forEach(t => { t.style.animationDelay = ''; t.classList.remove('bounce'); t.classList.add('shake'); });
+    if (away) toast('One away...');
+    await sleep(550);
+    renderDots();
+    if (derive().mistakes >= MAX_MISTAKES) { selected.clear(); render(); await finishGame(false); }
+    else render();
+  }
+  busy = false;
+}
+
+async function finishGame(won) {
+  const { mistakes } = derive();
+  recordResult(won, mistakes);
+  if (won) {
+    toast(['Perfect!', 'Great!', 'Solid!', 'Phew!'][Math.min(mistakes, 3)], 2200);
+    launchConfetti();
+    try { if (navigator.vibrate) navigator.vibrate([80, 40, 80, 40, 160]); } catch (e) {}
+  } else {
+    toast('Next Time!', 2200);
+    try { if (navigator.vibrate) navigator.vibrate(300); } catch (e) {}
+    const done = derive().solved;
+    for (let gi = 0; gi < 4; gi++) {
+      if (done.includes(gi) || shown.includes(gi)) continue;
+      await sleep(900);
+      shown.push(gi);
+      justSolved = gi;
+      render();
+    }
+  }
+  await sleep(1300);
+  openStats();
+}
+
+function recordResult(won, mistakes) {
+  if (state.recorded) return;
+  state.recorded = true;
+  saveState();
+  const s = loadStats();
+  s.played++;
+  if (won) {
+    s.wins++;
+    s.streak = (s.lastPlayed === yesterdayKey() && s.streak > 0) ? s.streak + 1 : 1;
+    if (mistakes === 0) s.perfect++;
+    s.dist[mistakes]++;
+  } else {
+    s.streak = 0;
+    s.dist[MAX_MISTAKES]++;
+  }
+  s.maxStreak = Math.max(s.maxStreak, s.streak);
+  s.lastPlayed = state.day;
+  saveJSON(STATS_KEY, s);
+}
+
+// ---------- sharing ----------
+function shareText() {
+  const url = location.href.split('#')[0].split('?')[0];
+  return url + '\nUnicyclist Connections\nPuzzle #' + puzzleNumber() + '\n' + shareGrid();
+}
+function shareGrid() {
+  return state.guesses.map(g => g.map(w => {
+    const grp = P.groups.find(x => x.words.includes(w));
+    return EMOJI[grp.color];
+  }).join('')).join('\n');
+}
+async function copyShare() {
+  const text = shareText();
+  try {
+    await navigator.clipboard.writeText(text);
+  } catch (e) {
+    const ta = document.createElement('textarea');
+    ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); } catch (err) {}
+    ta.remove();
+  }
+  toast('Copied results to clipboard');
+}
+
+// ---------- stats window ----------
+let countdownTimer = null;
+function openStats() {
+  const s = loadStats();
+  let streakNow = s.streak;
+  if (s.lastPlayed !== todayKey() && s.lastPlayed !== yesterdayKey()) streakNow = 0;
+  const winPct = s.played ? Math.round(100 * s.wins / s.played) : 0;
+  const over = P && state && isOver();
+  const todayIdx = over ? (isWon() ? derive().mistakes : MAX_MISTAKES) : -1;
+  const maxCount = Math.max(1, ...s.dist);
+  const labels = ['No mistakes', '1 mistake', '2 mistakes', '3 mistakes', 'Lost'];
+
+  let html = '<div class="stat-row">' +
+    stat(s.played, 'Played') + stat(winPct, 'Win %') + stat(streakNow, 'Current streak') +
+    stat(s.maxStreak, 'Max streak') + stat(s.perfect, 'Perfect') + '</div>';
+  html += '<div class="dist">';
+  s.dist.forEach((n, i) => {
+    const w = Math.max(8, Math.round(100 * n / maxCount));
+    html += '<div class="dist-row"><span class="lab">' + (labels[i] || '') + '</span><div class="dist-bar' + (i === todayIdx ? ' today' : '') + '" style="width:' + w + '%">' + n + '</div></div>';
+  });
+  html += '</div>';
+  if (over) {
+    html += '<div class="share-preview">' + shareGrid().replace(/\n/g, '<br>') + '</div>';
+    html += '<button type="button" class="share-btn" id="shareBtn">Share</button>';
+    html += '<div class="next-puzzle">Next puzzle in <strong id="countdown"></strong></div>';
+  }
+  $('statsBody').innerHTML = html;
+  if (over) {
+    $('shareBtn').addEventListener('click', copyShare);
+    tickCountdown();
+    clearInterval(countdownTimer);
+    countdownTimer = setInterval(tickCountdown, 1000);
+  }
+  $('statsOverlay').classList.add('show');
+}
+function stat(n, label) { return '<div><div class="stat-num">' + n + '</div><div class="stat-label">' + label + '</div></div>'; }
+function tickCountdown() {
+  const el = $('countdown');
+  if (!el) return;
+  const now = new Date();
+  const next = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+  const ms = next - now;
+  if (ms <= 1000) { location.reload(); return; }
+  const h = Math.floor(ms / 3600000), m = Math.floor(ms % 3600000 / 60000), sec = Math.floor(ms % 60000 / 1000);
+  el.textContent = pad(h) + ':' + pad(m) + ':' + pad(sec);
+}
+
+// ---------- confetti ----------
+function launchConfetti() {
+  const cv = $('confetti');
+  const ctx = cv.getContext('2d');
+  cv.width = innerWidth; cv.height = innerHeight;
+  const cols = ['#f9df6d', '#a0c35a', '#b0c4ef', '#ba81c5'];
+  const bits = Array.from({ length: 140 }, () => ({
+    x: Math.random() * cv.width, y: -20 - Math.random() * cv.height * 0.5,
+    vx: (Math.random() - 0.5) * 4, vy: 2 + Math.random() * 4,
+    size: 6 + Math.random() * 6, rot: Math.random() * 6, vr: (Math.random() - 0.5) * 0.3,
+    color: cols[Math.floor(Math.random() * cols.length)],
+  }));
+  const start = performance.now();
+  (function frame(now) {
+    ctx.clearRect(0, 0, cv.width, cv.height);
+    bits.forEach(b => {
+      b.x += b.vx; b.y += b.vy; b.rot += b.vr;
+      ctx.save(); ctx.translate(b.x, b.y); ctx.rotate(b.rot);
+      ctx.fillStyle = b.color; ctx.fillRect(-b.size / 2, -b.size / 4, b.size, b.size / 2);
+      ctx.restore();
+    });
+    if (now - start < 3500) requestAnimationFrame(frame);
+    else ctx.clearRect(0, 0, cv.width, cv.height);
+  })(start);
+}
+
+// ---------- modals, theme, midnight ----------
+document.querySelectorAll('[data-close]').forEach(b => b.addEventListener('click', () => $(b.dataset.close).classList.remove('show')));
+document.querySelectorAll('.overlay').forEach(o => o.addEventListener('click', (e) => { if (e.target === o) o.classList.remove('show'); }));
+$('helpBtn').addEventListener('click', () => $('helpOverlay').classList.add('show'));
+$('statsBtn').addEventListener('click', openStats);
+$('themeBtn').addEventListener('click', () => {
+  const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+  document.documentElement.dataset.theme = next;
+  try { localStorage.setItem('theme', next); } catch (e) {}
+});
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden && todayKey() !== loadedDay) location.reload();
+});
+
+// ---------- start ----------
+async function start() {
+  let catsData, statsData = null;
+  try {
+    const res = await fetch('categories.json', { cache: 'no-store' });
+    if (!res.ok) throw new Error('status ' + res.status);
+    catsData = await res.json();
+  } catch (e) {
+    $('loading').innerHTML = '<h2>Couldn\'t load the categories</h2>Please refresh the page in a moment.';
+    return;
+  }
+  try {
+    const res = await fetch('stats.json', { cache: 'no-store' });
+    if (res.ok) statsData = await res.json();
+  } catch (e) {}
+
+  let validTerms = null;
+  if (statsData) {
+    validTerms = new Map();
+    (statsData.words_by_length_asc || []).forEach(t => validTerms.set(String(t).toLowerCase(), String(t)));
+    (statsData.definitions_by_length_asc || []).forEach(d => validTerms.set(String(d.term).toLowerCase(), String(d.term)));
+    if (!validTerms.size) validTerms = null;
+  }
+
+  const cats = (catsData.categories || [])
+    .filter(c => c && c.name)
+    .map(c => ({ name: String(c.name), parent: c.parent ? String(c.parent) : '', words: Array.isArray(c.words) ? c.words : [] }));
+
+  P = buildPuzzle(cats, validTerms, loadedDay);
+  $('loading').style.display = 'none';
+
+  if (!P) {
+    const box = $('notEnough');
+    box.innerHTML = '<h2>Not enough categories yet</h2>Unicyclist Connections needs at least four categories with four words each. Add a few in the wiki and the puzzle will appear: <a href="wiktionary.html#c=">go to the categories</a>.';
+    box.style.display = 'block';
+    return;
+  }
+
+  $('game').style.display = 'block';
+  $('puzzleInfo').textContent = 'Puzzle #' + puzzleNumber() + ' · ' + new Date().toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' });
+
+  const saved = loadJSON(STATE_KEY);
+  state = (saved && saved.day === loadedDay && saved.sig === P.sig)
+    ? saved
+    : { day: loadedDay, sig: P.sig, guesses: [], recorded: false };
+  saveState();
+
+  order = P.startOrder.slice();
+  const d = derive();
+  shown = d.solved.slice();
+  if (d.mistakes >= MAX_MISTAKES) {
+    for (let gi = 0; gi < 4; gi++) if (!shown.includes(gi)) shown.push(gi);
+  }
+  if (isOver() && !state.recorded) recordResult(isWon(), d.mistakes);
+  wireButtons();
+  render();
+}
+start();
+</script>
+</body>
+</html>

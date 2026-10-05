@@ -174,15 +174,18 @@
 
 </head>
 <body>
-  <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap;">
+  <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;">
+    <div>
     <h1>Unicyclist Dictionary — Live Stats</h1>
-    <div style="display:flex; flex-direction:column; align-items:flex-end; gap:6px;">
+    <p class="subtitle" id="subtitle" style="margin-bottom:0;">Loading…</p>
+    </div>
+    <div style="display:flex; flex-direction:row; align-items:center; flex-wrap:wrap; justify-content:flex-end; gap:6px;">
       <a href="wiktionary.html" style="color:var(--muted); border:1px solid #262a33; border-radius:6px; padding:5px 10px; font-size:0.8rem; text-decoration:none;">Wiktionary view</a>
       <a href="wordle.html" style="color:var(--muted); border:1px solid #262a33; border-radius:6px; padding:5px 10px; font-size:0.8rem; text-decoration:none;">Unicyclist Wordle</a>
       <a href="connections.html" style="color:var(--muted); border:1px solid #262a33; border-radius:6px; padding:5px 10px; font-size:0.8rem; text-decoration:none;">Unicyclist Connections</a>
     </div>
   </div>
-  <p class="subtitle" id="subtitle">Loading…</p>
+  <div style="height:24px;"></div>
 
   <div id="content" class="grid" style="display:none;">
     <div class="card">

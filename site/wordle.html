@@ -119,7 +119,7 @@ function load(key, fallback) { try { return JSON.parse(localStorage.getItem(key)
 function save(key, value) { try { localStorage.setItem(key, JSON.stringify(value)); } catch (e) {} }
 
 const today = dayString();
-let answer = '', answerTerm = '', definition = '', len = 5;
+let answer = '', answerTerm = '', answerPos = '', definition = '', len = 5;
 let valid = new Set(), looseMode = false;
 let state = null, current = '', busy = false;
 let stats = load('dwg-stats', { played: 0, wins: 0, streak: 0, maxStreak: 0, lastWinDay: '', dist: [0, 0, 0, 0, 0, 0] });
@@ -280,6 +280,7 @@ async function submit() {
   const won = guess === answer;
   if (won) state.status = 'won'; else if (state.guesses.length >= MAX_GUESSES) state.status = 'lost';
   save('dwg-state', state);
+  updateHint();
   if (state.status !== 'playing') {
     recordResult(won, state.guesses.length);
     if (won) {
@@ -325,6 +326,12 @@ function confetti() {
     });
     if (t < 3000) requestAnimationFrame(frame); else canvas.remove();
   })(start);
+}
+
+// the part of speech is a hint: it appears after the 3rd guess (or when the game is over)
+function updateHint() {
+  const showPos = state.guesses.length >= 3 || state.status !== 'playing';
+  $('hintLine').textContent = len + ' letters' + (showPos && answerPos ? ' \u00b7 ' + answerPos : '');
 }
 
 function recordResult(won, n) {
@@ -436,7 +443,7 @@ async function init() {
   answer = pick.term.toLowerCase();
   len = answer.length;
   const posText = (pick.pos_list || [pick.pos]).filter(p => p && p !== '(no pos)').map(p => p.toLowerCase()).join(', ');
-  $('hintLine').textContent = len + ' letters' + (posText ? ' \u00b7 ' + posText : '');
+  answerPos = posText;
   const first = pick.senses && pick.senses[0] && pick.senses[0].defs[0];
   definition = (first ? first.text : pick.definition) || '';
 
@@ -450,6 +457,7 @@ async function init() {
   state = load('dwg-state', null);
   if (!state || state.day !== today || state.answer !== answer) state = { day: today, answer, guesses: [], status: 'playing' };
   buildBoard();
+  updateHint();
   state.guesses.forEach((g, r) => reveal(r, evaluate(g, answer), false));
   if (state.status !== 'playing') setTimeout(showStats, 300);
   else if (!load('dwg-seen', false)) { save('dwg-seen', true); showHelp(); }

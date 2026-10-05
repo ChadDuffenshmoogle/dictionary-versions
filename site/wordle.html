@@ -23,7 +23,8 @@
   header h1 { margin:0; font-family:Georgia,'Times New Roman',serif; font-weight:bold; font-size:1.7rem; letter-spacing:0.01em; text-align:center; }
   .icon { background:none; border:none; color:var(--text); font-size:1.25rem; cursor:pointer; padding:4px 6px; text-decoration:none; line-height:1; }
   #game { flex:1; display:flex; flex-direction:column; justify-content:space-between; align-items:center; width:100%; max-width:500px; margin:0 auto; min-height:0; }
-  #boardWrap { flex:1; display:flex; justify-content:center; align-items:center; padding:10px; min-height:0; }
+  #boardWrap { flex:1; display:flex; flex-direction:column; justify-content:center; align-items:center; padding:10px; min-height:0; }
+  #hintLine { height:22px; margin-bottom:8px; font-size:0.8rem; font-weight:bold; letter-spacing:0.08em; text-transform:uppercase; color:var(--muted); }
   #board { display:grid; grid-template-rows:repeat(6, auto); gap:5px; }
   .row { display:grid; gap:5px; grid-template-columns:repeat(var(--len), var(--tile)); }
   .tile { width:var(--tile); height:var(--tile); border:2px solid var(--tile-border); display:flex; justify-content:center; align-items:center;
@@ -93,7 +94,7 @@
 </header>
 <div id="toasts"></div>
 <div id="game">
-  <div id="boardWrap"><div id="board"></div></div>
+  <div id="boardWrap"><div id="hintLine"></div><div id="board"></div></div>
   <div id="keyboard"></div>
 </div>
 <div id="overlay" hidden><div class="modal"><button class="close" id="closeModal" aria-label="Close">&#10005;</button><div id="modalBody"></div></div></div>
@@ -140,7 +141,7 @@ $('overlay').addEventListener('click', (e) => { if (e.target === $('overlay')) c
 // ---------- board ----------
 function fit() {
   const availW = Math.min(window.innerWidth, 500) - 28;
-  const availH = $('boardWrap').clientHeight - 20;
+  const availH = $('boardWrap').clientHeight - 20 - 30;
   const byW = Math.floor((availW - (len - 1) * 5) / len);
   const byH = Math.floor((availH - 5 * 5) / MAX_GUESSES);
   const tile = Math.max(18, Math.min(62, byW, byH));
@@ -283,6 +284,8 @@ async function submit() {
     recordResult(won, state.guesses.length);
     if (won) {
       toast(WIN_WORDS[Math.min(state.guesses.length, 6) - 1], 1800);
+      confetti();
+      try { if (navigator.vibrate) navigator.vibrate([120, 60, 120, 60, 240]); } catch (e) {}
       [...rowEl(r).children].forEach((t, i) => { t.style.animationDelay = (i * 100) + 'ms'; t.classList.add('bounce'); });
     } else {
       toast(answerTerm.toUpperCase(), 6000);
@@ -290,6 +293,38 @@ async function submit() {
     setTimeout(showStats, 2200);
   }
   busy = false;
+}
+
+function confetti() {
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const canvas = document.createElement('canvas');
+  canvas.style.cssText = 'position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:60';
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = window.innerWidth * dpr; canvas.height = window.innerHeight * dpr;
+  document.body.appendChild(canvas);
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+  const colors = ['#6aaa64', '#c9b458', '#e0525f', '#4f9fe0', '#f2994a', '#b36fe0'];
+  const parts = Array.from({ length: 150 }, () => ({
+    x: window.innerWidth / 2 + (Math.random() - 0.5) * 120, y: window.innerHeight * 0.45,
+    vx: (Math.random() - 0.5) * 14, vy: -Math.random() * 15 - 4,
+    w: 6 + Math.random() * 6, h: 4 + Math.random() * 5, r: Math.random() * 6, vr: (Math.random() - 0.5) * 0.4,
+    c: colors[Math.floor(Math.random() * colors.length)],
+  }));
+  const start = performance.now();
+  (function frame(now) {
+    const t = now - start;
+    ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+    parts.forEach(p => {
+      p.vy += 0.35; p.vx *= 0.99; p.x += p.vx; p.y += p.vy; p.r += p.vr;
+      ctx.save();
+      ctx.globalAlpha = Math.max(0, 1 - Math.max(0, t - 2200) / 800);
+      ctx.translate(p.x, p.y); ctx.rotate(p.r);
+      ctx.fillStyle = p.c; ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+      ctx.restore();
+    });
+    if (t < 3000) requestAnimationFrame(frame); else canvas.remove();
+  })(start);
 }
 
 function recordResult(won, n) {
@@ -400,6 +435,8 @@ async function init() {
   answerTerm = pick.term;
   answer = pick.term.toLowerCase();
   len = answer.length;
+  const posText = (pick.pos_list || [pick.pos]).filter(p => p && p !== '(no pos)').map(p => p.toLowerCase()).join(', ');
+  $('hintLine').textContent = len + ' letters' + (posText ? ' \u00b7 ' + posText : '');
   const first = pick.senses && pick.senses[0] && pick.senses[0].defs[0];
   definition = (first ? first.text : pick.definition) || '';
 

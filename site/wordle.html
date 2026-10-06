@@ -451,13 +451,14 @@ async function init() {
   catch (e) { toast('Could not load the word list', 5000); return; }
   const allRows = data.definitions_by_length_asc || [];
   allRows.forEach(r => dictTerms.set(r.term.toLowerCase(), r.term));
-  // only use word lengths the Scrabble list covers, so every guess can be checked
-  let lengthsOk = null;
-  try {
-    const idx = await (await fetch('wordlist/index.json?x=' + Date.now(), { cache: 'no-store' })).json();
-    lengthsOk = new Set(Object.keys(idx.counts).filter(k => idx.counts[k] >= 50).map(Number));
-  } catch (e) {}
-  const rows = allRows.filter(r => /^[A-Za-z]{3,15}$/.test(r.term) && (!lengthsOk || lengthsOk.has(r.term.length)));
+  // only use word lengths that have a Scrabble word list, so every guess can be checked
+  const eligible = allRows.filter(r => /^[A-Za-z]{3,15}$/.test(r.term));
+  const lens = [...new Set(eligible.map(r => r.term.length))];
+  const found = (await Promise.all(lens.map(n =>
+    fetch(`wordlist/${n}.txt`, { method: 'HEAD' }).then(r => r.ok ? n : null).catch(() => null)))).filter(n => n !== null);
+  const lengthsOk = found.length ? new Set(found) : null;   // none found at all: the lists were never built
+  console.log('[wordle] lengths that have a word list:', found.sort((x, y) => x - y));
+  const rows = eligible.filter(r => !lengthsOk || lengthsOk.has(r.term.length));
   if (!rows.length) { toast('No words available yet', 5000); return; }
 
   // the same word for everyone: the word with the lowest score for today's date
@@ -472,7 +473,7 @@ async function init() {
   definition = (first ? first.text : pick.definition) || '';
 
   valid = new Set(rows.map(r => r.term.toLowerCase()).filter(t => t.length === len));
-  console.log('[wordle] answer length:', len, '| dictionary words of that length:', valid.size, '| lengths allowed by index.json:', lengthsOk ? [...lengthsOk] : 'index.json not found');
+  console.log('[wordle] answer length:', len, '| dictionary words of that length:', valid.size, '| lengths allowed:', lengthsOk ? [...lengthsOk] : 'none (lists missing)');
   try {
     const res = await fetch(`wordlist/${len}.txt`);
     console.log('[wordle] fetched wordlist/' + len + '.txt, HTTP status:', res.status);

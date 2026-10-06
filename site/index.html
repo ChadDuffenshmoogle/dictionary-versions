@@ -288,6 +288,14 @@
       <div style="color:var(--muted); font-size:0.8rem; margin-top:6px;">Click a <span id="letterChartClickLabel">letter</span> to see all words that start with it.</div>
     </div>
 
+    <div class="card wide">
+      <div class="letter-chart-title">Entries by character length</div>
+      <div style="height:320px;">
+        <canvas id="lengthChart"></canvas>
+      </div>
+      <div style="color:var(--muted); font-size:0.8rem; margin-top:6px;">Click a bar to see all words of that length (letters and numbers only).</div>
+    </div>
+
     <div class="wide" style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
       <div class="card">
         <h2 id="shortestWordsTitle" style="display:flex; align-items:center; gap:8px;">
@@ -606,15 +614,18 @@ async function main() {
     const startsWithMatch = raw.match(/^startswith:\s*(.*)$/);
     const posMatch = raw.match(/^pos:\s*(.*)$/);
     const dateMatch = raw.match(/^date:\s*(.*)$/);
+    const lengthMatch = raw.match(/^length:\s*(.*)$/);
     const scrabbleMatch = raw.match(/^scrabble(legal|normalized|illegal):?\s*(.*)$/);
     const q = startsWithMatch ? startsWithMatch[1]
             : posMatch ? posMatch[1]
             : dateMatch ? dateMatch[1]
+            : lengthMatch ? lengthMatch[1]
             : scrabbleMatch ? scrabbleMatch[2]
             : raw;
     const isPrefix = !!startsWithMatch;
     const isPos = !!posMatch;
     const isDate = !!dateMatch;
+    const isLength = !!lengthMatch;
     const isScrabble = !!scrabbleMatch;
     const wantScrabbleLegal = isScrabble && scrabbleMatch[1] === 'legal';
     const dateTerms = isDate ? (termsByDate.get(q) || new Set()) : null;
@@ -628,6 +639,7 @@ async function main() {
       if (isScrabble) match = e.scrabble === scrabbleMatch[1] && (!q || term.includes(q));
       else if (!q) match = true;
       else if (isDate) match = dateTerms.has(term);
+      else if (isLength) match = term.replace(/[^a-z0-9]/g, '').length === parseInt(q, 10);
       else if (isPos) match = (e.pos_list || [e.pos || '']).some(p => (p || '(no pos)').toLowerCase() === q);
       else if (isPrefix) match = term.startsWith(q);
       else if (searchScope === 'term') match = term.includes(q);
@@ -637,7 +649,7 @@ async function main() {
       entryEls[i].style.display = match ? '' : 'none';
       if (match) {
         visible++;
-        const noHighlight = isPos || isDate || isScrabble;
+        const noHighlight = isPos || isDate || isLength || isScrabble;
         const highlightTerm = noHighlight ? false : (q && (isPrefix || searchScope !== 'definition'));
         const highlightDef = noHighlight ? false : (q && !isPrefix && searchScope !== 'term');
         entryEls[i].querySelector('.term').innerHTML = highlight(e.term, highlightTerm ? q : '');
@@ -1109,6 +1121,41 @@ async function main() {
   letterGroupModeSelect.addEventListener('change', () => {
     buildLetterChart(parseInt(letterGroupModeSelect.value, 10));
   });
+
+  // Entries by character length (letters and numbers only)
+  (function () {
+    const lenCounts = {};
+    stats.words_by_length_asc.forEach(t => {
+      const len = t.replace(/[^a-zA-Z0-9]/g, '').length || 1;
+      lenCounts[len] = (lenCounts[len] || 0) + 1;
+    });
+    const maxLen = Math.max(...Object.keys(lenCounts).map(Number));
+    const lenLabels = [];
+    for (let i = 1; i <= maxLen; i++) lenLabels.push(String(i));
+    const lenData = lenLabels.map(l => lenCounts[l] || 0);
+
+    new Chart(document.getElementById('lengthChart'), {
+      type: 'bar',
+      data: { labels: lenLabels, datasets: [{ label: 'Entries', data: lenData, backgroundColor: '#7dd3fc' }] },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: 'x', intersect: false },
+        onHover: (event, elements) => {
+          event.native.target.style.cursor = elements.length ? 'pointer' : 'default';
+        },
+        onClick: (event, elements) => {
+          if (!elements.length) return;
+          openSearchModal(`length:${lenLabels[elements[0].index]}`);
+        },
+        scales: {
+          x: { ticks: { color: '#9a9fab', autoSkip: false }, grid: { display: false } },
+          y: { ticks: { color: '#9a9fab', precision: 0 }, grid: { color: '#262a33' } },
+        },
+        plugins: { legend: { display: false } },
+      },
+    });
+  })();
 
   // Parts of speech (posEntries/posLabels/posColors already declared earlier)
   new Chart(document.getElementById('posChart'), {

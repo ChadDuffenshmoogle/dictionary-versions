@@ -670,6 +670,9 @@ async function main() {
         const highlightDef = noHighlight ? false : (q && !isPrefix && searchScope !== 'term');
         entryEls[i].querySelector('.term').innerHTML = highlight(e.term, highlightTerm ? q : '');
         entryEls[i].querySelector('.def').innerHTML = highlight(e.definition, highlightDef ? q : '');
+        const monoWhat = isLength ? q.split(':')[0] : '';
+        entryEls[i].querySelector('.term').style.fontFamily = monoWhat === 'entries' ? 'monospace' : '';
+        entryEls[i].querySelector('.def').style.fontFamily = monoWhat === 'definitions' ? 'monospace' : '';
       }
     });
     dictResultCount.textContent = `${visible} of ${dictEntries.length} entries`;

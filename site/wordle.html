@@ -279,6 +279,7 @@ function reveal(r, st, animate) {
 
 async function submit() {
   if (current.length < len) return shakeRow('Not enough letters');
+  console.log('[wordle] guess:', current, '| in list:', valid.has(current), '| looseMode:', looseMode);
   if (!looseMode && !valid.has(current)) return shakeRow('Not in word list');
   busy = true;
   const r = state.guesses.length;
@@ -450,7 +451,13 @@ async function init() {
   catch (e) { toast('Could not load the word list', 5000); return; }
   const allRows = data.definitions_by_length_asc || [];
   allRows.forEach(r => dictTerms.set(r.term.toLowerCase(), r.term));
-  const rows = allRows.filter(r => /^[A-Za-z]{3,15}$/.test(r.term));
+  // only use word lengths the Scrabble list covers, so every guess can be checked
+  let lengthsOk = null;
+  try {
+    const idx = await (await fetch('wordlist/index.json?x=' + Date.now(), { cache: 'no-store' })).json();
+    lengthsOk = new Set(Object.keys(idx.counts).filter(k => idx.counts[k] >= 50).map(Number));
+  } catch (e) {}
+  const rows = allRows.filter(r => /^[A-Za-z]{3,15}$/.test(r.term) && (!lengthsOk || lengthsOk.has(r.term.length)));
   if (!rows.length) { toast('No words available yet', 5000); return; }
 
   // the same word for everyone: the word with the lowest score for today's date
@@ -465,11 +472,14 @@ async function init() {
   definition = (first ? first.text : pick.definition) || '';
 
   valid = new Set(rows.map(r => r.term.toLowerCase()).filter(t => t.length === len));
+  console.log('[wordle] answer length:', len, '| dictionary words of that length:', valid.size, '| lengths allowed by index.json:', lengthsOk ? [...lengthsOk] : 'index.json not found');
   try {
     const res = await fetch(`wordlist/${len}.txt`);
+    console.log('[wordle] fetched wordlist/' + len + '.txt, HTTP status:', res.status);
     if (!res.ok) throw new Error('missing');
     (await res.text()).split('\n').forEach(w => { w = w.trim(); if (w) valid.add(w); });
-  } catch (e) { looseMode = true; }   // no Scrabble list yet: accept any letters
+  } catch (e) { looseMode = true; console.log('[wordle] word list failed to load, so ANY letters will be accepted:', e.message); }
+  console.log('[wordle] looseMode:', looseMode, '| valid words loaded:', valid.size);   // no Scrabble list yet: accept any letters
 
   state = load('dwg-state', null);
   if (!state || state.day !== today || state.answer !== answer) state = { day: today, answer, guesses: [], status: 'playing' };

@@ -219,134 +219,159 @@ def _parse_entry_line(line):
 
 METADATA_LABELS = {
     "etymology", "derived terms", "synonym", "synonyms",
-    "ex", "example", "notes", "antonym", "antonyms",
+    "ex", "example", "notes", "antonym", "antonyms", "pronunciation",
 }
+
+POS_WORDS = ("noun", "verb", "adjective", "adverb", "interjection", "pronoun", "preposition")
 
 
 def _is_metadata_line(line):
     """Lines that are part of an entry's metadata (etymology, examples,
-    synonyms, a lone part-of-speech tag, a lone pronunciation guide, ...)
-    rather than the entry's own term/definition line."""
+    pronunciation, synonyms, numbered extra senses, a lone part-of-speech
+    tag, ...) rather than the entry's own term/definition line."""
     stripped = line.strip()
     label = stripped.rstrip(":").lower()
     if label in METADATA_LABELS:
         return True
     if stripped.lower().startswith(
         ("etymology:", "derived terms:", "synonym:", "synonyms:",
-         "ex:", "example:", "notes:", "antonym:", "antonyms:", "- example:")
+         "ex:", "example:", "notes:", "antonym:", "antonyms:", "- example:",
+         "pronunciation:")
     ):
         return True
-    # A lone "(adj.)" / "(n.)" style part-of-speech tag with nothing else
+    if re.match(r"^\d+\.\s", stripped):
+        return True
     if re.match(r"^\([^)]{1,12}\)\.?$", stripped):
         return True
-    # A lone pronunciation guide continuation line, e.g. "aychesseedeepobadenux)"
     if re.match(r"^[a-zA-Z\-']+\)$", stripped):
         return True
     return False
 
 
-def _emit(results, term, pos, definition):
-    results.append((term, pos, definition, True))
+def _make_entry(term, pos, definition):
+    return {"term": term, "etymology": "", "pronunciation": "",
+            "sections": [{"pos": pos, "defs": [{"text": definition, "examples": []}]}]}
+
+
+def _move_leading_ipa(entry):
+    """Old entries sometimes start their definition with /ipa/. Treat that as
+    the pronunciation so the form and the pages show it in the right place."""
+    if entry["pronunciation"] or not entry["sections"] or not entry["sections"][0]["defs"]:
+        return entry
+    first = entry["sections"][0]["defs"][0]
+    m = re.match(r"^(/[^/]+/)\s*(\S.*)$", first["text"])
+    if m:
+        entry["pronunciation"] = m.group(1)
+        first["text"] = m.group(2)
+    return entry
+
+
+def _emit(results, entry):
+    entry = _move_leading_ipa(entry)
+    term = entry["term"]
+    results.append(dict(entry, primary=True))
     if "/" in term:
         for part in term.split("/"):
             part = part.strip()
             if part and part != term:
-                results.append((part, pos, definition, False))
+                results.append(dict(entry, term=part, primary=False))
     if re.match(r"^the\s+", term, re.IGNORECASE):
-        results.append((re.sub(r"^the\s+", "", term, flags=re.IGNORECASE), pos, definition, False))
+        results.append(dict(entry, term=re.sub(r"^the\s+", "", term, flags=re.IGNORECASE), primary=False))
 
 
-def _collect_continuation(block_lines, start_idx):
-    """Collect every subsequent non-blank line as part of the definition,
-    whether it's dash-bulleted or a bare continuation line (like a quoted
-    usage example with no leading marker). Skips lone POS subheadings.
-    Stops at a genuine metadata label (Etymology/Example/Synonym/...) or
-    the end of the block."""
-    chunks = []
-    j = start_idx
-    while j < len(block_lines):
-        nxt = block_lines[j]
-        if not nxt:
-            j += 1
+def _parse_block_structured(block_lines):
+    """Read one hyphen block: several parts of speech, numbered senses,
+    examples, Etymology and Pronunciation. Old-style blocks (definition on
+    later lines, quote lines, Etymology above the definition) still work."""
+    term = None
+    sections, cur, sense = [], None, None
+    last = None
+    ety = []
+    pron = ""
+
+    for line in block_lines:
+        if not line:
             continue
-        nxt_unbulleted = re.sub(r"^-\s*", "", nxt)
-        if re.match(
-            r"^(etymology|ex|example|synonym|synonyms|antonym|"
-            r"antonyms|derived terms|notes)\b",
-            nxt_unbulleted, re.IGNORECASE,
-        ):
-            break
-        if re.match(r"^\([^)]{1,12}\)\.?$", nxt) or nxt.lower() in (
-            "noun", "verb", "adjective", "adverb",
-            "interjection", "pronoun", "preposition",
-        ):
-            j += 1
+        m = re.match(r"^etymology:\s*(.*)$", line, re.IGNORECASE)
+        if m:
+            ety.append(m.group(1).strip()); last = "ety"; continue
+        m = re.match(r"^pronunciation:\s*(.*)$", line, re.IGNORECASE)
+        if m:
+            pron = m.group(1).strip(); last = "pron"; continue
+        m = re.match(r"^(?:-\s*)?(?:examples?|ex):\s*(.*)$", line, re.IGNORECASE)
+        if m:
+            if sense is not None:
+                sense["examples"].append(m.group(1).strip())
+                last = "ex"
+            else:
+                last = "other"
             continue
-        chunks.append(nxt_unbulleted)
-        j += 1
-    return chunks
+        if re.match(r"^(?:-\s*)?(derived terms|synonyms?|antonyms?|notes)\s*:", line, re.IGNORECASE):
+            last = "other"; continue
+        m = re.match(r"^(\d+)\.\s+(.*)$", line)
+        if cur is not None and m:
+            sense = {"text": m.group(2).strip(), "examples": []}
+            cur["defs"].append(sense); last = "def"; continue
+
+        parsed = _parse_entry_line(line)
+        if parsed and (term is None or parsed[0].lower() == term.lower()):
+            if term is None:
+                term = parsed[0]
+            cur = {"pos": parsed[1], "defs": []}
+            sense = {"text": re.sub(r"^1\.\s+", "", parsed[2]), "examples": []}
+            cur["defs"].append(sense); sections.append(cur); last = "def"; continue
+
+        if re.match(r"^\([^)]{1,12}\)\.?$", line) or line.lower() in POS_WORDS:
+            continue  # lone part-of-speech subheading
+
+        text = re.sub(r"^-\s*", "", line)
+        if term is None:
+            # "term (pos)" with the definition on the next lines, or a bare term line
+            bare = re.sub(r"\s*/[^/]+/\s*$", "", line)
+            pm = re.search(r"\(([^)]{1,20})\)\.?\s*$", bare)
+            pos = pm.group(1).strip() if pm else ""
+            term = _clean_term(re.sub(r"\s*\([^)]{1,20}\)\.?\s*$", "", bare).strip())
+            if not term:
+                term = None
+                continue
+            cur = {"pos": pos, "defs": []}; sections.append(cur)
+            sense = None; last = "need"
+        elif last == "need":
+            sense = {"text": text, "examples": []}
+            cur["defs"].append(sense); last = "def"
+        elif last == "ety" and ety:
+            ety[-1] += " " + text
+        elif last == "ex" and sense is not None:
+            sense["examples"].append(text)
+        elif last == "def" and sense is not None:
+            if re.match(r"^[\"“'‘]", text) and not sense["examples"]:
+                sense["examples"].append(text)
+                last = "ex"
+            else:
+                sense["text"] += "; " + text
+
+    sections = [s for s in sections if any(d["text"] for d in s["defs"])]
+    if not term or not sections:
+        return None
+    return {"term": term, "sections": sections,
+            "etymology": " ".join(e for e in ety if e).strip(), "pronunciation": pron}
 
 
 def _process_block(results, block_lines):
-    """Extract (term, pos, definition) from one hyphen-delimited block's
-    buffered lines, using only its real main line."""
-    main_idx = None
-    for idx, line in enumerate(block_lines):
-        if not line or _is_metadata_line(line):
-            continue
-        main_idx = idx
-        break
-    if main_idx is None:
-        return
-
-    main_line = block_lines[main_idx]
-    parsed = _parse_entry_line(main_line)
-    used_fallback = False
-
-    if not parsed:
-        # Either "term (pos)" with nothing trailing, or a completely bare
-        # term line -- either way, the definition lives in the lines
-        # further down the block. Strip a trailing pronunciation guide
-        # first (e.g. "anoline (adj.) /aenline/") so it doesn't block the
-        # trailing-"(pos)" match or end up glued onto the term.
-        main_line_no_pron = re.sub(r"\s*/[^/]+/\s*$", "", main_line)
-        pos_match = re.search(r"\(([^)]{1,20})\)\.?\s*$", main_line_no_pron)
-        pos = pos_match.group(1).strip() if pos_match else ""
-        term_part = re.sub(r"\s*\([^)]{1,20}\)\.?\s*$", "", main_line_no_pron).strip()
-        if term_part:
-            chunks = _collect_continuation(block_lines, main_idx + 1)
-            if chunks:
-                parsed = (_clean_term(term_part), pos, "; ".join(chunks))
-                used_fallback = True
-
-    # Even when the main line parsed fine on its own, a definition can
-    # still continue on the lines right after it -- bulleted sub-items,
-    # or a bare continuation like a quoted usage example with no leading
-    # marker. Append it rather than silently dropping it (skip this if
-    # the fallback above already consumed the same lines).
-    if parsed and not used_fallback:
-        extra = _collect_continuation(block_lines, main_idx + 1)
-        if extra:
-            parsed = (parsed[0], parsed[1], parsed[2] + "; " + "; ".join(extra))
-
-    if parsed:
-        _emit(results, parsed[0], parsed[1], parsed[2])
+    entry = _parse_block_structured(block_lines)
+    if entry:
+        _emit(results, entry)
 
 
 def extract_definitions(content):
-    """Return list of (term, pos, definition, is_primary), reading only each
-    entry's actual main line -- ignoring Etymology/Synonym/Example/Derived-
-    Terms sub-lines and multi-line continuations so those never get
-    mistaken for entries in their own right. is_primary is True for the
-    entry's real term and False for a derived alternate form (a "/"-split
-    variant or a "the "-stripped variant) -- callers that need the true,
-    one-term-per-entry list (e.g. total counts) should filter on it.
+    """Return a list of entry dicts: term, sections (pos + numbered senses +
+    examples), etymology, pronunciation, primary. A word with several parts
+    of speech is ONE entry with several sections. primary is True for the
+    real term and False for a derived alternate form (a "/"-split variant
+    or a "the "-stripped variant).
 
-    Uses a simple linear state machine (in-block / not-in-block) rather
-    than pre-splitting the whole body on paired delimiters -- a single
-    unmatched or stray "-----" line anywhere in the file would otherwise
-    misalign every block after it and swallow large swaths of real
-    entries into one bad "block"."""
+    Uses a simple linear state machine (in-block / not-in-block) so a stray
+    "-----" line cannot swallow the entries after it."""
     if "-----DICTIONARY PROPER-----" not in content:
         return []
     body = content.split("-----DICTIONARY PROPER-----", 1)[1]
@@ -375,10 +400,8 @@ def extract_definitions(content):
                 continue
             parsed = _parse_entry_line(line)
             if parsed:
-                _emit(results, parsed[0], parsed[1], parsed[2])
+                _emit(results, _make_entry(parsed[0], parsed[1], parsed[2]))
 
-    # A block left open at end-of-file (unmatched delimiter) still gets
-    # its main entry read rather than silently dropped.
     if in_block and block_lines:
         _process_block(results, block_lines)
 
@@ -487,6 +510,31 @@ def _normalize_pos(raw_pos):
         return POS_NORMALIZATION[key[:-2]]
     return raw
 
+def _split_pos(raw_pos):
+    """Split one raw pos label into (real parts of speech, extra tags).
+    "Cyrilism, v."  -> (["Verb"], ["Cyrilism"])   any "...ism" word is a tag
+    "mass n."       -> (["Noun"], ["Uncountable"])
+    "v. + pron."    -> (["Verb", "Pronoun"], [])"""
+    labels, tags = [], []
+    for tok in re.split(r"\s*(?:,|\+|/|&|;)\s*", raw_pos or ""):
+        tok = tok.strip()
+        if not tok:
+            continue
+        if re.fullmatch(r"[A-Za-z]+ism", tok, re.IGNORECASE):
+            tag = tok[0].upper() + tok[1:]
+            if tag not in tags:
+                tags.append(tag)
+            continue
+        label = _normalize_pos(tok)
+        if label == "Mass Noun":
+            label = "Noun"
+            if "Uncountable" not in tags:
+                tags.append("Uncountable")
+        if label not in labels:
+            labels.append(label)
+    return labels, tags
+
+
 def fetch_scrabble_words():
     """Load the Scrabble word list into a set of uppercase words."""
     text = fetch_raw(SCRABBLE_FILE)
@@ -569,24 +617,14 @@ def main():
     # delimited by "-----" lines and never splits inside a term.
     raw_rows = extract_definitions(content)
     all_terms = sorted(
-        {t for t, _, _, is_primary in raw_rows if is_primary},
+        {r["term"] for r in raw_rows if r["primary"]},
         key=sort_key_ignore_punct,
     )
     total_entries = len(all_terms)
 
     # --- Cumulative growth series, anchored to the real current total ---
-    # additions_by_day_all is a commit-count proxy (1 commit == 1 new
-    # word), which drifts from reality over time -- a commit whose
-    # message didn't match the regex, an entry edited or removed outside
-    # the normal "new term" flow, etc. Rather than grow forward from a
-    # fixed historical BASELINE_COUNT and risk the endpoint disagreeing
-    # with total_entries (the actual current parse of the live file), the
-    # effective baseline is solved backward from today's true total: take
-    # the real total_entries, subtract everything the commit log says was
-    # added since the baseline date, and whatever's left is what the
-    # baseline must have been. This keeps the chart's shape (relative
-    # growth) intact while guaranteeing its last point always matches the
-    # Total Entries card exactly.
+    # (see the long note in git history: the baseline is solved backward
+    # from today's real total so the chart always ends on Total Entries)
     additions_since_baseline = sum(
         n for d, n in additions_by_day_all.items() if d > BASELINE_DATE
     )
@@ -615,29 +653,51 @@ def main():
 
     words_by_length_asc = sorted(all_terms, key=word_len)
 
-    # Map exact term -> (pos, parsed definition). Exact (case-sensitive) keys
-    # keep "Starkitch" and "starkitch" as separate entries. First match wins
-    # if the raw text has duplicate lines for the same exact term.
-    parsed_by_term = {}
-    for t, pos, d, _ in raw_rows:
-        if t not in parsed_by_term:
-            parsed_by_term[t] = (pos, d)
+    # First match wins if the raw text has duplicate lines for the same term.
+    parsed_by_lower = {}
+    for r in raw_rows:
+        parsed_by_lower.setdefault(r["term"].lower(), r)
 
-    # Walk every distinct term individually (not through a lowercase-keyed
-    # dict of terms) so two terms that only differ by capitalization each
-    # keep their own row instead of one overwriting the other.
-    definitions = []
+    def build_row(t, e):
+        if not e or not e["sections"]:
+            return {"term": t, "pos": "(no pos)", "pos_list": ["(no pos)"], "tags": [],
+                    "definition": "(definition not parsed -- see raw file)",
+                    "senses": [], "pronunciation": "", "etymology": ""}
+        senses, pos_list, tags = [], [], []
+        for s in e["sections"]:
+            labels, stags = _split_pos(s["pos"])
+            senses.append({"pos": ", ".join(labels) or "(no pos)", "defs": s["defs"]})
+            for p in labels:
+                if p not in pos_list:
+                    pos_list.append(p)
+            for tg in stags:
+                if tg not in tags:
+                    tags.append(tg)
+        if not pos_list:
+            pos_list = ["(no pos)"]
+        lines = []
+        for s in senses:
+            if len(senses) > 1:
+                lines.append(f"[{s['pos']}]")
+            if len(s["defs"]) > 1:
+                lines += [f"{i}. {d['text']}" for i, d in enumerate(s["defs"], 1)]
+            else:
+                lines.append(s["defs"][0]["text"])
+        return {"term": t, "pos": " / ".join(pos_list), "pos_list": pos_list, "tags": tags,
+                "definition": "\n".join(lines), "senses": senses,
+                "pronunciation": e["pronunciation"], "etymology": e["etymology"]}
+
+    # A word with several parts of speech is ONE word in total_entries and
+    # letter_counts, but is counted under EACH of its parts of speech here.
+    rows = []
     pos_counts = Counter()
     for t in all_terms:
-        pos, d = parsed_by_term.get(t, ("", "(definition not parsed -- see raw file)"))
-        pos_clean = _normalize_pos(pos)
-        pos_counts[pos_clean] += 1
-        definitions.append((t, pos_clean, d))
+        row = build_row(t, parsed_by_lower.get(t.lower()))
+        for p in row["pos_list"]:
+            pos_counts[p] += 1
+        rows.append(row)
 
-    definitions_by_length_asc = sorted(
-        [{"term": t, "pos": p, "definition": d} for t, p, d in definitions],
-        key=lambda td: len(td["definition"]),
-    )
+    definitions_by_length_asc = sorted(rows, key=lambda r: len(r["definition"]))
 
     # --- Scrabble legality ---
     scrabble_set = fetch_scrabble_words()
@@ -669,6 +729,24 @@ def main():
     out_path = os.path.join(os.path.dirname(__file__), "..", "site", "stats.json")
     with open(out_path, "w") as f:
         json.dump(stats, f, indent=2)
+
+    # One plain word list per word length (lowercase), so the daily word game page
+    # only downloads the length it needs.
+    wordlist_dir = os.path.join(os.path.dirname(__file__), "..", "site", "wordlist")
+    os.makedirs(wordlist_dir, exist_ok=True)
+    words_by_len = {}
+    for w in scrabble_set:
+        if re.fullmatch(r"[A-Z]+", w) and 3 <= len(w) <= 15:
+            words_by_len.setdefault(len(w), []).append(w.lower())
+    for n, words in words_by_len.items():
+        with open(os.path.join(wordlist_dir, f"{n}.txt"), "w") as f:
+            f.write("\n".join(sorted(words)))
+
+    # which lengths exist, so the game only picks answers it can check guesses for
+    counts = {str(n): len(ws) for n, ws in sorted(words_by_len.items())}
+    with open(os.path.join(wordlist_dir, "index.json"), "w") as f:
+        json.dump({"counts": counts}, f)
+    print(f"Word lists written (length: words): {counts}")
 
     print(f"Wrote {out_path}: {total_entries} entries, latest={latest_name}")
 

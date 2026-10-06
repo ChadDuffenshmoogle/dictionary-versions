@@ -289,11 +289,22 @@
     </div>
 
     <div class="card wide">
-      <div class="letter-chart-title">Entries by character length</div>
+      <div class="letter-chart-title">
+        <select id="lenWhat" class="inline-select">
+          <option value="entries">Entries</option>
+          <option value="definitions">Definitions</option>
+        </select>
+        by
+        <select id="lenMode" class="inline-select">
+          <option value="letter">letter</option>
+          <option value="character">character</option>
+        </select>
+        count
+      </div>
       <div style="height:320px;">
         <canvas id="lengthChart"></canvas>
       </div>
-      <div style="color:var(--muted); font-size:0.8rem; margin-top:6px;">Click a bar to see all words of that length (letters and numbers only).</div>
+      <div style="color:var(--muted); font-size:0.8rem; margin-top:6px;">Click a bar to see everything with that count (letter skips spaces and punctuation, character counts them).</div>
     </div>
 
     <div class="wide" style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
@@ -639,7 +650,12 @@ async function main() {
       if (isScrabble) match = e.scrabble === scrabbleMatch[1] && (!q || term.includes(q));
       else if (!q) match = true;
       else if (isDate) match = dateTerms.has(term);
-      else if (isLength) match = term.replace(/[^a-z0-9]/g, '').length === parseInt(q, 10);
+      else if (isLength) {
+        const [w, m, n] = q.split(':');
+        const text = w === 'definitions' ? def : term;
+        const len = m === 'character' ? text.length : text.replace(/[^a-z0-9]/g, '').length;
+        match = len === parseInt(n, 10);
+      }
       else if (isPos) match = (e.pos_list || [e.pos || '']).some(p => (p || '(no pos)').toLowerCase() === q);
       else if (isPrefix) match = term.startsWith(q);
       else if (searchScope === 'term') match = term.includes(q);
@@ -1122,21 +1138,24 @@ async function main() {
     buildLetterChart(parseInt(letterGroupModeSelect.value, 10));
   });
 
-  // Entries by character length (letters and numbers only)
-  (function () {
+  // Entries/Definitions by letter or character count (bars with 0 are skipped)
+  let lengthChartInstance = null;
+  function buildLengthChart(what, mode) {
+    const texts = what === 'definitions'
+      ? (stats.definitions_by_length_asc || []).map(d => d.definition)
+      : stats.words_by_length_asc;
     const lenCounts = {};
-    stats.words_by_length_asc.forEach(t => {
-      const len = t.replace(/[^a-zA-Z0-9]/g, '').length || 1;
+    texts.forEach(t => {
+      const len = mode === 'character' ? t.length : (t.replace(/[^a-zA-Z0-9]/g, '').length || 1);
       lenCounts[len] = (lenCounts[len] || 0) + 1;
     });
-    const maxLen = Math.max(...Object.keys(lenCounts).map(Number));
-    const lenLabels = [];
-    for (let i = 1; i <= maxLen; i++) lenLabels.push(String(i));
-    const lenData = lenLabels.map(l => lenCounts[l] || 0);
+    const lenLabels = Object.keys(lenCounts).map(Number).sort((a, b) => a - b).map(String);
+    const lenData = lenLabels.map(l => lenCounts[l]);
 
-    new Chart(document.getElementById('lengthChart'), {
+    if (lengthChartInstance) lengthChartInstance.destroy();
+    lengthChartInstance = new Chart(document.getElementById('lengthChart'), {
       type: 'bar',
-      data: { labels: lenLabels, datasets: [{ label: 'Entries', data: lenData, backgroundColor: '#7dd3fc' }] },
+      data: { labels: lenLabels, datasets: [{ label: what === 'definitions' ? 'Definitions' : 'Entries', data: lenData, backgroundColor: '#7dd3fc' }] },
       options: {
         responsive: true,
         maintainAspectRatio: false,
@@ -1146,16 +1165,22 @@ async function main() {
         },
         onClick: (event, elements) => {
           if (!elements.length) return;
-          openSearchModal(`length:${lenLabels[elements[0].index]}`);
+          openSearchModal(`length:${what}:${mode}:${lenLabels[elements[0].index]}`);
         },
         scales: {
-          x: { ticks: { color: '#9a9fab', autoSkip: false }, grid: { display: false } },
+          x: { ticks: { color: '#9a9fab', autoSkip: true }, grid: { display: false } },
           y: { ticks: { color: '#9a9fab', precision: 0 }, grid: { color: '#262a33' } },
         },
         plugins: { legend: { display: false } },
       },
     });
-  })();
+  }
+  const lenWhatSelect = document.getElementById('lenWhat');
+  const lenModeSelect = document.getElementById('lenMode');
+  const refreshLengthChart = () => buildLengthChart(lenWhatSelect.value, lenModeSelect.value);
+  refreshLengthChart();
+  lenWhatSelect.addEventListener('change', refreshLengthChart);
+  lenModeSelect.addEventListener('change', refreshLengthChart);
 
   // Parts of speech (posEntries/posLabels/posColors already declared earlier)
   new Chart(document.getElementById('posChart'), {

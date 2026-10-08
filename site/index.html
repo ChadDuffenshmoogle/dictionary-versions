@@ -307,6 +307,32 @@
       <div style="color:var(--muted); font-size:0.8rem; margin-top:6px;">Click a bar to see everything with that count (letter skips spaces and punctuation, character counts them).</div>
     </div>
 
+    <div class="card wide">
+      <div class="letter-chart-title" style="flex-wrap:wrap;">
+        <select id="usedWhat" class="inline-select">
+          <option value="characters">Characters</option>
+          <option value="words">Words</option>
+        </select>
+        used in
+        <select id="usedSource" class="inline-select">
+          <option value="entries">Entries</option>
+          <option value="definitions">Definitions</option>
+          <option value="both">Entries + Definitions</option>
+        </select>
+        <select id="usedTop" class="inline-select" style="display:none;">
+          <option value="30">(Top 30)</option>
+          <option value="100">(Top 100)</option>
+          <option value="all">(All)</option>
+        </select>
+      </div>
+      <div id="usedChartOuter" style="overflow-x:auto;">
+        <div id="usedChartInner" style="height:320px;">
+          <canvas id="usedChart"></canvas>
+        </div>
+      </div>
+      <div style="color:var(--muted); font-size:0.8rem; margin-top:6px;">Each bar counts every time that character (or word) appears. Capital and lowercase letters are counted together.</div>
+    </div>
+
     <div class="wide" style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
       <div class="card">
         <h2 id="shortestWordsTitle" style="display:flex; align-items:center; gap:8px;">
@@ -1184,6 +1210,69 @@ async function main() {
   refreshLengthChart();
   lenWhatSelect.addEventListener('change', refreshLengthChart);
   lenModeSelect.addEventListener('change', refreshLengthChart);
+
+  // Characters / words used in entries, definitions, or both (no empty bars)
+  let usedChartInstance = null;
+  function buildUsedChart(what, source, top) {
+    let texts = [];
+    if (source !== 'definitions') texts = texts.concat(stats.words_by_length_asc || []);
+    if (source !== 'entries') texts = texts.concat((stats.definitions_by_length_asc || []).map(d => d.definition));
+
+    const counts = {};
+    texts.forEach(t => {
+      const lower = String(t).toLowerCase();
+      if (what === 'characters') {
+        for (const ch of lower) counts[ch] = (counts[ch] || 0) + 1;
+      } else {
+        lower.split(/\s+/).forEach(w => {
+          const clean = w.replace(/^[^a-z0-9]+|[^a-z0-9]+$/g, '');
+          if (clean) counts[clean] = (counts[clean] || 0) + 1;
+        });
+      }
+    });
+
+    let entries = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+    if (what === 'words' && top !== 'all') entries = entries.slice(0, parseInt(top, 10));
+    const labels = entries.map(([k]) => (k === ' ' ? 'space' : k));
+    const data = entries.map(([, v]) => v);
+
+    const inner = document.getElementById('usedChartInner');
+    const outerWidth = document.getElementById('usedChartOuter').clientWidth || 600;
+    const barWidth = what === 'words' && top !== '30' ? 26 : 0;
+    inner.style.width = Math.max(labels.length * barWidth, outerWidth) + 'px';
+
+    if (usedChartInstance) usedChartInstance.destroy();
+    usedChartInstance = new Chart(document.getElementById('usedChart'), {
+      type: 'bar',
+      data: { labels, datasets: [{ label: 'Uses', data, backgroundColor: '#7dd3fc' }] },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: 'x', intersect: false },
+        scales: {
+          x: {
+            ticks: what === 'words'
+              ? { color: '#9a9fab', autoSkip: false, maxRotation: 90, minRotation: 90, font: { size: 10 } }
+              : { color: '#9a9fab', autoSkip: false },
+            grid: { display: false },
+          },
+          y: { ticks: { color: '#9a9fab', precision: 0 }, grid: { color: '#262a33' } },
+        },
+        plugins: { legend: { display: false } },
+      },
+    });
+  }
+  const usedWhatSelect = document.getElementById('usedWhat');
+  const usedSourceSelect = document.getElementById('usedSource');
+  const usedTopSelect = document.getElementById('usedTop');
+  const refreshUsedChart = () => {
+    usedTopSelect.style.display = usedWhatSelect.value === 'words' ? '' : 'none';
+    buildUsedChart(usedWhatSelect.value, usedSourceSelect.value, usedTopSelect.value);
+  };
+  refreshUsedChart();
+  usedWhatSelect.addEventListener('change', refreshUsedChart);
+  usedSourceSelect.addEventListener('change', refreshUsedChart);
+  usedTopSelect.addEventListener('change', refreshUsedChart);
 
   // Parts of speech (posEntries/posLabels/posColors already declared earlier)
   new Chart(document.getElementById('posChart'), {

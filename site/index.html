@@ -620,12 +620,12 @@ async function main() {
   // from every existing entry. A seeded random generator keeps the guess
   // the same until the dictionary changes.
   function predictNextWord(limit) {
-    const allTerms = (stats.words_by_length_asc || []).map(t => t.toLowerCase());
-    const existing = new Set(allTerms);
+    const allTerms = stats.words_by_length_asc || [];
+    const existing = new Set(allTerms.map(t => t.toLowerCase()));
     // "Last N" uses the order words were added (the timeline), sorted by
     // date; the full dictionary is still used to reject duplicates.
     const timeline = (stats.added_terms_timeline || [])
-      .map((e, i) => ({ date: e.date, term: e.term.toLowerCase(), i }))
+      .map((e, i) => ({ date: e.date, term: e.term, i }))
       .sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : a.i - b.i));
     const terms = limit === 'all' || !timeline.length
       ? allTerms
@@ -679,15 +679,15 @@ async function main() {
         word += ch;
       }
       const clean = word.trim();
-      if (clean.length >= 4 && clean.length < 24 && !existing.has(clean)) result = clean;
+      if (clean.length >= 4 && clean.length < 24 && !existing.has(clean.toLowerCase())) result = clean;
     }
     document.getElementById('predictedWord').textContent = result || '—';
     // Predicted definition: same idea, but one word at a time, using the
     // two previous words as context (falls back to one word).
-    const termSet = new Set(terms);
+    const termSet = new Set(terms.map(t => t.toLowerCase()));
     const defs = (stats.definitions_by_length_asc || [])
       .filter(d => limit === 'all' || termSet.has(d.term.toLowerCase()))
-      .map(d => d.definition.trim().split(/\s+/).filter(Boolean));
+      .map(d => d.definition.match(/[\p{L}\p{N}]+(?:['’\-][\p{L}\p{N}]+)*|[^\s\p{L}\p{N}]/gu) || []);
     const DSTART = '\u0002', DEND = '\u0003';
     const dTable = {};
     defs.forEach(words => {
@@ -713,6 +713,29 @@ async function main() {
       }
       return DEND;
     }
+    // Put the tokens back together with normal spacing: no space before
+    // , . ; : ! ? ) ] } or after ( [ {, quotes hug the words inside them.
+    function joinDefTokens(tokens) {
+      let text = '';
+      let quoteOpen = {};
+      let prev = '';
+      tokens.forEach(tok => {
+        let space = text ? ' ' : '';
+        if (/^[,.;:!?)\]}%…]$/.test(tok)) space = '';
+        else if (/^[(\[{]$/.test(prev)) space = '';
+        if (/^["'“”‘’]$/.test(tok)) {
+          const closing = !!quoteOpen[tok];
+          quoteOpen[tok] = !closing;
+          if (closing) space = '';
+          else tok = tok;
+          prev = closing ? '' : '(';
+        } else {
+          prev = tok;
+        }
+        text += space + tok;
+      });
+      return text;
+    }
     let definition = '';
     for (let attempt = 0; attempt < 50 && !definition; attempt++) {
       const out = [];
@@ -724,7 +747,7 @@ async function main() {
         p2 = p1;
         p1 = w;
       }
-      if (out.length >= 4 && out.length < 25) definition = out.join(' ');
+      if (out.length >= 4 && out.length < 25) definition = joinDefTokens(out);
     }
     document.getElementById('predictedDefinition').textContent = definition;
   }

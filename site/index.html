@@ -205,6 +205,28 @@
     z-index: 20;
   }
   .tip:hover .tip-text, .tip:focus .tip-text { display: block; }
+  .hover-src { position: relative; cursor: help; }
+  .src-panel {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 320px;
+    max-width: 85vw;
+    max-height: 280px;
+    overflow: auto;
+    margin-top: 6px;
+    padding: 10px 12px;
+    background: #0f1115;
+    border: 1px solid #262a33;
+    border-radius: 8px;
+    color: var(--text);
+    font-size: 0.8rem;
+    font-weight: 400;
+    line-height: 1.5;
+    z-index: 20;
+  }
+  .hover-src:hover .src-panel:not(:empty) { display: block; }
   .nav-btn {
     display: inline-block;
     padding: 6px 12px;
@@ -318,8 +340,14 @@
         <option value="100">Last 100 words</option>
         <option value="10">Last 10 words</option>
       </select>
-      <div class="stat-big" id="predictedWord" style="font-size:1.6rem;">—</div>
-      <div id="predictedDefinition" style="color:var(--muted); font-size:0.8rem; margin-top:4px;"></div>
+      <div class="hover-src">
+        <div class="stat-big" id="predictedWord" style="font-size:1.6rem;">—</div>
+        <div class="src-panel" id="predictedWordSrc"></div>
+      </div>
+      <div class="hover-src" style="margin-top:4px;">
+        <div id="predictedDefinition" style="color:var(--muted); font-size:0.8rem;"></div>
+        <div class="src-panel" id="predictedDefinitionSrc"></div>
+      </div>
     </div>
 
     <div class="card wide">
@@ -687,10 +715,10 @@ async function main() {
     const termSet = new Set(terms.map(t => t.toLowerCase()));
     const defs = (stats.definitions_by_length_asc || [])
       .filter(d => limit === 'all' || termSet.has(d.term.toLowerCase()))
-      .map(d => d.definition.match(/[\p{L}\p{N}]+(?:['’\-][\p{L}\p{N}]+)*|[^\s\p{L}\p{N}]/gu) || []);
+      .map(d => ({ term: d.term, tokens: d.definition.match(/[\p{L}\p{N}]+(?:['’\-][\p{L}\p{N}]+)*|[^\s\p{L}\p{N}]/gu) || [] }));
     const DSTART = '\u0002', DEND = '\u0003';
     const dTable = {};
-    defs.forEach(words => {
+    defs.forEach(({ tokens: words }) => {
       const seq = [DSTART, DSTART, ...words, DEND];
       for (let i = 2; i < seq.length; i++) {
         const keys = [seq[i - 2] + '\u0001' + seq[i - 1], seq[i - 1]];
@@ -715,28 +743,111 @@ async function main() {
     }
     // Put the tokens back together with normal spacing: no space before
     // , . ; : ! ? ) ] } or after ( [ {, quotes hug the words inside them.
-    function joinDefTokens(tokens) {
+    // wrap(token, index) lets the caller add markup around each token.
+    function joinTokens(tokens, wrap) {
       let text = '';
-      let quoteOpen = {};
+      const quoteOpen = {};
       let prev = '';
-      tokens.forEach(tok => {
-        let space = text ? ' ' : '';
+      tokens.forEach((tok, idx) => {
+        let space = idx ? ' ' : '';
         if (/^[,.;:!?)\]}%…]$/.test(tok)) space = '';
         else if (/^[(\[{]$/.test(prev)) space = '';
         if (/^["'“”‘’]$/.test(tok)) {
           const closing = !!quoteOpen[tok];
           quoteOpen[tok] = !closing;
           if (closing) space = '';
-          else tok = tok;
           prev = closing ? '' : '(';
         } else {
           prev = tok;
         }
-        text += space + tok;
+        text += space + wrap(tok, idx);
       });
       return text;
     }
+
+    // Hover panels: show which existing entries each piece came from.
+    const PALETTE = ['#6ee7b7', '#7dd3fc', '#fbbf24', '#f472b6', '#a78bfa', '#fb923c'];
+    const swatch = (i) => `background:${PALETTE[i % PALETTE.length]}; color:#0f1115; border-radius:3px; padding:0 2px;`;
+    const mutedNote = (t) => `<div style="color:var(--muted); margin-top:8px;">${t}</div>`;
+
+    function renderWordSources(word) {
+      const panel = document.getElementById('predictedWordSrc');
+      if (!word) { panel.innerHTML = ''; return; }
+      const lw = word.toLowerCase();
+      const lterms = terms.map(t => t.toLowerCase());
+      const segs = [];
+      let i = 0;
+      while (i < word.length) {
+        let bestLen = 1, bestK = -1, bestPos = -1;
+        for (let k = 0; k < lterms.length; k++) {
+          const t = lterms[k];
+          for (let L = Math.min(word.length - i, t.length); L > bestLen; L--) {
+            const pos = t.indexOf(lw.substr(i, L));
+            if (pos !== -1) { bestLen = L; bestK = k; bestPos = pos; break; }
+          }
+        }
+        if (bestK === -1) { segs.push({ text: word.substr(i, 1) }); i += 1; }
+        else { segs.push({ text: word.substr(i, bestLen), k: bestK, pos: bestPos }); i += bestLen; }
+      }
+      let c = 0;
+      segs.forEach(sg => { if (sg.k !== undefined) sg.c = c++; });
+      const wordHtml = segs.map(sg => sg.c !== undefined
+        ? `<span style="${swatch(sg.c)}">${escapeHtml(sg.text)}</span>` : escapeHtml(sg.text)).join('');
+      const lines = segs.filter(sg => sg.c !== undefined).map(sg => {
+        const t = terms[sg.k];
+        const end = sg.pos + sg.text.length;
+        return `<div style="margin-top:4px;"><span style="${swatch(sg.c)}">${escapeHtml(sg.text)}</span> from ${escapeHtml(t.slice(0, sg.pos))}<span style="${swatch(sg.c)}">${escapeHtml(t.slice(sg.pos, end))}</span>${escapeHtml(t.slice(end))}</div>`;
+      }).join('');
+      const anyPlain = segs.some(sg => sg.c === undefined);
+      panel.innerHTML = `<div style="font-weight:700;">Built from pieces of existing entries</div>
+        <div style="font-size:1rem; margin-top:4px;">${wordHtml}</div>${lines}`
+        + (anyPlain ? mutedNote('Uncolored letters were picked one at a time by chance.') : '')
+        + mutedNote('Each piece shows one example entry it appears in; many others may contain it too.');
+    }
+
+    function renderDefinitionSources(tokens) {
+      const panel = document.getElementById('predictedDefinitionSrc');
+      if (!tokens.length) { panel.innerHTML = ''; return; }
+      const segs = [];
+      let i = 0;
+      while (i < tokens.length) {
+        let bestLen = 1, bestD = -1, bestPos = -1;
+        for (let d = 0; d < defs.length; d++) {
+          const dt = defs[d].tokens;
+          for (let j = 0; j < dt.length; j++) {
+            if (dt[j] !== tokens[i]) continue;
+            let L = 1;
+            while (i + L < tokens.length && j + L < dt.length && dt[j + L] === tokens[i + L]) L++;
+            if (L > bestLen) { bestLen = L; bestD = d; bestPos = j; }
+          }
+        }
+        if (bestD === -1) { segs.push({ tokens: [tokens[i]] }); i += 1; }
+        else { segs.push({ tokens: tokens.slice(i, i + bestLen), d: bestD, pos: bestPos }); i += bestLen; }
+      }
+      let c = 0;
+      segs.forEach(sg => { if (sg.d !== undefined) sg.c = c++; });
+      const flat = [];
+      segs.forEach(sg => sg.tokens.forEach(t => flat.push({ t, c: sg.c })));
+      const defHtml = joinTokens(flat.map(f => f.t), (t, idx) => flat[idx].c !== undefined
+        ? `<span style="${swatch(flat[idx].c)}">${escapeHtml(t)}</span>` : escapeHtml(t));
+      const lines = segs.filter(sg => sg.c !== undefined).map(sg => {
+        const dt = defs[sg.d].tokens;
+        const from = Math.max(0, sg.pos - 4);
+        const to = Math.min(dt.length, sg.pos + sg.tokens.length + 4);
+        const lo = sg.pos - from, hi = lo + sg.tokens.length;
+        const snippet = joinTokens(dt.slice(from, to), (t, idx) => idx >= lo && idx < hi
+          ? `<span style="${swatch(sg.c)}">${escapeHtml(t)}</span>` : escapeHtml(t));
+        return `<div style="margin-top:4px;">${from > 0 ? '… ' : ''}${snippet}${to < dt.length ? ' …' : ''} <span style="color:var(--muted);">(${escapeHtml(defs[sg.d].term)})</span></div>`;
+      }).join('');
+      const anyPlain = segs.some(sg => sg.c === undefined);
+      panel.innerHTML = `<div style="font-weight:700;">Built from phrases in existing definitions</div>
+        <div style="margin-top:4px;">${defHtml}</div>${lines}`
+        + (anyPlain ? mutedNote('Uncolored words were picked one at a time from common word pairs.') : '')
+        + mutedNote('Each phrase shows one example definition it appears in.');
+    }
+
     let definition = '';
+    let definitionTokens = [];
     for (let attempt = 0; attempt < 50 && !definition; attempt++) {
       const out = [];
       let p2 = DSTART, p1 = DSTART;
@@ -747,9 +858,11 @@ async function main() {
         p2 = p1;
         p1 = w;
       }
-      if (out.length >= 4 && out.length < 25) definition = joinDefTokens(out);
+      if (out.length >= 4 && out.length < 25) { definition = joinTokens(out, t => t); definitionTokens = out; }
     }
     document.getElementById('predictedDefinition').textContent = definition;
+    renderWordSources(result);
+    renderDefinitionSources(definitionTokens);
   }
   const predictLimitSelect = document.getElementById('predictLimit');
   // Run the prediction after the rest of the page has painted, so the
@@ -757,6 +870,8 @@ async function main() {
   function predictLater() {
     document.getElementById('predictedWord').textContent = '…';
     document.getElementById('predictedDefinition').textContent = '';
+    document.getElementById('predictedWordSrc').innerHTML = '';
+    document.getElementById('predictedDefinitionSrc').innerHTML = '';
     requestAnimationFrame(() => setTimeout(() => predictNextWord(predictLimitSelect.value), 0));
   }
   predictLater();

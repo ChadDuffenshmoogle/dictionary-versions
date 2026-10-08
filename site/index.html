@@ -205,6 +205,74 @@
     z-index: 20;
   }
   .tip:hover .tip-text, .tip:focus .tip-text { display: block; }
+  .nav-btn {
+    display: inline-block;
+    padding: 6px 12px;
+    font-size: 0.8rem;
+    line-height: 1.2;
+    text-decoration: none;
+    cursor: pointer;
+    border: 1px solid transparent;
+  }
+  /* file: looks like a terminal / text file */
+  .nav-file {
+    background: #0f1115;
+    color: var(--accent);
+    border-color: var(--accent);
+    border-radius: 4px;
+    font-family: ui-monospace, Menlo, Consolas, monospace;
+  }
+  /* search: looks like a search bar */
+  .nav-search {
+    background: #fff;
+    color: #3c4043;
+    border-color: #dfe1e5;
+    border-radius: 999px;
+    padding: 6px 16px;
+    font-family: Arial, sans-serif;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+  }
+  /* zoogliography: looks like an old bibliography page */
+  .nav-zoog {
+    background: #f4ecd8;
+    color: #4a3621;
+    border-color: #b79b6c;
+    border-radius: 3px;
+    font-family: Georgia, 'Times New Roman', serif;
+    font-style: italic;
+  }
+  /* wiktionary: looks like a Wiktionary page */
+  .nav-wikt {
+    background: #f8f9fa;
+    color: #0645ad;
+    border-color: #a2a9b1;
+    border-radius: 2px;
+    font-family: 'Linux Libertine', Georgia, Times, serif;
+  }
+  /* wordle: looks like a Wordle tile */
+  .nav-wordle {
+    background: #6aaa64;
+    color: #fff;
+    border-color: #6aaa64;
+    border-radius: 2px;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  /* connections: looks like a Connections tile with the four group colors */
+  .nav-conn {
+    background:
+      linear-gradient(90deg, #f9df6d 25%, #a0c35a 25% 50%, #b0c4ef 50% 75%, #ba81c5 75%) bottom / 100% 4px no-repeat,
+      #efefe6;
+    color: #000;
+    border-radius: 6px;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-weight: 700;
+    text-transform: uppercase;
+    padding-bottom: 10px;
+  }
+  .nav-btn:hover { filter: brightness(0.93); }
 </style>
 
 </head>
@@ -215,9 +283,12 @@
     <p class="subtitle" id="subtitle" style="margin-bottom:0;">Loading…</p>
     </div>
     <div style="display:flex; flex-direction:row; align-items:center; flex-wrap:wrap; justify-content:flex-end; gap:6px;">
-      <a href="wiktionary.html" style="color:var(--muted); border:1px solid #262a33; border-radius:6px; padding:5px 10px; font-size:0.8rem; text-decoration:none;">Wiktionary view</a>
-      <a href="wordle.html" style="color:var(--muted); border:1px solid #262a33; border-radius:6px; padding:5px 10px; font-size:0.8rem; text-decoration:none;">Unicyclist Wordle</a>
-      <a href="connections.html" style="color:var(--muted); border:1px solid #262a33; border-radius:6px; padding:5px 10px; font-size:0.8rem; text-decoration:none;">Unicyclist Connections</a>
+      <button id="viewFileBtn" class="nav-btn nav-file">📄 View Current Dictionary File</button>
+      <button id="viewSearchBtn" class="nav-btn nav-search">🔍 View Searchable Dictionary</button>
+      <button id="viewZoogBtn" class="nav-btn nav-zoog">📚 View Zoogliography</button>
+      <a href="wiktionary.html" class="nav-btn nav-wikt">Wiktionary view</a>
+      <a href="wordle.html" class="nav-btn nav-wordle">Unicyclist Wordle</a>
+      <a href="connections.html" class="nav-btn nav-conn">Unicyclist Connections</a>
     </div>
   </div>
   <div style="height:24px;"></div>
@@ -232,18 +303,6 @@
       <h2>Most Recent Word</h2>
       <div class="stat-big" id="latestWord" style="font-size:1.6rem;">—</div>
       <div id="latestWordTime" style="color:var(--muted); font-size:0.85rem; margin-top:4px;"></div>
-    </div>
-
-    <div class="card" style="display:flex; align-items:center; justify-content:center; gap:10px; flex-wrap:wrap;">
-      <button id="viewFileBtn" style="background:var(--accent); color:#0f1115; border:none; border-radius:8px; padding:12px 20px; font-weight:700; font-size:0.95rem; cursor:pointer;">
-        View Current Dictionary File
-      </button>
-      <button id="viewSearchBtn" style="background:#7dd3fc; color:#0f1115; border:none; border-radius:8px; padding:12px 20px; font-weight:700; font-size:0.95rem; cursor:pointer;">
-        View Searchable Dictionary
-      </button>
-      <button id="viewZoogBtn" style="background:#a78bfa; color:#0f1115; border:none; border-radius:8px; padding:12px 20px; font-weight:700; font-size:0.95rem; cursor:pointer;">
-        View Zoogliography
-      </button>
     </div>
 
     <div class="card">

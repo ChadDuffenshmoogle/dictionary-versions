@@ -322,7 +322,7 @@
         <select id="usedTop" class="inline-select" style="display:none;">
           <option value="30">(Top 30)</option>
           <option value="100">(Top 100)</option>
-          <option value="all">(All)</option>
+          <option value="multi">(Used more than once)</option>
         </select>
       </div>
       <div id="usedChartOuter" style="overflow-x:auto;">
@@ -330,7 +330,7 @@
           <canvas id="usedChart"></canvas>
         </div>
       </div>
-      <div style="color:var(--muted); font-size:0.8rem; margin-top:6px;">Each bar counts every time that character (or word) appears. Capital and lowercase letters are counted together.</div>
+      <div style="color:var(--muted); font-size:0.8rem; margin-top:6px;">Each bar counts every time that character (or word) appears. Capital and lowercase letters are counted together. Click a bar to see the entries it comes from.</div>
     </div>
 
     <div class="wide" style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
@@ -652,17 +652,20 @@ async function main() {
     const posMatch = raw.match(/^pos:\s*(.*)$/);
     const dateMatch = raw.match(/^date:\s*(.*)$/);
     const lengthMatch = raw.match(/^length:\s*(.*)$/);
+    const usedMatch = raw.match(/^used:(characters|words):(entries|definitions|both):(.*)$/);
     const scrabbleMatch = raw.match(/^scrabble(legal|normalized|illegal):?\s*(.*)$/);
     const q = startsWithMatch ? startsWithMatch[1]
             : posMatch ? posMatch[1]
             : dateMatch ? dateMatch[1]
             : lengthMatch ? lengthMatch[1]
+            : usedMatch ? usedMatch[3]
             : scrabbleMatch ? scrabbleMatch[2]
             : raw;
     const isPrefix = !!startsWithMatch;
     const isPos = !!posMatch;
     const isDate = !!dateMatch;
     const isLength = !!lengthMatch;
+    const isUsed = !!usedMatch;
     const isScrabble = !!scrabbleMatch;
     const wantScrabbleLegal = isScrabble && scrabbleMatch[1] === 'legal';
     const dateTerms = isDate ? (termsByDate.get(q) || new Set()) : null;
@@ -675,6 +678,12 @@ async function main() {
       let match;
       if (isScrabble) match = e.scrabble === scrabbleMatch[1] && (!q || term.includes(q));
       else if (!q) match = true;
+      else if (isUsed) {
+        const inText = (text) => usedMatch[1] === 'characters'
+          ? text.includes(q)
+          : text.split(/\s+/).some(w => w.replace(/^[^a-z0-9]+|[^a-z0-9]+$/g, '') === q);
+        match = (usedMatch[2] !== 'definitions' && inText(term)) || (usedMatch[2] !== 'entries' && inText(def));
+      }
       else if (isDate) match = dateTerms.has(term);
       else if (isLength) {
         const [w, m, n] = q.split(':');
@@ -692,8 +701,10 @@ async function main() {
       if (match) {
         visible++;
         const noHighlight = isPos || isDate || isLength || isScrabble;
-        const highlightTerm = noHighlight ? false : (q && (isPrefix || searchScope !== 'definition'));
-        const highlightDef = noHighlight ? false : (q && !isPrefix && searchScope !== 'term');
+        const highlightTerm = isUsed ? usedMatch[2] !== 'definitions'
+          : noHighlight ? false : (q && (isPrefix || searchScope !== 'definition'));
+        const highlightDef = isUsed ? usedMatch[2] !== 'entries'
+          : noHighlight ? false : (q && !isPrefix && searchScope !== 'term');
         entryEls[i].querySelector('.term').innerHTML = highlight(e.term, highlightTerm ? q : '');
         entryEls[i].querySelector('.def').innerHTML = highlight(e.definition, highlightDef ? q : '');
         const monoWhat = isLength ? q.split(':')[0] : '';
@@ -1231,9 +1242,16 @@ async function main() {
       }
     });
 
-    let entries = Object.entries(counts).sort((a, b) => b[1] - a[1]);
-    if (what === 'words' && top !== 'all') entries = entries.slice(0, parseInt(top, 10));
-    const labels = entries.map(([k]) => (k === ' ' ? 'space' : k));
+    let entries = Object.entries(counts);
+    if (what === 'characters') {
+      entries.sort((a, b) => a[0].localeCompare(b[0]));
+    } else {
+      entries.sort((a, b) => b[1] - a[1]);
+      if (top === 'multi') entries = entries.filter(([, v]) => v > 1);
+      else entries = entries.slice(0, parseInt(top, 10));
+    }
+    const keys = entries.map(([k]) => k);
+    const labels = keys.map(k => (k === ' ' ? 'space' : k));
     const data = entries.map(([, v]) => v);
 
     const inner = document.getElementById('usedChartInner');
@@ -1249,6 +1267,13 @@ async function main() {
         responsive: true,
         maintainAspectRatio: false,
         interaction: { mode: 'x', intersect: false },
+        onHover: (event, elements) => {
+          event.native.target.style.cursor = elements.length ? 'pointer' : 'default';
+        },
+        onClick: (event, elements) => {
+          if (!elements.length) return;
+          openSearchModal(`used:${what}:${source}:${keys[elements[0].index]}`);
+        },
         scales: {
           x: {
             ticks: what === 'words'

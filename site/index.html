@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Unicyclist Dictionary — Stats</title>
+<title>Unicyclist Dictionary Stats</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 <style>
   :root {
@@ -279,16 +279,20 @@
 <body>
   <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;">
     <div>
-    <h1>Unicyclist Dictionary — Live Stats</h1>
+    <h1>Unicyclist Dictionary Live Stats</h1>
     <p class="subtitle" id="subtitle" style="margin-bottom:0;">Loading…</p>
     </div>
-    <div style="display:flex; flex-direction:row; align-items:center; flex-wrap:wrap; justify-content:flex-end; gap:6px;">
-      <button id="viewFileBtn" class="nav-btn nav-file">📄 View Current Dictionary File</button>
-      <button id="viewSearchBtn" class="nav-btn nav-search">🔍 View Searchable Dictionary</button>
-      <button id="viewZoogBtn" class="nav-btn nav-zoog">📚 View Zoogliography</button>
-      <a href="wiktionary.html" class="nav-btn nav-wikt">Wiktionary view</a>
-      <a href="wordle.html" class="nav-btn nav-wordle">Unicyclist Wordle</a>
-      <a href="connections.html" class="nav-btn nav-conn">Unicyclist Connections</a>
+    <div style="display:flex; flex-direction:column; align-items:flex-end; gap:6px;">
+      <div style="display:flex; flex-direction:row; flex-wrap:wrap; justify-content:flex-end; gap:6px;">
+        <button id="viewFileBtn" class="nav-btn nav-file">📄 View Current Dictionary File</button>
+        <button id="viewSearchBtn" class="nav-btn nav-search">🔍 View Searchable Dictionary</button>
+        <button id="viewZoogBtn" class="nav-btn nav-zoog">📚 View Zoogliography</button>
+      </div>
+      <div style="display:flex; flex-direction:row; flex-wrap:wrap; justify-content:flex-end; gap:6px;">
+        <a href="wiktionary.html" class="nav-btn nav-wikt">Wiktionary view</a>
+        <a href="wordle.html" class="nav-btn nav-wordle">Unicyclist Wordle</a>
+        <a href="connections.html" class="nav-btn nav-conn">Unicyclist Connections</a>
+      </div>
     </div>
   </div>
   <div style="height:24px;"></div>
@@ -307,7 +311,7 @@
 
     <div class="card">
       <h2>Next Predicted Word
-        <span class="tip" tabindex="0">?<span class="tip-text">Made-up guess from the spelling patterns in the chosen set of entries (all words, the last 100, or the last 10). The tool counts which letter usually follows each group of 3 letters (for example, what often comes after "tio"), then builds a new word one letter at a time by picking likely next letters. It only keeps words that are not already in the dictionary, and the guess changes only when a new word is added. It predicts spelling, not meaning.</span></span>
+        <span class="tip" tabindex="0">?<span class="tip-text">Made-up guess from the spelling patterns in the chosen set of entries (all words, the last 100, or the last 10). The tool counts which letter usually follows each group of 3 letters (for example, what often comes after "tio"), then builds a new word one letter at a time by picking likely next letters. It only keeps words that are not already in the dictionary, and the guess changes only when a new word is added. The definition is built the same way, one word at a time, from which words usually follow each pair of words in the chosen definitions, so it is made-up and not meaningful.</span></span>
       </h2>
       <select id="predictLimit" class="inline-select" style="font-size:0.8rem; margin-bottom:6px;">
         <option value="all">All words</option>
@@ -315,7 +319,7 @@
         <option value="10">Last 10 words</option>
       </select>
       <div class="stat-big" id="predictedWord" style="font-size:1.6rem;">—</div>
-      <div id="predictedWordNote" style="color:var(--muted); font-size:0.85rem; margin-top:4px;">Based on the spelling of all previous entries</div>
+      <div id="predictedDefinition" style="color:var(--muted); font-size:0.8rem; margin-top:4px;"></div>
     </div>
 
     <div class="card wide">
@@ -678,13 +682,62 @@ async function main() {
       if (clean.length >= 4 && clean.length < 24 && !existing.has(clean)) result = clean;
     }
     document.getElementById('predictedWord').textContent = result || '—';
-    document.getElementById('predictedWordNote').textContent = limit === 'all'
-      ? 'Based on the spelling of all previous entries'
-      : `Based on the spelling of the last ${limit} entries`;
+    // Predicted definition: same idea, but one word at a time, using the
+    // two previous words as context (falls back to one word).
+    const termSet = new Set(terms);
+    const defs = (stats.definitions_by_length_asc || [])
+      .filter(d => limit === 'all' || termSet.has(d.term.toLowerCase()))
+      .map(d => d.definition.trim().split(/\s+/).filter(Boolean));
+    const DSTART = '\u0002', DEND = '\u0003';
+    const dTable = {};
+    defs.forEach(words => {
+      const seq = [DSTART, DSTART, ...words, DEND];
+      for (let i = 2; i < seq.length; i++) {
+        const keys = [seq[i - 2] + '\u0001' + seq[i - 1], seq[i - 1]];
+        keys.forEach(k => {
+          (dTable[k] = dTable[k] || {})[seq[i]] = ((dTable[k] || {})[seq[i]] || 0) + 1;
+        });
+      }
+    });
+    function pickNextDefWord(prev2, prev1) {
+      for (const k of [prev2 + '\u0001' + prev1, prev1]) {
+        const options = dTable[k];
+        if (!options) continue;
+        const entries = Object.entries(options);
+        const total = entries.reduce((s, [, c]) => s + c, 0);
+        let r = rand() * total;
+        for (const [w, c] of entries) {
+          r -= c;
+          if (r <= 0) return w;
+        }
+      }
+      return DEND;
+    }
+    let definition = '';
+    for (let attempt = 0; attempt < 50 && !definition; attempt++) {
+      const out = [];
+      let p2 = DSTART, p1 = DSTART;
+      while (out.length < 25) {
+        const w = pickNextDefWord(p2, p1);
+        if (w === DEND) break;
+        out.push(w);
+        p2 = p1;
+        p1 = w;
+      }
+      if (out.length >= 4 && out.length < 25) definition = out.join(' ');
+    }
+    document.getElementById('predictedDefinition').textContent = definition;
   }
   const predictLimitSelect = document.getElementById('predictLimit');
-  predictNextWord(predictLimitSelect.value);
-  predictLimitSelect.addEventListener('change', () => predictNextWord(predictLimitSelect.value));
+  // Run the prediction after the rest of the page has painted, so the
+  // other cards and charts never wait on it.
+  function predictLater() {
+    document.getElementById('predictedWord').textContent = '…';
+    document.getElementById('predictedDefinition').textContent = '';
+    requestAnimationFrame(() => setTimeout(() => predictNextWord(predictLimitSelect.value), 0));
+  }
+  predictLater();
+  predictLimitSelect.addEventListener('change', predictLater);
 
   const fileModalOverlay = document.getElementById('fileModalOverlay');
   const fileModalTitle = document.getElementById('fileModalTitle');

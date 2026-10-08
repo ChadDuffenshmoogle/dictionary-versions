@@ -817,6 +817,56 @@ async function main() {
       projected.push({ x, y: lastPoint.y + b * d });
     }
 
+    // Power fit: y = A * (x+1)^k, found by a straight-line fit on the
+    // logs (x is shifted by 1 so day 0 is not log(0)).
+    const logPts = points.filter(p => p.y > 0);
+    const lsx = logPts.reduce((s, p) => s + Math.log(p.x + 1), 0);
+    const lsy = logPts.reduce((s, p) => s + Math.log(p.y), 0);
+    const lsxy = logPts.reduce((s, p) => s + Math.log(p.x + 1) * Math.log(p.y), 0);
+    const lsxx = logPts.reduce((s, p) => s + Math.log(p.x + 1) ** 2, 0);
+    const ln = logPts.length;
+    const powK = (ln * lsxy - lsx * lsy) / (ln * lsxx - lsx * lsx);
+    const powA = Math.exp((lsy - powK * lsx) / ln);
+    const powerAt = (x) => powA * Math.pow(x + 1, powK);
+
+    // Quadratic (degree-2 polynomial) fit: y = c0 + c1*t + c2*t^2, with
+    // t = x / lastX so the numbers stay small, solved with the normal
+    // equations.
+    const scaleX = lastPoint.x || 1;
+    const pw = (k) => points.reduce((s, p) => s + Math.pow(p.x / scaleX, k), 0);
+    const pyw = (k) => points.reduce((s, p) => s + p.y * Math.pow(p.x / scaleX, k), 0);
+    const M = [
+      [n, pw(1), pw(2), pyw(0)],
+      [pw(1), pw(2), pw(3), pyw(1)],
+      [pw(2), pw(3), pw(4), pyw(2)],
+    ];
+    for (let i = 0; i < 3; i++) {
+      let big = i;
+      for (let r = i + 1; r < 3; r++) if (Math.abs(M[r][i]) > Math.abs(M[big][i])) big = r;
+      [M[i], M[big]] = [M[big], M[i]];
+      for (let r = i + 1; r < 3; r++) {
+        const f = M[r][i] / M[i][i];
+        for (let c = i; c < 4; c++) M[r][c] -= f * M[i][c];
+      }
+    }
+    const coef = [0, 0, 0];
+    for (let i = 2; i >= 0; i--) {
+      let v = M[i][3];
+      for (let c = i + 1; c < 3; c++) v -= M[i][c] * coef[c];
+      coef[i] = v / M[i][i];
+    }
+    const polyAt = (x) => coef[0] + coef[1] * (x / scaleX) + coef[2] * Math.pow(x / scaleX, 2);
+
+    // Like the linear line, both curves are shifted to start exactly at
+    // the real last data point so there is no fake jump.
+    const powerProjected = [];
+    const polyProjected = [];
+    for (let d = 0; d <= projectionDays; d++) {
+      const x = lastPoint.x + d;
+      powerProjected.push({ x, y: lastPoint.y + powerAt(x) - powerAt(lastPoint.x) });
+      polyProjected.push({ x, y: lastPoint.y + polyAt(x) - polyAt(lastPoint.x) });
+    }
+
     const dateLabel = (x) => {
       const d = new Date(firstDate.getTime() + x * dayMs);
       return d.toISOString().slice(0, 10);
@@ -859,6 +909,20 @@ async function main() {
             label: `Projected (linear trend, next ${projectionMonths} month${projectionMonths === 1 ? '' : 's'})`,
             data: projected,
             borderColor: '#fbbf24',
+            borderDash: [6, 4],
+            pointRadius: 0,
+          },
+          {
+            label: `Projected (power fit, exponent ${powK.toFixed(2)})`,
+            data: powerProjected,
+            borderColor: '#f472b6',
+            borderDash: [6, 4],
+            pointRadius: 0,
+          },
+          {
+            label: 'Projected (quadratic polynomial)',
+            data: polyProjected,
+            borderColor: '#a78bfa',
             borderDash: [6, 4],
             pointRadius: 0,
           },

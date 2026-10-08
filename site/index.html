@@ -248,8 +248,13 @@
 
     <div class="card">
       <h2>Next Predicted Word
-        <span class="tip" tabindex="0">?<span class="tip-text">Made-up guess from the spelling patterns in every existing entry. The tool counts which letter usually follows each group of 3 letters (for example, what often comes after "tio"), then builds a new word one letter at a time by picking likely next letters. It only keeps words that are not already in the dictionary, and the guess changes only when a new word is added. It predicts spelling, not meaning.</span></span>
+        <span class="tip" tabindex="0">?<span class="tip-text">Made-up guess from the spelling patterns in the chosen set of entries (all words, the last 100, or the last 10). The tool counts which letter usually follows each group of 3 letters (for example, what often comes after "tio"), then builds a new word one letter at a time by picking likely next letters. It only keeps words that are not already in the dictionary, and the guess changes only when a new word is added. It predicts spelling, not meaning.</span></span>
       </h2>
+      <select id="predictLimit" class="inline-select" style="font-size:0.8rem; margin-bottom:6px;">
+        <option value="all">All words</option>
+        <option value="100">Last 100 words</option>
+        <option value="10">Last 10 words</option>
+      </select>
       <div class="stat-big" id="predictedWord" style="font-size:1.6rem;">—</div>
       <div id="predictedWordNote" style="color:var(--muted); font-size:0.85rem; margin-top:4px;">Based on the spelling of all previous entries</div>
     </div>
@@ -551,9 +556,17 @@ async function main() {
   // Next predicted word: a letter-by-letter (order-3 Markov) guess built
   // from every existing entry. A seeded random generator keeps the guess
   // the same until the dictionary changes.
-  (function predictNextWord() {
-    const terms = (stats.words_by_length_asc || []).map(t => t.toLowerCase());
-    const existing = new Set(terms);
+  function predictNextWord(limit) {
+    const allTerms = (stats.words_by_length_asc || []).map(t => t.toLowerCase());
+    const existing = new Set(allTerms);
+    // "Last N" uses the order words were added (the timeline), sorted by
+    // date; the full dictionary is still used to reject duplicates.
+    const timeline = (stats.added_terms_timeline || [])
+      .map((e, i) => ({ date: e.date, term: e.term.toLowerCase(), i }))
+      .sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : a.i - b.i));
+    const terms = limit === 'all' || !timeline.length
+      ? allTerms
+      : timeline.slice(-parseInt(limit, 10)).map(e => e.term);
     const START = '\u0002', END = '\u0003', ORDER = 3;
     const table = {};
     terms.forEach(t => {
@@ -568,7 +581,7 @@ async function main() {
     });
 
     let seed = 0;
-    const seedText = terms.length + '|' + (stats.latest_word_term || '');
+    const seedText = limit + '|' + terms.length + '|' + (stats.latest_word_term || '');
     for (let i = 0; i < seedText.length; i++) seed = (seed * 31 + seedText.charCodeAt(i)) >>> 0;
     const rand = () => {
       seed = (seed + 0x6D2B79F5) >>> 0;
@@ -606,7 +619,13 @@ async function main() {
       if (clean.length >= 4 && clean.length < 24 && !existing.has(clean)) result = clean;
     }
     document.getElementById('predictedWord').textContent = result || '—';
-  })();
+    document.getElementById('predictedWordNote').textContent = limit === 'all'
+      ? 'Based on the spelling of all previous entries'
+      : `Based on the spelling of the last ${limit} entries`;
+  }
+  const predictLimitSelect = document.getElementById('predictLimit');
+  predictNextWord(predictLimitSelect.value);
+  predictLimitSelect.addEventListener('change', () => predictNextWord(predictLimitSelect.value));
 
   const fileModalOverlay = document.getElementById('fileModalOverlay');
   const fileModalTitle = document.getElementById('fileModalTitle');

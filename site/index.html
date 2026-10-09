@@ -215,7 +215,8 @@
     border-radius: 4px;
     font-size: 0.8rem;
   }
-  .hover-src { position: relative; cursor: help; }
+  /* the 6px of padding is the gap above the panel, and it counts as hovered */
+  .hover-src { position: relative; cursor: help; padding-bottom: 6px; }
   .src-panel {
     display: none;
     position: absolute;
@@ -225,7 +226,7 @@
     max-width: 85vw;
     max-height: 360px;
     overflow: auto;
-    margin-top: 6px;
+    margin-top: 0;
     padding: 10px 12px;
     background: #0f1115;
     border: 1px solid #262a33;
@@ -237,16 +238,6 @@
     z-index: 20;
   }
   .hover-src:hover .src-panel:not(:empty) { display: block; }
-  /* invisible bridge over the gap, so the panel stays open while the mouse
-     travels from the word/definition down onto the panel */
-  .src-panel::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: -10px;
-    height: 10px;
-  }
   .tip .tip-text::before {
     content: '';
     position: absolute;

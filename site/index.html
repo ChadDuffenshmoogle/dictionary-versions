@@ -15,6 +15,7 @@
     --accent: #6ee7b7;
     --line: #262a33;
     --panel: #0f1115;
+    --on-accent: #0f1115;
     color-scheme: dark;
   }
   :root[data-theme="light"] {
@@ -22,29 +23,25 @@
     --card: #ffffff;
     --text: #1a1d24;
     --muted: #5b6170;
-    --accent: #059669;
+    --accent: #047857;
+    --on-accent: #ffffff;
     --line: #d9dce3;
     --panel: #f0f2f5;
     color-scheme: light;
   }
   body { transition: background 0.25s, color 0.25s; }
   .card { transition: background 0.25s, border-color 0.25s; }
+  .site-footer { text-align: center; margin: 28px 0 8px; }
   .theme-btn {
-    position: fixed;
-    right: 16px;
-    bottom: 16px;
-    z-index: 50;
-    width: 40px;
-    height: 40px;
-    padding: 0;
-    border: 1px solid var(--line);
-    border-radius: 50%;
-    background: var(--card);
-    font-size: 1.2rem;
+    padding: 2px 6px;
+    border: none;
+    background: transparent;
+    font-size: 0.85rem;
     line-height: 1;
     cursor: pointer;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+    opacity: 0.7;
   }
+  .theme-btn:hover { opacity: 1; }
   .theme-btn span { display: inline-block; }
   .theme-btn.swap span { animation: themeSwap 0.3s ease; }
   @keyframes themeSwap {
@@ -123,7 +120,7 @@
   }
   .scope-toggle button.active {
     background: var(--accent);
-    color: #0f1115;
+    color: var(--on-accent);
     border-color: var(--accent);
     font-weight: 700;
   }
@@ -413,8 +410,6 @@
   </div>
   <div style="height:24px;"></div>
 
-  <button id="themeBtn" class="theme-btn" type="button" aria-label="Switch light/dark mode"><span id="themeIcon">🌙</span></button>
-
   <div id="content" class="grid" style="display:none;">
     <div class="wide top-row">
     <div class="card">
@@ -643,7 +638,7 @@
           <label style="display:flex; align-items:center; gap:5px;">
             Max <input type="number" id="cloudMaxSize" value="38" min="3" max="120" style="width:48px; background:var(--panel); color:var(--accent); border:1px solid var(--line); border-radius:6px; padding:2px 4px;">
           </label>
-          <button id="cloudRebuild" style="background:var(--accent); color:#0f1115; border:none; border-radius:6px; padding:5px 12px; font-weight:700; cursor:pointer; font-size:0.8rem;">Apply</button>
+          <button id="cloudRebuild" style="background:var(--accent); color:var(--on-accent); border:none; border-radius:6px; padding:5px 12px; font-weight:700; cursor:pointer; font-size:0.8rem;">Apply</button>
         </div>
       </div>
       <canvas id="wordCloudCanvas"></canvas>
@@ -652,6 +647,10 @@
   </div>
 
   <div id="errorBox" class="error" style="display:none;"></div>
+
+  <footer class="site-footer">
+    <button id="themeBtn" class="theme-btn" type="button" aria-label="Switch light/dark mode"><span id="themeIcon">🌙</span></button>
+  </footer>
 
   <div id="fileModalOverlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:100; align-items:center; justify-content:center; padding:20px;">
     <div style="background:var(--card); border:1px solid var(--line); border-radius:12px; max-width:800px; width:100%; max-height:85vh; display:flex; flex-direction:column;">
@@ -706,6 +705,11 @@ const C = {
   get line() { return getComputedStyle(document.documentElement).getPropertyValue('--line').trim(); },
   get text() { return getComputedStyle(document.documentElement).getPropertyValue('--text').trim(); },
   get accent() { return getComputedStyle(document.documentElement).getPropertyValue('--accent').trim(); },
+  shade(hex) {
+    if (document.documentElement.dataset.theme !== 'light') return hex;
+    const n = parseInt(hex.slice(1), 16), f = 0.55;
+    return `rgb(${Math.round(((n >> 16) & 255) * f)}, ${Math.round(((n >> 8) & 255) * f)}, ${Math.round((n & 255) * f)})`;
+  },
   get crosshair() { return document.documentElement.dataset.theme === 'light' ? 'rgba(26, 29, 36, 0.35)' : 'rgba(232, 232, 236, 0.35)'; },
 };
 function recolorCharts() {
@@ -738,6 +742,7 @@ function recolorCharts() {
       icon.textContent = isLight() ? '☀️' : '🌙';
       try { localStorage.setItem('theme', isLight() ? 'light' : 'dark'); } catch (e) {}
       recolorCharts();
+      document.dispatchEvent(new Event('themechange'));
     }, 150);
   });
 })();
@@ -995,7 +1000,7 @@ async function main() {
       segs.forEach(sg => { if (!sg.plain) sg.c = c++; });
       // Underline each piece of the big word in its hover-panel colour.
       document.getElementById('predictedWord').innerHTML = segs.map(sg => {
-        const col = sg.plain ? 'var(--muted)' : PALETTE[sg.c % PALETTE.length];
+        const col = sg.plain ? 'var(--muted)' : C.shade(PALETTE[sg.c % PALETTE.length]);
         const style = `text-decoration:underline ${sg.plain ? 'dashed ' : ''}${col}; text-decoration-thickness:3px; text-underline-offset:5px;`;
         return `<span style="${style}">${escapeHtml(word.slice(sg.start, sg.end + 1))}</span>`;
       }).join('');
@@ -1249,6 +1254,11 @@ async function main() {
     predictLater();
   });
   predictModeBtn.addEventListener('animationend', () => predictModeBtn.classList.remove('pop'));
+  document.addEventListener('themechange', () => {
+    predictLater();
+    const rebuild = document.getElementById('cloudRebuild');
+    if (rebuild) rebuild.click();
+  });
   document.addEventListener('click', (e) => {
     const btn = e.target.closest('.copy-btn');
     if (!btn) return;
@@ -1378,7 +1388,7 @@ async function main() {
   ];
   function colorForPos(pos) {
     const idx = posLabels.indexOf(pos || '(no pos)');
-    return posColors[(idx === -1 ? posLabels.length : idx) % posColors.length];
+    return C.shade(posColors[(idx === -1 ? posLabels.length : idx) % posColors.length]);
   }
 
   const dictEntries = (stats.definitions_by_length_asc || [])
@@ -2178,7 +2188,7 @@ async function main() {
   });
   function cloudColorForPos(pos) {
     const idx = posLabels.indexOf(pos || '(no pos)');
-    return posColors[(idx === -1 ? posLabels.length : idx) % posColors.length];
+    return C.shade(posColors[(idx === -1 ? posLabels.length : idx) % posColors.length]);
   }
 
   const allCloudTerms = stats.words_by_length_asc || [];

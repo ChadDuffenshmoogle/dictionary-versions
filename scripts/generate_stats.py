@@ -177,7 +177,7 @@ def update_zoogliography(word):
             url,
             headers=headers,
             json={
-                "message": f"Update predicted next word: {word}",
+                "message": f"Update predicted next word: {word} [skip ci]",
                 "content": base64.b64encode(new_text.encode("utf-8")).decode("ascii"),
                 "sha": info["sha"],  # fails if the bot saved the file first
                 "branch": GITHUB_BRANCH,

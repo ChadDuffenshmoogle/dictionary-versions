@@ -793,45 +793,81 @@ async function main() {
     function renderWordSources(word) {
       const panel = document.getElementById('predictedWordSrc');
       if (!word) { panel.innerHTML = ''; return; }
-      const lw = word.toLowerCase();
-      const lterms = terms.map(t => t.toLowerCase());
-      const segs = [];
-      let i = 0;
-      while (i < word.length) {
-        let bestLen = 1, bestK = -1, bestPos = -1;
-        for (let k = 0; k < lterms.length; k++) {
-          const t = lterms[k];
-          for (let L = Math.min(word.length - i, t.length); L > bestLen; L--) {
-            const pos = t.indexOf(lw.substr(i, L));
-            if (pos !== -1) { bestLen = L; bestK = k; bestPos = pos; break; }
-          }
+      // The chain picks each letter from the letters right before it (up to
+      // ORDER of them), falling back to fewer when that exact run never
+      // appeared. So for every letter, find the longest run ending at it
+      // that exists in some entry; only entries with that exact run could
+      // have supplied the letter. (Entries are padded with START so
+      // "starts with" matches only at the start.)
+      const paddedWord = START.repeat(ORDER) + word;
+      const paddedTerms = terms.map(t => START.repeat(ORDER) + t + END);
+      const perLetter = [];
+      for (let p = 0; p < word.length; p++) {
+        const pp = p + ORDER;
+        let found = null;
+        for (let o = ORDER; o >= 1 && !found; o--) {
+          const gram = paddedWord.slice(pp - o, pp + 1);
+          const hits = [];
+          paddedTerms.forEach((pt, k) => {
+            let from = pt.indexOf(gram);
+            while (from !== -1) {
+              hits.push({ k, end: from + o }); // index of this letter in the padded entry
+              from = pt.indexOf(gram, from + 1);
+            }
+          });
+          if (hits.length) found = { o, hits };
         }
-        if (bestK === -1) { segs.push({ text: word.substr(i, 1) }); i += 1; }
-        else { segs.push({ text: word.substr(i, bestLen), k: bestK, pos: bestPos }); i += bestLen; }
+        perLetter.push(found);
+      }
+
+      // Join neighbouring letters into one piece while at least one entry
+      // supplies them side by side. A new piece starts where that breaks,
+      // and its first letters re-use ("overlap") the end of the last piece.
+      const segs = [];
+      let cur = null;
+      for (let p = 0; p < word.length; p++) {
+        const f = perLetter[p];
+        if (!f) { cur = null; segs.push({ start: p, end: p, plain: true }); continue; }
+        if (cur) {
+          const next = f.hits.filter(h => cur.hits.some(c => c.k === h.k && c.end + 1 === h.end));
+          if (next.length) { cur.end = p; cur.hits = next; continue; }
+        }
+        cur = { start: p, end: p, ctx: Math.min(f.o, p), hits: f.hits };
+        segs.push(cur);
       }
       let c = 0;
-      segs.forEach(sg => { if (sg.k !== undefined) sg.c = c++; });
-      // Top row: the word as its pieces, e.g.  [shoo] + [b] + [dooble]
-      const chip = (sg) => sg.c !== undefined
-        ? `<span style="${swatch(sg.c)} padding:1px 6px; font-weight:700;">${escapeHtml(sg.text)}</span>`
-        : `<span style="border:1px dashed var(--muted); color:var(--muted); border-radius:3px; padding:0 5px;">${escapeHtml(sg.text)}</span>`;
+      segs.forEach(sg => { if (!sg.plain) sg.c = c++; });
+
+      const fade = 'opacity:.55; font-weight:400; text-decoration:underline;';
+      const chip = (sg) => {
+        if (sg.plain) {
+          return `<span style="border:1px dashed var(--muted); color:var(--muted); border-radius:3px; padding:0 5px;">${escapeHtml(word[sg.start])}</span>`;
+        }
+        const ctxText = word.slice(sg.start - sg.ctx, sg.start);
+        const newText = word.slice(sg.start, sg.end + 1);
+        return `<span style="${swatch(sg.c)} padding:1px 6px; font-weight:700;"><span style="${fade}">${escapeHtml(ctxText)}</span>${escapeHtml(newText)}</span>`;
+      };
       const formula = segs.map(chip).join('<span style="color:var(--muted);"> + </span>');
-      // One block per piece, with a matching colored edge, listing the entries.
-      const blocks = segs.filter(sg => sg.c !== undefined).map(sg => {
-        const piece = sg.text.toLowerCase();
-        const matches = terms.filter(t => t.toLowerCase().includes(piece));
-        const rows = matches.map(t => {
-          const pos = t.toLowerCase().indexOf(piece);
-          const end = pos + piece.length;
-          return `<div>${escapeHtml(t.slice(0, pos))}<span style="${swatch(sg.c)}">${escapeHtml(t.slice(pos, end))}</span>${escapeHtml(t.slice(end))}</div>`;
-        }).join('');
+
+      const blocks = segs.filter(sg => !sg.plain).map(sg => {
+        const len = sg.end - sg.start + 1;
+        const seen = new Set();
+        const rows = [];
+        sg.hits.forEach(h => {
+          if (seen.has(h.k)) return;
+          seen.add(h.k);
+          const t = terms[h.k];
+          const first = h.end - (len - 1) - ORDER;   // where the new letters begin in the entry
+          const ctxStart = first - sg.ctx;
+          rows.push(`<div>${escapeHtml(t.slice(0, ctxStart))}<span style="${swatch(sg.c)} ${fade}">${escapeHtml(t.slice(ctxStart, first))}</span><span style="${swatch(sg.c)}">${escapeHtml(t.slice(first, first + len))}</span>${escapeHtml(t.slice(first + len))}</div>`);
+        });
         return `<div style="margin-top:12px; padding-left:8px; border-left:3px solid ${PALETTE[sg.c % PALETTE.length]};">
-          <div>${chip(sg)} <span style="color:var(--muted);">in ${matches.length} ${matches.length === 1 ? 'entry' : 'entries'}</span></div>
-          <div style="margin-top:4px;">${rows}</div></div>`;
+          <div>${chip(sg)} <span style="color:var(--muted);">in ${rows.length} ${rows.length === 1 ? 'entry' : 'entries'}</span></div>
+          <div style="margin-top:4px;">${rows.join('')}</div></div>`;
       }).join('');
-      const anyPlain = segs.some(sg => sg.c === undefined);
+      const anyPlain = segs.some(sg => sg.plain);
       panel.innerHTML = `<div style="font-size:1rem; line-height:2;">${formula}</div>${blocks}`
-        + (anyPlain ? mutedNote('Dashed letters were picked one at a time by chance.') : '');
+        + (anyPlain ? mutedNote('Dashed letters matched no entry and were picked by chance.') : '');
     }
 
     function renderDefinitionSources(tokens) {

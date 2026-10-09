@@ -53,6 +53,16 @@
   .edit-error { color:var(--error); }
   .edit-ok { color:#14866d; }
   .wotd-def { white-space:pre-line; }
+  .top-row { display:flex; flex-wrap:wrap; gap:16px; margin:16px 0 20px 0; align-items:flex-start; }
+  .top-row > .wotd, .top-row > .picks { flex:1 1 280px; min-width:0; margin:0; }
+  .picks { border:1px solid var(--line); background:var(--panel); }
+  .picks-head { background:var(--wotd-head); padding:4px 12px; font-weight:bold; font-size:1.05rem; }
+  .picks-tabs { padding:8px 14px 0 14px; display:flex; flex-wrap:wrap; gap:6px; }
+  .picks-tabs button { padding:3px 12px; cursor:pointer; border:1px solid var(--line); background:var(--bg); color:inherit; border-radius:2px; }
+  .picks-tabs button.on { background:var(--link); color:#fff; border-color:var(--link); }
+  .picks-body { padding:8px 14px 10px 14px; }
+  .picks-body ul { list-style:none; margin:0 0 6px 0; padding:0; }
+  .picks-body li { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-bottom:3px; }
   .pron { color:var(--muted); margin:2px 0 6px 0; }
   h3.sub { font-size:1.05rem; margin:1rem 0 0.2rem 0; }
   .example { color:var(--muted); font-style:italic; }
@@ -262,13 +272,14 @@ function showHome() {
     <p>${entries.length} entries. Pick a letter or search above.</p>
     ${lettersBar('')}
     ${latest && byTerm.has(latest.toLowerCase()) ? `<p>Newest word: ${wordLink(byTerm.get(latest.toLowerCase()).term)}</p>` : ''}
-    ${wordOfTheDayHtml()}
+    <div class="top-row">${wordOfTheDayHtml()}${picksBoxHtml()}</div>
     ${'#ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').map(letter => {
       const list = entries.filter(e => letterOf(e.term) === letter);
       if (list.length === 0) return '';
       return `<h2>${letter}</h2>
         <ul class="word-list">${list.map(e => `<li>${wordLink(e.term)}</li>`).join('')}</ul>`;
     }).join('')}`;
+  wirePicks();
 }
 
 // ---- hover previews ----
@@ -560,6 +571,127 @@ function catDescendants(cats, name) {
     catKids(cats, queue.shift()).forEach(k => { out.push(k.name); queue.push(k.name); });
   }
   return out;
+}
+
+// ---- Editor's Picks (saved in site/picks.json; anyone can read, only signed-in editors change them) ----
+const PICKS_PATH = 'site/picks.json';
+const PICK_EDITORS = ['J. C.', 'Louis', 'Rory'];
+let picks = normalizePicks(null);   // { 'J. C.': [term, ...], 'Louis': [...], 'Rory': [...] }
+let pickSel = null;                 // which editor's tab is showing on the home page
+
+function normalizePicks(j) {
+  const src = (j && j.picks) || {};
+  const out = {};
+  PICK_EDITORS.forEach(n => { out[n] = Array.isArray(src[n]) ? src[n].map(String) : []; });
+  return out;
+}
+
+async function loadPicks() {
+  try {
+    const res = await fetch('picks.json?x=' + Date.now(), { cache: 'no-store' });
+    picks = normalizePicks(res.ok ? await res.json() : null);
+  } catch (e) { picks = normalizePicks(null); }
+}
+
+async function savePicks(mutate, message) {
+  const token = await signIn();
+  const url = `${API}/contents/${PICKS_PATH}`;
+  let sha = null, data = null;
+  const res = await fetch(`${url}?ref=${BRANCH}`, { headers: ghHeaders(token), cache: 'no-store' });
+  if (res.ok) {
+    const j = await res.json();
+    sha = j.sha;
+    try { data = JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(j.content.replace(/\n/g, '')), c => c.charCodeAt(0)))); } catch (e) {}
+  } else if (res.status !== 404) {
+    if (res.status === 401 || res.status === 403) { try { localStorage.removeItem('ghToken'); } catch (e) {} }
+    throw new Error('Could not read the picks file (' + res.status + ').');
+  }
+  const next = normalizePicks(data);
+  mutate(next);
+  const body = { message, content: toBase64(JSON.stringify({ picks: next }, null, 2) + '\n'), branch: BRANCH };
+  if (sha) body.sha = sha;
+  const put = await fetch(url, { method: 'PUT', headers: { ...ghHeaders(token), 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+  if (put.status === 401 || put.status === 403) {
+    try { localStorage.removeItem('ghToken'); } catch (e) {}
+    throw new Error('GitHub rejected the token. Sign in again.');
+  }
+  if (!put.ok) throw new Error('Saving picks failed (' + put.status + ').');
+  picks = next;
+}
+
+async function pickAction(mutate, message) {
+  try { await savePicks(mutate, message); } catch (err) { if (err.message !== 'Cancelled.') alert(err.message); }
+  route();
+}
+
+function dayHash(str) {
+  let h = 2166136261;
+  for (let i = 0; i < str.length; i++) h = Math.imul(h ^ str.charCodeAt(i), 16777619);
+  return h >>> 0;
+}
+function pickDay() {
+  const now = new Date();
+  return Math.floor(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()) / 86400000);
+}
+// a pick's words, as dictionary entries (words that no longer exist are skipped)
+function pickWords(name) {
+  const set = new Set((picks[name] || []).map(t => t.toLowerCase()));
+  return entries.filter(e => set.has(e.term.toLowerCase()));
+}
+
+function picksBoxHtml() {
+  if (!pickSel) pickSel = PICK_EDITORS[dayHash('editor|' + pickDay()) % PICK_EDITORS.length];
+  const list = pickWords(pickSel);
+  const key = (e) => dayHash(pickDay() + '|' + pickSel + '|' + e.term.toLowerCase());
+  const five = list.slice().sort((a, b) => key(a) - key(b)).slice(0, 5);
+  return `
+    <div class="picks" id="picksBox">
+      <div class="picks-head">Editor's Picks</div>
+      <div class="picks-tabs">${PICK_EDITORS.map(n => `<button type="button" data-n="${esc(n)}"${n === pickSel ? ' class="on"' : ''}>${esc(n)}</button>`).join('')}</div>
+      <div class="picks-body">
+        ${five.length ? `<ul>${five.map(e => `<li>${wordLink(e.term)}</li>`).join('')}</ul>` : '<p class="muted">No picks yet.</p>'}
+        <a href="#p=${encodeURIComponent(pickSel)}">Show all (${list.length}) →</a>
+      </div>
+    </div>`;
+}
+
+function wirePicks() {
+  const box = document.getElementById('picksBox');
+  if (!box) return;
+  box.querySelectorAll('.picks-tabs button').forEach(b => b.onclick = () => {
+    pickSel = b.dataset.n;
+    box.outerHTML = picksBoxHtml();
+    wirePicks();
+  });
+}
+
+function showPick(name) {
+  const n = PICK_EDITORS.find(x => x.toLowerCase() === name.toLowerCase());
+  if (!n) { view.innerHTML = '<h1>Editor\'s Picks</h1><p>No picks list with this name.</p>'; return; }
+  const list = pickWords(n);
+  const editing = isSignedIn();
+  view.innerHTML = `
+    <h1>${esc(n)}'s Picks</h1>
+    <p class="muted">${list.length} entries · ${PICK_EDITORS.map(x => x === n ? esc(x) : `<a href="#p=${encodeURIComponent(x)}">${esc(x)}</a>`).join(' · ')}</p>
+    <ul class="word-list">${list.map(e => `<li>${wordLink(e.term)}${editing ? ` <a href="#" class="rm-pick" data-t="${esc(e.term)}" title="Remove from this list">✕</a>` : ''}</li>`).join('')}</ul>
+    ${editing ? `
+      <div class="cat-edit">
+        <input id="pickAddWord" list="pickTerms" placeholder="Add a word…">
+        <datalist id="pickTerms">${entries.map(e => `<option value="${esc(e.term)}">`).join('')}</datalist>
+        <button id="pickAddBtn" type="button">Add</button>
+      </div>` : ''}`;
+  if (!editing) return;
+  document.getElementById('pickAddBtn').onclick = () => {
+    const e = byTerm.get(document.getElementById('pickAddWord').value.trim().toLowerCase());
+    if (!e) { alert('That word is not in the dictionary.'); return; }
+    if (list.some(x => x.term === e.term)) { alert('Already in this list.'); return; }
+    pickAction(p => { p[n].push(e.term); }, `Edit picks: add '${e.term}' to ${n}`);
+  };
+  view.querySelectorAll('.rm-pick').forEach(a => a.onclick = (ev) => {
+    ev.preventDefault();
+    const t = a.dataset.t;
+    pickAction(p => { p[n] = p[n].filter(w => w.toLowerCase() !== t.toLowerCase()); }, `Edit picks: remove '${t}' from ${n}`);
+  });
 }
 
 function showCategoryIndex() {
@@ -1431,6 +1563,7 @@ function route() {
   const hash = location.hash.replace(/^#/, '');
   if (hash.startsWith('w=')) return showEntry(decodeURIComponent(hash.slice(2)));
   if (hash.startsWith('c=')) { const k = decodeURIComponent(hash.slice(2)); return k ? showCategory(k) : showCategoryIndex(); }
+  if (hash.startsWith('p=')) return showPick(decodeURIComponent(hash.slice(2)));
   if (hash.startsWith('l=')) return showLetter(decodeURIComponent(hash.slice(2)));
   if (hash.startsWith('q=')) return showSearch(decodeURIComponent(hash.slice(2)));
   showHome();
@@ -1452,6 +1585,7 @@ window.addEventListener('hashchange', route);
       .sort((a, b) => sortKey(a.term).localeCompare(sortKey(b.term)));
     entries.forEach(e => byTerm.set(e.term.toLowerCase(), e));
     await loadCustomCategories();
+    await loadPicks();
     route();
   } catch (err) {
     view.innerHTML = `<p class="muted">Could not load the dictionary: ${esc(err.message)}</p>`;

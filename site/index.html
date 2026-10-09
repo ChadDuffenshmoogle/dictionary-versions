@@ -13,20 +13,26 @@
     --text: #e8e8ec;
     --muted: #9a9fab;
     --accent: #6ee7b7;
+    --on-accent: #0f1115;
     --line: #262a33;
     --panel: #0f1115;
-    --on-accent: #0f1115;
+    --violet: #a78bfa;
+    --mark: #fbbf24;
+    --overlay: rgba(0, 0, 0, 0.6);
     color-scheme: dark;
   }
   :root[data-theme="light"] {
-    --bg: #f5f6f8;
+    --bg: #f3f4f8;
     --card: #ffffff;
-    --text: #1a1d24;
-    --muted: #5b6170;
-    --accent: #047857;
+    --text: #1b1f2a;
+    --muted: #667085;
+    --accent: #0b8a68;
     --on-accent: #ffffff;
-    --line: #d9dce3;
-    --panel: #f0f2f5;
+    --line: #e1e4ec;
+    --panel: #eef0f6;
+    --violet: #7c5cd6;
+    --mark: #fde68a;
+    --overlay: rgba(20, 24, 36, 0.45);
     color-scheme: light;
   }
   body { transition: background 0.25s, color 0.25s; }
@@ -135,7 +141,7 @@
   }
   .dict-entry .def { white-space: pre-line; }
   .dict-entry .pos {
-    color: #6b7280;
+    color: var(--muted);
     font-size: 0.75rem;
     font-weight: 400;
     font-style: italic;
@@ -257,9 +263,9 @@
   }
   .mode-btn:active { transform: scale(0.94); }
   .mode-btn.nonsense {
-    background: #a78bfa;
-    border-color: #a78bfa;
-    color: #0f1115;
+    background: var(--violet);
+    border-color: var(--violet);
+    color: var(--on-accent);
   }
   .mode-btn.pop { animation: modePop 0.4s ease; }
   @keyframes modePop {
@@ -652,7 +658,7 @@
     <button id="themeBtn" class="theme-btn" type="button" aria-label="Switch light/dark mode"><span id="themeIcon">🌙</span></button>
   </footer>
 
-  <div id="fileModalOverlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:100; align-items:center; justify-content:center; padding:20px;">
+  <div id="fileModalOverlay" style="display:none; position:fixed; inset:0; background:var(--overlay); z-index:100; align-items:center; justify-content:center; padding:20px;">
     <div style="background:var(--card); border:1px solid var(--line); border-radius:12px; max-width:800px; width:100%; max-height:85vh; display:flex; flex-direction:column;">
       <div style="display:flex; justify-content:space-between; align-items:center; padding:14px 18px; border-bottom:1px solid var(--line); gap:12px; flex-wrap:wrap;">
         <a id="fileModalTitle" href="#" target="_blank" rel="noopener" style="color:var(--accent); text-decoration:none; font-weight:700;">Current Dictionary File</a>
@@ -666,10 +672,10 @@
     </div>
   </div>
 
-  <div id="zoogModalOverlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:100; align-items:center; justify-content:center; padding:20px;">
+  <div id="zoogModalOverlay" style="display:none; position:fixed; inset:0; background:var(--overlay); z-index:100; align-items:center; justify-content:center; padding:20px;">
     <div style="background:var(--card); border:1px solid var(--line); border-radius:12px; max-width:800px; width:100%; max-height:85vh; display:flex; flex-direction:column;">
       <div style="display:flex; justify-content:space-between; align-items:center; padding:14px 18px; border-bottom:1px solid var(--line); gap:12px; flex-wrap:wrap;">
-        <a id="zoogModalTitle" href="https://github.com/ChadDuffenshmoogle/dictionary-versions/blob/main/Zoogliography.txt" target="_blank" rel="noopener" style="color:#a78bfa; text-decoration:none; font-weight:700;">Zoogliography</a>
+        <a id="zoogModalTitle" href="https://github.com/ChadDuffenshmoogle/dictionary-versions/blob/main/Zoogliography.txt" target="_blank" rel="noopener" style="color:var(--violet); text-decoration:none; font-weight:700;">Zoogliography</a>
         <div style="display:flex; align-items:center; gap:8px;">
           <button id="zoogDownloadBtn" style="background:var(--panel); color:var(--text); border:1px solid var(--line); border-radius:6px; padding:6px 12px; font-size:0.8rem; cursor:pointer;">⬇ .txt</button>
           <button id="zoogModalClose" style="background:none; border:none; color:var(--muted); font-size:1.4rem; cursor:pointer; line-height:1;">&times;</button>
@@ -679,7 +685,7 @@
     </div>
   </div>
 
-  <div id="searchModalOverlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:100; align-items:center; justify-content:center; padding:20px;">
+  <div id="searchModalOverlay" style="display:none; position:fixed; inset:0; background:var(--overlay); z-index:100; align-items:center; justify-content:center; padding:20px;">
     <div style="background:var(--card); border:1px solid var(--line); border-radius:12px; max-width:800px; width:100%; max-height:85vh; display:flex; flex-direction:column;">
       <div style="display:flex; justify-content:space-between; align-items:center; padding:14px 18px; border-bottom:1px solid var(--line);">
         <strong>Searchable Dictionary</strong>
@@ -705,13 +711,28 @@ const C = {
   get line() { return getComputedStyle(document.documentElement).getPropertyValue('--line').trim(); },
   get text() { return getComputedStyle(document.documentElement).getPropertyValue('--text').trim(); },
   get accent() { return getComputedStyle(document.documentElement).getPropertyValue('--accent').trim(); },
-  shade(hex) {
-    if (document.documentElement.dataset.theme !== 'light') return hex;
-    const n = parseInt(hex.slice(1), 16), f = 0.55;
-    return `rgb(${Math.round(((n >> 16) & 255) * f)}, ${Math.round(((n >> 8) & 255) * f)}, ${Math.round((n & 255) * f)})`;
-  },
   get crosshair() { return document.documentElement.dataset.theme === 'light' ? 'rgba(26, 29, 36, 0.35)' : 'rgba(232, 232, 236, 0.35)'; },
 };
+// Every pastel colour the charts and text use, as [dark theme, light theme].
+const TONES = [
+  ['#6ee7b7', '#0b8a68'], ['#7dd3fc', '#2b8fd6'], ['#fbbf24', '#d98b06'], ['#f472b6', '#d6408a'],
+  ['#a78bfa', '#7c5cd6'], ['#fb923c', '#e0671c'], ['#34d399', '#2fa36b'], ['#60a5fa', '#3b7be0'],
+  ['#f87171', '#d64545'], ['#c084fc', '#a24fd6'], ['#9a9fab', '#8a90a0'], ['#171a21', '#ffffff'],
+];
+// T(colour) gives the version that fits the current theme.
+function T(c) {
+  if (typeof c !== 'string') return c;
+  const light = document.documentElement.dataset.theme === 'light';
+  const k = c.toLowerCase();
+  for (const [d, l] of TONES) if (k === d || k === l) return light ? l : d;
+  return c;
+}
+// Dark or white text, whichever reads better on this background colour.
+function ink(hex) {
+  const n = parseInt(hex.slice(1), 16);
+  const lum = (0.299 * ((n >> 16) & 255) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255)) / 255;
+  return lum > 0.46 ? '#0f1115' : '#ffffff';
+}
 function recolorCharts() {
   Object.values(Chart.instances).forEach(ch => {
     Object.values(ch.options.scales || {}).forEach(sc => {
@@ -721,7 +742,10 @@ function recolorCharts() {
     const lg = ch.options.plugins && ch.options.plugins.legend;
     if (lg && lg.labels) lg.labels.color = C.text;
     ch.data.datasets.forEach(d => {
-      if (d.borderColor === '#6ee7b7' || d.borderColor === '#059669') { d.borderColor = C.accent; d.backgroundColor = C.accent; }
+      ['backgroundColor', 'borderColor', 'pointBackgroundColor', 'pointBorderColor'].forEach(k => {
+        if (typeof d[k] === 'string') d[k] = T(d[k]);
+        else if (Array.isArray(d[k])) d[k] = d[k].map(T);
+      });
     });
     ch.update('none');
   });
@@ -946,8 +970,8 @@ async function main() {
     }
 
     // Hover panels: show which existing entries each piece came from.
-    const PALETTE = ['#6ee7b7', '#7dd3fc', '#fbbf24', '#f472b6', '#a78bfa', '#fb923c'];
-    const swatch = (i) => `background:${PALETTE[i % PALETTE.length]}; color:#0f1115; border-radius:3px; padding:0 2px;`;
+    const PALETTE = ['#6ee7b7', '#7dd3fc', '#fbbf24', '#f472b6', '#a78bfa', '#fb923c'].map(T);
+    const swatch = (i) => `background:${PALETTE[i % PALETTE.length]}; color:${ink(PALETTE[i % PALETTE.length])}; border-radius:3px; padding:0 2px;`;
     const COPY_BTN = '<button type="button" class="copy-btn">Copy</button>';
     const mutedNote = (t) => `<div style="color:var(--muted); margin-top:8px;">${t}</div>`;
 
@@ -1000,7 +1024,7 @@ async function main() {
       segs.forEach(sg => { if (!sg.plain) sg.c = c++; });
       // Underline each piece of the big word in its hover-panel colour.
       document.getElementById('predictedWord').innerHTML = segs.map(sg => {
-        const col = sg.plain ? 'var(--muted)' : C.shade(PALETTE[sg.c % PALETTE.length]);
+        const col = sg.plain ? 'var(--muted)' : PALETTE[sg.c % PALETTE.length];
         const style = `text-decoration:underline ${sg.plain ? 'dashed ' : ''}${col}; text-decoration-thickness:3px; text-underline-offset:5px;`;
         return `<span style="${style}">${escapeHtml(word.slice(sg.start, sg.end + 1))}</span>`;
       }).join('');
@@ -1388,7 +1412,7 @@ async function main() {
   ];
   function colorForPos(pos) {
     const idx = posLabels.indexOf(pos || '(no pos)');
-    return C.shade(posColors[(idx === -1 ? posLabels.length : idx) % posColors.length]);
+    return T(posColors[(idx === -1 ? posLabels.length : idx) % posColors.length]);
   }
 
   const dictEntries = (stats.definitions_by_length_asc || [])
@@ -1411,7 +1435,7 @@ async function main() {
     const escapedQ = q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     return escaped.replace(
       new RegExp(`(${escapedQ})`, 'ig'),
-      '<mark style="background:#fbbf24; color:#0f1115; border-radius:3px; padding:0 2px;">$1</mark>'
+      '<mark style="background:var(--mark); color:#0f1115; border-radius:3px; padding:0 2px;">$1</mark>'
     );
   }
 
@@ -1694,21 +1718,21 @@ async function main() {
           {
             label: `Projected (linear trend, next ${projectionMonths} month${projectionMonths === 1 ? '' : 's'})`,
             data: projected,
-            borderColor: '#fbbf24',
+            borderColor: T('#fbbf24'),
             borderDash: [6, 4],
             pointRadius: 0,
           },
           {
             label: `Projected (power fit, exponent ${powK.toFixed(2)})`,
             data: powerProjected,
-            borderColor: '#f472b6',
+            borderColor: T('#f472b6'),
             borderDash: [6, 4],
             pointRadius: 0,
           },
           {
             label: 'Projected (quadratic polynomial)',
             data: polyProjected,
-            borderColor: '#a78bfa',
+            borderColor: T('#a78bfa'),
             borderDash: [6, 4],
             pointRadius: 0,
           },
@@ -1758,8 +1782,8 @@ async function main() {
       labels: scrabbleLabels,
       datasets: [{
         data: [scrabbleLegal, scrabbleNormalized, scrabbleIllegal],
-        backgroundColor: ['#6ee7b7', '#fbbf24', '#f87171'],
-        borderColor: '#171a21',
+        backgroundColor: ['#6ee7b7', '#fbbf24', '#f87171'].map(T),
+        borderColor: T('#171a21'),
         borderWidth: 2,
       }],
     },
@@ -1993,7 +2017,7 @@ async function main() {
         datasets: [{
           label: 'Entries',
           data: counts,
-          backgroundColor: '#7dd3fc',
+          backgroundColor: T('#7dd3fc'),
         }],
       },
       options: {
@@ -2045,7 +2069,7 @@ async function main() {
     if (lengthChartInstance) lengthChartInstance.destroy();
     lengthChartInstance = new Chart(document.getElementById('lengthChart'), {
       type: 'bar',
-      data: { labels: lenLabels, datasets: [{ label: what === 'definitions' ? 'Definitions' : 'Entries', data: lenData, backgroundColor: '#7dd3fc' }] },
+      data: { labels: lenLabels, datasets: [{ label: what === 'definitions' ? 'Definitions' : 'Entries', data: lenData, backgroundColor: T('#7dd3fc') }] },
       options: {
         responsive: true,
         maintainAspectRatio: false,
@@ -2112,7 +2136,7 @@ async function main() {
     if (usedChartInstance) usedChartInstance.destroy();
     usedChartInstance = new Chart(document.getElementById('usedChart'), {
       type: 'bar',
-      data: { labels, datasets: [{ label: 'Uses', data, backgroundColor: '#7dd3fc' }] },
+      data: { labels, datasets: [{ label: 'Uses', data, backgroundColor: T('#7dd3fc') }] },
       options: {
         responsive: true,
         maintainAspectRatio: false,
@@ -2156,8 +2180,8 @@ async function main() {
       labels: posLabels,
       datasets: [{
         data: posEntries.map(([, count]) => count),
-        backgroundColor: posLabels.map((_, i) => posColors[i % posColors.length]),
-        borderColor: '#171a21',
+        backgroundColor: posLabels.map((_, i) => T(posColors[i % posColors.length])),
+        borderColor: T('#171a21'),
         borderWidth: 2,
       }],
     },
@@ -2188,7 +2212,7 @@ async function main() {
   });
   function cloudColorForPos(pos) {
     const idx = posLabels.indexOf(pos || '(no pos)');
-    return C.shade(posColors[(idx === -1 ? posLabels.length : idx) % posColors.length]);
+    return T(posColors[(idx === -1 ? posLabels.length : idx) % posColors.length]);
   }
 
   const allCloudTerms = stats.words_by_length_asc || [];

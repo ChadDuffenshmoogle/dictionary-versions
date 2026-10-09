@@ -113,9 +113,9 @@ def too_similar(word, existing_norm):
 
 def predict_next_word(terms, seed_text):
     """Guess a new word letter by letter from the spelling of every entry
-    (a 3-letter Markov chain). The same seed gives the same word, so it only
+    (a 4-letter Markov chain). The same seed gives the same word, so it only
     changes when the dictionary changes."""
-    order, start, end = 3, "\x02", "\x03"
+    order, start, end = 4, "\x02", "\x03"
     existing_norm = list({_norm_term(t) for t in terms if _norm_term(t)})
     table = {}
     for t in terms:

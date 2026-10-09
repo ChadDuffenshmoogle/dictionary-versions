@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Unicyclist Dictionary Stats</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script>try { if (localStorage.getItem('theme') === 'light') document.documentElement.dataset.theme = 'light'; } catch (e) {}</script>
 <style>
   :root {
     --bg: #0f1115;
@@ -12,6 +13,44 @@
     --text: #e8e8ec;
     --muted: #9a9fab;
     --accent: #6ee7b7;
+    --line: #262a33;
+    --panel: #0f1115;
+    color-scheme: dark;
+  }
+  :root[data-theme="light"] {
+    --bg: #f5f6f8;
+    --card: #ffffff;
+    --text: #1a1d24;
+    --muted: #5b6170;
+    --accent: #059669;
+    --line: #d9dce3;
+    --panel: #f0f2f5;
+    color-scheme: light;
+  }
+  body { transition: background 0.25s, color 0.25s; }
+  .card { transition: background 0.25s, border-color 0.25s; }
+  .theme-btn {
+    position: fixed;
+    right: 16px;
+    bottom: 16px;
+    z-index: 50;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    border: 1px solid var(--line);
+    border-radius: 50%;
+    background: var(--card);
+    font-size: 1.2rem;
+    line-height: 1;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+  }
+  .theme-btn span { display: inline-block; }
+  .theme-btn.swap span { animation: themeSwap 0.3s ease; }
+  @keyframes themeSwap {
+    0%   { transform: scale(1);   opacity: 1; }
+    50%  { transform: scale(0.3); opacity: 0; }
+    100% { transform: scale(1);   opacity: 1; }
   }
   * { box-sizing: border-box; }
   body {
@@ -33,7 +72,7 @@
     background: var(--card);
     border-radius: 12px;
     padding: 18px;
-    border: 1px solid #262a33;
+    border: 1px solid var(--line);
   }
   .card h2 { margin: 0 0 12px 0; font-size: 1rem; color: var(--accent); }
   .stat-big { font-size: 2.2rem; font-weight: 700; }
@@ -52,8 +91,8 @@
     width: 52px;
     padding: 2px 4px;
     border-radius: 6px;
-    border: 1px solid #262a33;
-    background: #0f1115;
+    border: 1px solid var(--line);
+    background: var(--panel);
     color: var(--accent);
     font: inherit;
     font-weight: 700;
@@ -62,8 +101,8 @@
     width: 100%;
     padding: 10px 12px;
     border-radius: 8px;
-    border: 1px solid #262a33;
-    background: #0f1115;
+    border: 1px solid var(--line);
+    background: var(--panel);
     color: var(--text);
     font-size: 0.95rem;
     box-sizing: border-box;
@@ -74,9 +113,9 @@
     margin: 10px 0 12px 0;
   }
   .scope-toggle button {
-    background: #0f1115;
+    background: var(--panel);
     color: var(--muted);
-    border: 1px solid #262a33;
+    border: 1px solid var(--line);
     border-radius: 6px;
     padding: 6px 12px;
     font-size: 0.85rem;
@@ -90,7 +129,7 @@
   }
   .dict-entry {
     padding: 10px 0;
-    border-bottom: 1px solid #21242c;
+    border-bottom: 1px solid var(--line);
   }
   .dict-entry:last-child { border-bottom: none; }
   .dict-entry .term {
@@ -126,8 +165,8 @@
     font-size: 1rem;
     font-weight: 700;
     color: var(--accent);
-    background: #0f1115;
-    border: 1px solid #262a33;
+    background: var(--panel);
+    border: 1px solid var(--line);
     border-radius: 6px;
     padding: 2px 6px;
     cursor: pointer;
@@ -196,8 +235,8 @@
     left: -10px;
     width: 280px;
     padding: 10px 12px;
-    background: #0f1115;
-    border: 1px solid #262a33;
+    background: var(--panel);
+    border: 1px solid var(--line);
     border-radius: 8px;
     color: var(--text);
     font-size: 0.8rem;
@@ -252,8 +291,8 @@
     overflow: auto;
     margin-top: 0;
     padding: 10px 12px;
-    background: #0f1115;
-    border: 1px solid #262a33;
+    background: var(--panel);
+    border: 1px solid var(--line);
     border-radius: 8px;
     color: var(--text);
     font-size: 0.8rem;
@@ -374,6 +413,8 @@
   </div>
   <div style="height:24px;"></div>
 
+  <button id="themeBtn" class="theme-btn" type="button" aria-label="Switch light/dark mode"><span id="themeIcon">🌙</span></button>
+
   <div id="content" class="grid" style="display:none;">
     <div class="wide top-row">
     <div class="card">
@@ -410,15 +451,15 @@
     <div class="card wide">
       <div style="display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:14px;">
         <h2 style="margin:0;">Total Word Count Over Time (+ <input type="number" id="projMonths" value="6" min="1" step="1"
-          style="width:56px; padding:2px 4px; border-radius:6px; border:1px solid #262a33; background:#0f1115; color:var(--accent); font:inherit; font-weight:700;">
+          style="width:56px; padding:2px 4px; border-radius:6px; border:1px solid var(--line); background:var(--panel); color:var(--accent); font:inherit; font-weight:700;">
           Month Projection)</h2>
         <div style="display:flex; flex-direction:column; gap:6px; font-size:0.8rem; color:var(--muted); text-align:right;">
           <div>Current rate: <strong id="currentRateDisplay" style="color:var(--accent);">—</strong></div>
           <div style="display:flex; align-items:center; gap:4px; flex-wrap:wrap; justify-content:flex-end;">
             Rate needed for
-            <input type="number" id="goalWords" value="1000" min="1" style="width:64px; padding:2px 4px; border-radius:6px; border:1px solid #262a33; background:#0f1115; color:var(--accent); font:inherit; font-weight:700;">
+            <input type="number" id="goalWords" value="1000" min="1" style="width:64px; padding:2px 4px; border-radius:6px; border:1px solid var(--line); background:var(--panel); color:var(--accent); font:inherit; font-weight:700;">
             words by
-            <select id="goalMonth" style="padding:2px 4px; border-radius:6px; border:1px solid #262a33; background:#0f1115; color:var(--accent); font:inherit; font-weight:700;">
+            <select id="goalMonth" style="padding:2px 4px; border-radius:6px; border:1px solid var(--line); background:var(--panel); color:var(--accent); font:inherit; font-weight:700;">
               <option value="0">Jan</option>
               <option value="1">Feb</option>
               <option value="2">Mar</option>
@@ -432,7 +473,7 @@
               <option value="10">Nov</option>
               <option value="11">Dec</option>
             </select>
-            <input type="number" id="goalYear" value="2027" min="2026" style="width:70px; padding:2px 4px; border-radius:6px; border:1px solid #262a33; background:#0f1115; color:var(--accent); font:inherit; font-weight:700;">
+            <input type="number" id="goalYear" value="2027" min="2026" style="width:70px; padding:2px 4px; border-radius:6px; border:1px solid var(--line); background:var(--panel); color:var(--accent); font:inherit; font-weight:700;">
             : <strong id="goalRateDisplay" style="color:var(--accent);">—</strong>
           </div>
         </div>
@@ -597,10 +638,10 @@
             <input type="checkbox" id="cloudRandomSize"> Random sizes
           </label>
           <label style="display:flex; align-items:center; gap:5px;">
-            Min <input type="number" id="cloudMinSize" value="9" min="3" max="100" style="width:48px; background:#0f1115; color:var(--accent); border:1px solid #262a33; border-radius:6px; padding:2px 4px;">
+            Min <input type="number" id="cloudMinSize" value="9" min="3" max="100" style="width:48px; background:var(--panel); color:var(--accent); border:1px solid var(--line); border-radius:6px; padding:2px 4px;">
           </label>
           <label style="display:flex; align-items:center; gap:5px;">
-            Max <input type="number" id="cloudMaxSize" value="38" min="3" max="120" style="width:48px; background:#0f1115; color:var(--accent); border:1px solid #262a33; border-radius:6px; padding:2px 4px;">
+            Max <input type="number" id="cloudMaxSize" value="38" min="3" max="120" style="width:48px; background:var(--panel); color:var(--accent); border:1px solid var(--line); border-radius:6px; padding:2px 4px;">
           </label>
           <button id="cloudRebuild" style="background:var(--accent); color:#0f1115; border:none; border-radius:6px; padding:5px 12px; font-weight:700; cursor:pointer; font-size:0.8rem;">Apply</button>
         </div>
@@ -613,12 +654,12 @@
   <div id="errorBox" class="error" style="display:none;"></div>
 
   <div id="fileModalOverlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:100; align-items:center; justify-content:center; padding:20px;">
-    <div style="background:var(--card); border:1px solid #262a33; border-radius:12px; max-width:800px; width:100%; max-height:85vh; display:flex; flex-direction:column;">
-      <div style="display:flex; justify-content:space-between; align-items:center; padding:14px 18px; border-bottom:1px solid #262a33; gap:12px; flex-wrap:wrap;">
+    <div style="background:var(--card); border:1px solid var(--line); border-radius:12px; max-width:800px; width:100%; max-height:85vh; display:flex; flex-direction:column;">
+      <div style="display:flex; justify-content:space-between; align-items:center; padding:14px 18px; border-bottom:1px solid var(--line); gap:12px; flex-wrap:wrap;">
         <a id="fileModalTitle" href="#" target="_blank" rel="noopener" style="color:var(--accent); text-decoration:none; font-weight:700;">Current Dictionary File</a>
         <div style="display:flex; align-items:center; gap:8px;">
-          <button id="downloadTxtBtn" style="background:#0f1115; color:var(--text); border:1px solid #262a33; border-radius:6px; padding:6px 12px; font-size:0.8rem; cursor:pointer;">⬇ .txt</button>
-          <button id="downloadJsonBtn" style="background:#0f1115; color:var(--text); border:1px solid #262a33; border-radius:6px; padding:6px 12px; font-size:0.8rem; cursor:pointer;">⬇ .json</button>
+          <button id="downloadTxtBtn" style="background:var(--panel); color:var(--text); border:1px solid var(--line); border-radius:6px; padding:6px 12px; font-size:0.8rem; cursor:pointer;">⬇ .txt</button>
+          <button id="downloadJsonBtn" style="background:var(--panel); color:var(--text); border:1px solid var(--line); border-radius:6px; padding:6px 12px; font-size:0.8rem; cursor:pointer;">⬇ .json</button>
           <button id="fileModalClose" style="background:none; border:none; color:var(--muted); font-size:1.4rem; cursor:pointer; line-height:1;">&times;</button>
         </div>
       </div>
@@ -627,11 +668,11 @@
   </div>
 
   <div id="zoogModalOverlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:100; align-items:center; justify-content:center; padding:20px;">
-    <div style="background:var(--card); border:1px solid #262a33; border-radius:12px; max-width:800px; width:100%; max-height:85vh; display:flex; flex-direction:column;">
-      <div style="display:flex; justify-content:space-between; align-items:center; padding:14px 18px; border-bottom:1px solid #262a33; gap:12px; flex-wrap:wrap;">
+    <div style="background:var(--card); border:1px solid var(--line); border-radius:12px; max-width:800px; width:100%; max-height:85vh; display:flex; flex-direction:column;">
+      <div style="display:flex; justify-content:space-between; align-items:center; padding:14px 18px; border-bottom:1px solid var(--line); gap:12px; flex-wrap:wrap;">
         <a id="zoogModalTitle" href="https://github.com/ChadDuffenshmoogle/dictionary-versions/blob/main/Zoogliography.txt" target="_blank" rel="noopener" style="color:#a78bfa; text-decoration:none; font-weight:700;">Zoogliography</a>
         <div style="display:flex; align-items:center; gap:8px;">
-          <button id="zoogDownloadBtn" style="background:#0f1115; color:var(--text); border:1px solid #262a33; border-radius:6px; padding:6px 12px; font-size:0.8rem; cursor:pointer;">⬇ .txt</button>
+          <button id="zoogDownloadBtn" style="background:var(--panel); color:var(--text); border:1px solid var(--line); border-radius:6px; padding:6px 12px; font-size:0.8rem; cursor:pointer;">⬇ .txt</button>
           <button id="zoogModalClose" style="background:none; border:none; color:var(--muted); font-size:1.4rem; cursor:pointer; line-height:1;">&times;</button>
         </div>
       </div>
@@ -640,8 +681,8 @@
   </div>
 
   <div id="searchModalOverlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:100; align-items:center; justify-content:center; padding:20px;">
-    <div style="background:var(--card); border:1px solid #262a33; border-radius:12px; max-width:800px; width:100%; max-height:85vh; display:flex; flex-direction:column;">
-      <div style="display:flex; justify-content:space-between; align-items:center; padding:14px 18px; border-bottom:1px solid #262a33;">
+    <div style="background:var(--card); border:1px solid var(--line); border-radius:12px; max-width:800px; width:100%; max-height:85vh; display:flex; flex-direction:column;">
+      <div style="display:flex; justify-content:space-between; align-items:center; padding:14px 18px; border-bottom:1px solid var(--line);">
         <strong>Searchable Dictionary</strong>
         <button id="searchModalClose" style="background:none; border:none; color:var(--muted); font-size:1.4rem; cursor:pointer; line-height:1;">&times;</button>
       </div>
@@ -659,6 +700,47 @@
   </div>
 
 <script>
+// Theme colours for the charts, read fresh each time so they follow the toggle.
+const C = {
+  get muted() { return getComputedStyle(document.documentElement).getPropertyValue('--muted').trim(); },
+  get line() { return getComputedStyle(document.documentElement).getPropertyValue('--line').trim(); },
+  get text() { return getComputedStyle(document.documentElement).getPropertyValue('--text').trim(); },
+  get accent() { return getComputedStyle(document.documentElement).getPropertyValue('--accent').trim(); },
+  get crosshair() { return document.documentElement.dataset.theme === 'light' ? 'rgba(26, 29, 36, 0.35)' : 'rgba(232, 232, 236, 0.35)'; },
+};
+function recolorCharts() {
+  Object.values(Chart.instances).forEach(ch => {
+    Object.values(ch.options.scales || {}).forEach(sc => {
+      if (sc.ticks) sc.ticks.color = C.muted;
+      if (sc.grid) sc.grid.color = C.line;
+    });
+    const lg = ch.options.plugins && ch.options.plugins.legend;
+    if (lg && lg.labels) lg.labels.color = C.text;
+    ch.data.datasets.forEach(d => {
+      if (d.borderColor === '#6ee7b7' || d.borderColor === '#059669') { d.borderColor = C.accent; d.backgroundColor = C.accent; }
+    });
+    ch.update('none');
+  });
+}
+// Light / dark toggle: an emoji that swaps with a small shrink-and-grow, remembered between visits.
+(function () {
+  const btn = document.getElementById('themeBtn');
+  const icon = document.getElementById('themeIcon');
+  const isLight = () => document.documentElement.dataset.theme === 'light';
+  icon.textContent = isLight() ? '☀️' : '🌙';
+  btn.addEventListener('click', () => {
+    btn.classList.remove('swap');
+    void btn.offsetWidth;
+    btn.classList.add('swap');
+    setTimeout(() => {
+      if (isLight()) delete document.documentElement.dataset.theme;
+      else document.documentElement.dataset.theme = 'light';
+      icon.textContent = isLight() ? '☀️' : '🌙';
+      try { localStorage.setItem('theme', isLight() ? 'light' : 'dark'); } catch (e) {}
+      recolorCharts();
+    }, 150);
+  });
+})();
 // Thin vertical line at the hovered x-position, on every chart.
 Chart.register({
   id: 'crosshair',
@@ -673,7 +755,7 @@ Chart.register({
     ctx.moveTo(x, top);
     ctx.lineTo(x, bottom);
     ctx.lineWidth = 1;
-    ctx.strokeStyle = 'rgba(232, 232, 236, 0.35)';
+    ctx.strokeStyle = C.crosshair;
     ctx.stroke();
     ctx.restore();
   },
@@ -1594,8 +1676,8 @@ async function main() {
           {
             label: 'Actual total entries',
             data: points.map(p => ({ x: p.x, y: p.y })),
-            borderColor: '#6ee7b7',
-            backgroundColor: '#6ee7b7',
+            borderColor: C.accent,
+            backgroundColor: C.accent,
             pointRadius: 2,
             tension: 0.15,
           },
@@ -1633,15 +1715,15 @@ async function main() {
               scale.ticks = monthStartTicks(scale.min, scale.max);
             },
             ticks: {
-              color: '#9a9fab',
+              color: C.muted,
               callback: (val) => monthYearLabel(val),
             },
-            grid: { color: '#262a33' },
+            grid: { color: C.line },
           },
-          y: { ticks: { color: '#9a9fab' }, grid: { color: '#262a33' } },
+          y: { ticks: { color: C.muted }, grid: { color: C.line } },
         },
         plugins: {
-          legend: { labels: { color: '#e8e8ec' } },
+          legend: { labels: { color: C.text } },
           tooltip: {
             callbacks: {
               title: (items) => dateLabel(items[0].parsed.x),
@@ -1681,7 +1763,7 @@ async function main() {
         openSearchModal(scrabblePrefixes[elements[0].index]);
       },
       plugins: {
-        legend: { position: 'bottom', labels: { color: '#e8e8ec', boxWidth: 12, font: { size: 11 } } },
+        legend: { position: 'bottom', labels: { color: C.text, boxWidth: 12, font: { size: 11 } } },
         tooltip: {
           callbacks: {
             label: (item) => {
@@ -1768,7 +1850,7 @@ async function main() {
       datasets: [{
         label: 'New words added',
         data: additionsFilled.map(p => p.count),
-        backgroundColor: '#6ee7b7',
+        backgroundColor: C.accent,
       }],
     },
     options: {
@@ -1793,7 +1875,7 @@ async function main() {
       scales: {
         x: {
           ticks: {
-            color: '#9a9fab',
+            color: C.muted,
             autoSkip: false,
             maxRotation: 0,
             minRotation: 0,
@@ -1806,11 +1888,11 @@ async function main() {
               return `${month}. ${y}`;
             },
           },
-          grid: { color: '#262a33' },
+          grid: { color: C.line },
         },
-        y: { ticks: { color: '#9a9fab', precision: 0 }, grid: { color: '#262a33' } },
+        y: { ticks: { color: C.muted, precision: 0 }, grid: { color: C.line } },
       },
-      plugins: { legend: { labels: { color: '#e8e8ec' } } },
+      plugins: { legend: { labels: { color: C.text } } },
     },
   });
 
@@ -1919,11 +2001,11 @@ async function main() {
         scales: {
           x: {
             ticks: n === 1
-              ? { color: '#9a9fab' }
-              : { color: '#9a9fab', autoSkip: false, maxRotation: 90, minRotation: 90, font: { size: 9 } },
+              ? { color: C.muted }
+              : { color: C.muted, autoSkip: false, maxRotation: 90, minRotation: 90, font: { size: 9 } },
             grid: { display: false },
           },
-          y: { ticks: { color: '#9a9fab', precision: 0 }, grid: { color: '#262a33' } },
+          y: { ticks: { color: C.muted, precision: 0 }, grid: { color: C.line } },
         },
         plugins: { legend: { display: false } },
       },
@@ -1966,8 +2048,8 @@ async function main() {
           openSearchModal(`length:${what}:${mode}:${lenLabels[elements[0].index]}`);
         },
         scales: {
-          x: { ticks: { color: '#9a9fab', autoSkip: true }, grid: { display: false } },
-          y: { ticks: { color: '#9a9fab', precision: 0 }, grid: { color: '#262a33' } },
+          x: { ticks: { color: C.muted, autoSkip: true }, grid: { display: false } },
+          y: { ticks: { color: C.muted, precision: 0 }, grid: { color: C.line } },
         },
         plugins: { legend: { display: false } },
       },
@@ -2035,11 +2117,11 @@ async function main() {
         scales: {
           x: {
             ticks: what === 'words'
-              ? { color: '#9a9fab', autoSkip: false, maxRotation: 90, minRotation: 90, font: { size: 10 } }
-              : { color: '#9a9fab', autoSkip: false },
+              ? { color: C.muted, autoSkip: false, maxRotation: 90, minRotation: 90, font: { size: 10 } }
+              : { color: C.muted, autoSkip: false },
             grid: { display: false },
           },
-          y: { ticks: { color: '#9a9fab', precision: 0 }, grid: { color: '#262a33' } },
+          y: { ticks: { color: C.muted, precision: 0 }, grid: { color: C.line } },
         },
         plugins: { legend: { display: false } },
       },
@@ -2081,7 +2163,7 @@ async function main() {
         openSearchModal(`pos:${value}`);
       },
       plugins: {
-        legend: { position: 'bottom', labels: { color: '#e8e8ec', boxWidth: 12, font: { size: 11 } } },
+        legend: { position: 'bottom', labels: { color: C.text, boxWidth: 12, font: { size: 11 } } },
       },
     },
   });

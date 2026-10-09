@@ -205,6 +205,16 @@
     z-index: 20;
   }
   .tip:hover .tip-text, .tip:focus .tip-text { display: block; }
+  .num-box {
+    width: 56px;
+    margin-left: 4px;
+    padding: 2px 4px;
+    background: #0f1115;
+    color: var(--text);
+    border: 1px solid #262a33;
+    border-radius: 4px;
+    font-size: 0.8rem;
+  }
   .hover-src { position: relative; cursor: help; }
   .src-panel {
     display: none;
@@ -333,13 +343,16 @@
 
     <div class="card">
       <h2>Next Predicted Word
-        <span class="tip" tabindex="0">?<span class="tip-text">Made-up guess from the spelling patterns in the chosen set of entries (all words, the last 100, or the last 10). The tool counts which letter usually follows each group of 3 letters (for example, what often comes after "tio"), then builds a new word one letter at a time by picking likely next letters. It only keeps words that are not already in the dictionary, and the guess changes only when a new word is added. The definition is built the same way, one word at a time, from which words usually follow each pair of words in the chosen definitions, so it is made-up and not meaningful.</span></span>
+        <span class="tip" tabindex="0">?<span class="tip-text">Made-up guess from the spelling patterns in the entries. The tool counts which letter usually follows each group of letters (3 by default, set by Letter memory; for example, what often comes after "tio"), then builds a new word one letter at a time by picking likely next letters. It only keeps words that are not already in the dictionary, and the guess changes only when a new word is added. The definition is built the same way, one word at a time, from which words usually follow each group of words (2 by default, set by Word memory), so it is made-up and not meaningful. Words used limits learning to the newest words (0 = all), and a bigger memory copies the existing entries more closely.</span></span>
       </h2>
-      <select id="predictLimit" class="inline-select" style="font-size:0.8rem; margin-bottom:6px;">
-        <option value="all">All words</option>
-        <option value="100">Last 100 words</option>
-        <option value="10">Last 10 words</option>
-      </select>
+      <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:8px; font-size:0.75rem; color:var(--muted);">
+        <label title="How many of the newest words to learn from. 0 means every word.">Words used (0 = all)
+          <input type="number" id="predictLimit" class="num-box" value="0" min="0" step="1"></label>
+        <label title="How many letters back the word generator looks when picking the next letter.">Letter memory
+          <input type="number" id="predictOrder" class="num-box" value="3" min="1" max="6" step="1"></label>
+        <label title="How many words back the definition generator looks when picking the next word.">Word memory
+          <input type="number" id="predictDOrder" class="num-box" value="2" min="1" max="4" step="1"></label>
+      </div>
       <div class="hover-src">
         <div class="stat-big" id="predictedWord" style="font-size:1.6rem;">—</div>
         <div class="src-panel" id="predictedWordSrc"></div>
@@ -648,7 +661,9 @@ async function main() {
   // from every existing entry. A seeded random generator keeps the guess
   // the same until the dictionary changes.
   let predictedAllWord = null; // the all-words prediction, shown in the Zoogliography
-  function predictNextWord(limit, silent) {
+  function predictNextWord(opts, silent) {
+    const { limit, order: ORDER, dorder: DORDER } = opts;
+    const useAll = !limit;
     const allTerms = stats.words_by_length_asc || [];
     const existing = new Set(allTerms.map(t => t.toLowerCase()));
     // "Last N" uses the order words were added (the timeline), sorted by
@@ -656,10 +671,10 @@ async function main() {
     const timeline = (stats.added_terms_timeline || [])
       .map((e, i) => ({ date: e.date, term: e.term, i }))
       .sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : a.i - b.i));
-    const terms = limit === 'all' || !timeline.length
+    const terms = useAll || !timeline.length
       ? allTerms
-      : timeline.slice(-parseInt(limit, 10)).map(e => e.term);
-    const START = '\u0002', END = '\u0003', ORDER = 3;
+      : timeline.slice(-limit).map(e => e.term);
+    const START = '\u0002', END = '\u0003';
     const table = {};
     terms.forEach(t => {
       const padded = START.repeat(ORDER) + t + END;
@@ -673,7 +688,7 @@ async function main() {
     });
 
     let seed = 0;
-    const seedText = limit + '|' + terms.length + '|' + (stats.latest_word_term || '');
+    const seedText = [limit, ORDER, DORDER].join('-') + '|' + terms.length + '|' + (stats.latest_word_term || '');
     for (let i = 0; i < seedText.length; i++) seed = (seed * 31 + seedText.charCodeAt(i)) >>> 0;
     const rand = () => {
       seed = (seed + 0x6D2B79F5) >>> 0;
@@ -712,29 +727,29 @@ async function main() {
     }
     // For "All words", use the one word made by generate_stats.py so the
     // card and Zoogliography.txt always show the same word.
-    if (limit === 'all' && stats.predicted_word) result = stats.predicted_word;
+    if (useAll && ORDER === 3 && stats.predicted_word) result = stats.predicted_word;
     if (silent) return result; // only the word was wanted, no card update
     document.getElementById('predictedWord').textContent = result || '—';
     // Predicted definition: same idea, but one word at a time, using the
     // two previous words as context (falls back to one word).
     const termSet = new Set(terms.map(t => t.toLowerCase()));
     const defs = (stats.definitions_by_length_asc || [])
-      .filter(d => limit === 'all' || termSet.has(d.term.toLowerCase()))
+      .filter(d => useAll || termSet.has(d.term.toLowerCase()))
       .map(d => ({ term: d.term, tokens: d.definition.match(/[\p{L}\p{N}]+(?:['’\-][\p{L}\p{N}]+)*|[^\s\p{L}\p{N}]/gu) || [] }));
     const DSTART = '\u0002', DEND = '\u0003';
     const dTable = {};
     defs.forEach(({ tokens: words }) => {
-      const seq = [DSTART, DSTART, ...words, DEND];
-      for (let i = 2; i < seq.length; i++) {
-        const keys = [seq[i - 2] + '\u0001' + seq[i - 1], seq[i - 1]];
-        keys.forEach(k => {
+      const seq = [...Array(DORDER).fill(DSTART), ...words, DEND];
+      for (let i = DORDER; i < seq.length; i++) {
+        for (let o = 1; o <= DORDER; o++) {
+          const k = seq.slice(i - o, i).join('\u0001');
           (dTable[k] = dTable[k] || {})[seq[i]] = ((dTable[k] || {})[seq[i]] || 0) + 1;
-        });
+        }
       }
     });
-    function pickNextDefWord(prev2, prev1) {
-      for (const k of [prev2 + '\u0001' + prev1, prev1]) {
-        const options = dTable[k];
+    function pickNextDefWord(history) {
+      for (let o = DORDER; o >= 1; o--) {
+        const options = dTable[history.slice(history.length - o).join('\u0001')];
         if (!options) continue;
         const entries = Object.entries(options);
         const total = entries.reduce((s, [, c]) => s + c, 0);
@@ -865,13 +880,12 @@ async function main() {
     let definitionTokens = [];
     for (let attempt = 0; attempt < 50 && !definition; attempt++) {
       const out = [];
-      let p2 = DSTART, p1 = DSTART;
+      const history = Array(DORDER).fill(DSTART);
       while (out.length < 25) {
-        const w = pickNextDefWord(p2, p1);
+        const w = pickNextDefWord(history);
         if (w === DEND) break;
         out.push(w);
-        p2 = p1;
-        p1 = w;
+        history.push(w);
       }
       if (out.length >= 4 && out.length < 25) { definition = joinTokens(out, t => t); definitionTokens = out; }
     }
@@ -879,7 +893,25 @@ async function main() {
     renderWordSources(result);
     renderDefinitionSources(definitionTokens);
   }
-  const predictLimitSelect = document.getElementById('predictLimit');
+  const predictLimitBox = document.getElementById('predictLimit');
+  const predictOrderBox = document.getElementById('predictOrder');
+  const predictDOrderBox = document.getElementById('predictDOrder');
+  const DEFAULT_PREDICT = { limit: 0, order: 3, dorder: 2 };
+  // Read a number box, keep it inside its allowed range, and fall back to
+  // the default if it is empty or not a number.
+  function readBox(box, min, max, fallback) {
+    const n = parseInt(box.value, 10);
+    const value = Number.isNaN(n) ? fallback : Math.min(max, Math.max(min, n));
+    box.value = value;
+    return value;
+  }
+  function readPredictOpts() {
+    return {
+      limit: readBox(predictLimitBox, 0, 100000, DEFAULT_PREDICT.limit),
+      order: readBox(predictOrderBox, 1, 6, DEFAULT_PREDICT.order),
+      dorder: readBox(predictDOrderBox, 1, 4, DEFAULT_PREDICT.dorder),
+    };
+  }
   // Run the prediction after the rest of the page has painted, so the
   // other cards and charts never wait on it.
   function predictLater() {
@@ -888,15 +920,17 @@ async function main() {
     document.getElementById('predictedWordSrc').innerHTML = '';
     document.getElementById('predictedDefinitionSrc').innerHTML = '';
     requestAnimationFrame(() => setTimeout(() => {
-      predictNextWord(predictLimitSelect.value);
+      predictNextWord(readPredictOpts());
       if (predictedAllWord === null) {
-        predictedAllWord = predictNextWord('all', true) || '';
+        // the Zoogliography always uses the default settings
+        predictedAllWord = predictNextWord(DEFAULT_PREDICT, true) || '';
         refreshZoogModal();
       }
     }, 0));
   }
   predictLater();
-  predictLimitSelect.addEventListener('change', predictLater);
+  [predictLimitBox, predictOrderBox, predictDOrderBox].forEach(box =>
+    box.addEventListener('change', predictLater));
 
   const fileModalOverlay = document.getElementById('fileModalOverlay');
   const fileModalTitle = document.getElementById('fileModalTitle');

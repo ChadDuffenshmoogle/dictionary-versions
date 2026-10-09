@@ -78,12 +78,45 @@ ZOOG_MARKER = "--- Predicted Next Word ---"
 ZOOG_TOKEN = os.environ.get("ZOOG_WRITE_TOKEN")
 
 
+def _norm_term(s):
+    """Lowercase with spaces, hyphens and punctuation removed."""
+    return re.sub(r"[\W_]+", "", s.lower())
+
+
+def _edit_distance(a, b):
+    prev = list(range(len(b) + 1))
+    for i, ca in enumerate(a, 1):
+        row = [i]
+        for j, cb in enumerate(b, 1):
+            row.append(min(prev[j] + 1, row[j - 1] + 1, prev[j - 1] + (ca != cb)))
+        prev = row
+    return prev[-1]
+
+
+def too_similar(word, existing_norm):
+    """True if the word is, or nearly is, something already in the dictionary:
+    same once punctuation is ignored, one contains the other (5+ letters), or
+    only about a quarter of its length apart."""
+    w = _norm_term(word)
+    if not w:
+        return True
+    for e in existing_norm:
+        if e == w:
+            return True
+        if len(w) >= 5 and len(e) >= 5 and (w in e or e in w):
+            return True
+        limit = max(1, int(0.25 * max(len(w), len(e))))
+        if abs(len(w) - len(e)) <= limit and _edit_distance(w, e) <= limit:
+            return True
+    return False
+
+
 def predict_next_word(terms, seed_text):
     """Guess a new word letter by letter from the spelling of every entry
     (a 3-letter Markov chain). The same seed gives the same word, so it only
     changes when the dictionary changes."""
     order, start, end = 3, "\x02", "\x03"
-    existing = {t.lower() for t in terms}
+    existing_norm = list({_norm_term(t) for t in terms if _norm_term(t)})
     table = {}
     for t in terms:
         padded = start * order + t + end
@@ -109,7 +142,7 @@ def predict_next_word(terms, seed_text):
                 break
             word += ch
         word = word.strip()
-        if 4 <= len(word) < 24 and word.lower() not in existing:
+        if 4 <= len(word) < 24 and not too_similar(word, existing_norm):
             return word
     return ""
 

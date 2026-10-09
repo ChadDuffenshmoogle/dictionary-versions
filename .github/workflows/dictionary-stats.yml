@@ -35,6 +35,7 @@ jobs:
       - name: Generate stats.json
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ZOOG_WRITE_TOKEN: ${{ secrets.ZOOG_WRITE_TOKEN }}
         run: python scripts/generate_stats.py
 
       - name: Upload Pages artifact

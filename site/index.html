@@ -205,17 +205,31 @@
     z-index: 20;
   }
   .tip:hover .tip-text, .tip:focus .tip-text { display: block; }
-  .num-box {
-    width: 56px;
-    margin-left: 4px;
-    padding: 2px 4px;
-    background: #0f1115;
-    color: var(--text);
-    border: 1px solid #262a33;
-    border-radius: 4px;
+  .mode-btn {
+    margin-bottom: 8px;
+    padding: 5px 16px;
+    border: 1px solid var(--accent);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--accent);
     font-size: 0.8rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.3s, color 0.3s, border-color 0.3s, transform 0.15s;
   }
-  /* the 6px of padding is the gap above the panel, and it counts as hovered */
+  .mode-btn:active { transform: scale(0.94); }
+  .mode-btn.nonsense {
+    background: #a78bfa;
+    border-color: #a78bfa;
+    color: #0f1115;
+  }
+  .mode-btn.pop { animation: modePop 0.4s ease; }
+  @keyframes modePop {
+    0%   { transform: scale(1) rotate(0deg); }
+    30%  { transform: scale(0.9) rotate(-4deg); }
+    60%  { transform: scale(1.08) rotate(3deg); }
+    100% { transform: scale(1) rotate(0deg); }
+  }
   .hover-src { position: relative; cursor: help; padding-bottom: 6px; }
   .src-panel {
     display: none;
@@ -352,16 +366,9 @@
 
     <div class="card">
       <h2>Next Predicted Word
-        <span class="tip" tabindex="0">?<span class="tip-text">Made-up guess from the spelling patterns in the entries. The tool counts which letter usually follows each group of letters (3 by default, set by Letter memory; for example, what often comes after "tio"), then builds a new word one letter at a time by picking likely next letters. It only keeps words that are not already in the dictionary, and the guess changes only when a new word is added. The definition is built the same way, one word at a time, from which words usually follow each group of words (2 by default, set by Word memory), so it is made-up and not meaningful. Words used limits learning to the newest words (0 = all), and a bigger memory copies the existing entries more closely.</span></span>
+        <span class="tip" tabindex="0">?<span class="tip-text">Made-up guess from the spelling patterns in the entries. The tool counts which letter usually follows each group of letters (for example, what often comes after "tio"), then builds a new word one letter at a time by picking likely next letters. It only keeps words that are not already in the dictionary or too close to one, and the guess changes only when a new word is added. The definition is built the same way, one word at a time, from which words usually follow each group of words, and it may not copy an existing definition. Normal looks 4 letters back for the word and 2 words back for the definition. Nonsense looks only 2 letters and 1 word back, so the result is looser and stranger.</span></span>
       </h2>
-      <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:8px; font-size:0.75rem; color:var(--muted);">
-        <label title="How many of the newest words to learn from. 0 means every word.">Words used (0 = all)
-          <input type="number" id="predictLimit" class="num-box" value="0" min="0" step="1"></label>
-        <label title="How many letters back the word generator looks when picking the next letter.">Letter memory
-          <input type="number" id="predictOrder" class="num-box" value="3" min="1" max="6" step="1"></label>
-        <label title="How many words back the definition generator looks when picking the next word.">Word memory
-          <input type="number" id="predictDOrder" class="num-box" value="2" min="1" max="4" step="1"></label>
-      </div>
+      <button id="predictModeBtn" class="mode-btn" type="button">Normal</button>
       <div class="hover-src">
         <div class="stat-big" id="predictedWord" style="font-size:1.6rem;">—</div>
         <div class="src-panel" id="predictedWordSrc"></div>
@@ -765,7 +772,7 @@ async function main() {
     }
     // For "All words", use the one word made by generate_stats.py so the
     // card and Zoogliography.txt always show the same word.
-    if (useAll && ORDER === 3 && stats.predicted_word && !tooSimilar(stats.predicted_word)) result = stats.predicted_word;
+    if (useAll && ORDER === 4 && stats.predicted_word && !tooSimilar(stats.predicted_word)) result = stats.predicted_word;
     if (silent) return result; // only the word was wanted, no card update
     document.getElementById('predictedWord').textContent = result || '—';
     // Predicted definition: same idea, but one word at a time, using the
@@ -1043,25 +1050,14 @@ async function main() {
     renderWordSources(result);
     renderDefinitionSources(definitionTokens);
   }
-  const predictLimitBox = document.getElementById('predictLimit');
-  const predictOrderBox = document.getElementById('predictOrder');
-  const predictDOrderBox = document.getElementById('predictDOrder');
-  const DEFAULT_PREDICT = { limit: 0, order: 3, dorder: 2 };
-  // Read a number box, keep it inside its allowed range, and fall back to
-  // the default if it is empty or not a number.
-  function readBox(box, min, max, fallback) {
-    const n = parseInt(box.value, 10);
-    const value = Number.isNaN(n) ? fallback : Math.min(max, Math.max(min, n));
-    box.value = value;
-    return value;
-  }
-  function readPredictOpts() {
-    return {
-      limit: readBox(predictLimitBox, 0, 100000, DEFAULT_PREDICT.limit),
-      order: readBox(predictOrderBox, 1, 6, DEFAULT_PREDICT.order),
-      dorder: readBox(predictDOrderBox, 1, 4, DEFAULT_PREDICT.dorder),
-    };
-  }
+  // Normal matches the saved word in stats.json / Zoogliography.txt
+  // (4 letters of memory, made by generate_stats.py).
+  const PREDICT_MODES = {
+    normal:   { label: 'Normal',   limit: 0, order: 4, dorder: 2 },
+    nonsense: { label: 'Nonsense', limit: 0, order: 2, dorder: 1 },
+  };
+  let predictMode = 'normal';
+  const predictModeBtn = document.getElementById('predictModeBtn');
   // Run the prediction after the rest of the page has painted, so the
   // other cards and charts never wait on it.
   function predictLater() {
@@ -1070,17 +1066,26 @@ async function main() {
     document.getElementById('predictedWordSrc').innerHTML = '';
     document.getElementById('predictedDefinitionSrc').innerHTML = '';
     requestAnimationFrame(() => setTimeout(() => {
-      predictNextWord(readPredictOpts());
+      predictNextWord(PREDICT_MODES[predictMode]);
       if (predictedAllWord === null) {
-        // the Zoogliography always uses the default settings
-        predictedAllWord = predictNextWord(DEFAULT_PREDICT, true) || '';
+        // the Zoogliography always uses Normal
+        predictedAllWord = predictNextWord(PREDICT_MODES.normal, true) || '';
         refreshZoogModal();
       }
     }, 0));
   }
   predictLater();
-  [predictLimitBox, predictOrderBox, predictDOrderBox].forEach(box =>
-    box.addEventListener('change', predictLater));
+  predictModeBtn.addEventListener('click', () => {
+    predictMode = predictMode === 'normal' ? 'nonsense' : 'normal';
+    predictModeBtn.textContent = PREDICT_MODES[predictMode].label;
+    predictModeBtn.classList.toggle('nonsense', predictMode === 'nonsense');
+    // little wobble each press
+    predictModeBtn.classList.remove('pop');
+    void predictModeBtn.offsetWidth;
+    predictModeBtn.classList.add('pop');
+    predictLater();
+  });
+  predictModeBtn.addEventListener('animationend', () => predictModeBtn.classList.remove('pop'));
 
   const fileModalOverlay = document.getElementById('fileModalOverlay');
   const fileModalTitle = document.getElementById('fileModalTitle');

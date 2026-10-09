@@ -579,7 +579,9 @@ def main():
     additions_by_day = Counter()
     additions_by_day_all = Counter()  # unfiltered, used for cumulative growth
     added_terms_timeline = []
-    add_re = re.compile(r"with new term '(.+?)'")
+    # Greedy on purpose: the term is everything up to the LAST quote on the
+    # line, so terms with apostrophes (like "ain't") are not cut short.
+    add_re = re.compile(r"with new term '(.+)'")
     for c in commits:
         msg = c["commit"]["message"]
         date = to_central_date(c["commit"]["author"]["date"])

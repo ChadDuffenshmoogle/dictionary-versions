@@ -660,36 +660,21 @@ def scrabble_status(term, scrabble_set):
 def main():
     commits = get_all_commits()
 
-    # --- New-word-added frequency (== new-file frequency) ---
-    additions_by_day = Counter()
-    additions_by_day_all = Counter()  # unfiltered, used for cumulative growth
-    added_terms_timeline = []
+    # --- Every "word added" commit, newest first ---
+    # These are only candidates: a word can be added and then deleted later
+    # (we changed our mind), and the commit message for the add stays in the
+    # history forever. Below, once the current dictionary is loaded, adds
+    # whose word no longer exists are thrown out so they cannot show up as
+    # the most recent word or inflate the charts.
     # Greedy on purpose: the term is everything up to the LAST quote on the
     # line, so terms with apostrophes (like "ain't") are not cut short.
     add_re = re.compile(r"with new term '(.+)'")
+    adds = []
     for c in commits:
-        msg = c["commit"]["message"]
-        date = to_central_date(c["commit"]["author"]["date"])
-        m = add_re.search(msg)
+        m = add_re.search(c["commit"]["message"])
         if m:
-            additions_by_day_all[date] += 1
-            if date > BASELINE_DATE:
-                additions_by_day[date] += 1
-                added_terms_timeline.append({"date": date, "term": m.group(1)})
-
-    # --- Most recent word added (commits come back newest-first) ---
-    latest_word_term = None
-    latest_word_timestamp = None
-    for c in commits:
-        m0 = add_re.search(c["commit"]["message"])
-        if m0:
-            latest_word_term = m0.group(1)
-            latest_word_timestamp = to_central_datetime_str(c["commit"]["author"]["date"])
-            break
-
-    additions_series = [
-        {"date": d, "count": n} for d, n in sorted(additions_by_day.items())
-    ]
+            ts = c["commit"]["author"]["date"]
+            adds.append({"date": to_central_date(ts), "term": m.group(1), "timestamp": ts})
 
     # --- Latest file: entries, letter breakdown, word/definition extremes ---
     filenames = get_dictionary_filenames()
@@ -708,6 +693,41 @@ def main():
         key=sort_key_ignore_punct,
     )
     total_entries = len(all_terms)
+
+    # --- Keep only adds whose word is still in the dictionary ---
+    current_terms = {r["term"].strip().lower() for r in raw_rows}
+
+    def still_in_dictionary(term):
+        t = term.strip().lower()
+        if t in current_terms or _clean_term(t).lower() in current_terms:
+            return True
+        # entries written as "a / b" are stored as separate terms
+        parts = [p.strip() for p in t.split("/") if p.strip()]
+        return len(parts) > 1 and all(p in current_terms for p in parts)
+
+    kept, dropped, seen = [], [], set()
+    for a in adds:  # newest first, so a re-added word counts once, at its newest add
+        key = a["term"].strip().lower()
+        if not still_in_dictionary(a["term"]):
+            dropped.append(a["term"])
+        elif key not in seen:
+            seen.add(key)
+            kept.append(a)
+    if dropped:
+        print(f"Ignored {len(dropped)} added word(s) no longer in the dictionary: {dropped}")
+
+    additions_by_day_all = Counter(a["date"] for a in kept)  # used for cumulative growth
+    additions_by_day = Counter(a["date"] for a in kept if a["date"] > BASELINE_DATE)
+    # oldest first, so "last N words" on the page really are the newest N
+    added_terms_timeline = [
+        {"date": a["date"], "term": a["term"]}
+        for a in reversed(kept) if a["date"] > BASELINE_DATE
+    ]
+    latest_word_term = kept[0]["term"] if kept else None
+    latest_word_timestamp = to_central_datetime_str(kept[0]["timestamp"]) if kept else None
+    additions_series = [
+        {"date": d, "count": n} for d, n in sorted(additions_by_day.items())
+    ]
 
     # ONE prediction, made here. It goes into stats.json (the page shows this
     # exact word) and into Zoogliography.txt. A failure while saving to the

@@ -943,7 +943,7 @@ async function main() {
       // letters), **bold** = the new letters picked from it.
       const wordPiece = (sg) => sg.plain ? `[${word[sg.start]}]`
         : `__${word.slice(sg.start - sg.ctx, sg.start)}**${word.slice(sg.start, sg.end + 1)}**__`;
-      const wordLines = [`Predicted word: ${word}`, '', `${word} = ${segs.map(wordPiece).join(' + ')}`];
+      const wordLines = [`${word} = ${segs.map(wordPiece).join(' + ')}`];
       segs.forEach(sg => {
         wordLines.push('');
         if (sg.plain) { wordLines.push(`[${word[sg.start]}] picked by chance`); return; }
@@ -957,7 +957,6 @@ async function main() {
           wordLines.push(t.slice(0, cs) + '__' + t.slice(cs, first) + '**' + t.slice(first, first + len) + '**__' + t.slice(first + len));
         });
       });
-      wordLines.push('', '__underline__ = letters matched, **bold** = the new letters');
       panel.dataset.copy = wordLines.join('\n');
       panel.innerHTML = COPY_BTN + `<div style="font-size:1rem; line-height:2;">${formula}</div>${blocks}`
         + (anyPlain ? mutedNote('Dashed letters matched no entry and were picked by chance.') : '');
@@ -1058,7 +1057,7 @@ async function main() {
         const len = sg.end - sg.start + 1, from = sg.start - sg.ctx;
         return joinTokens(tokens.slice(from, sg.end + 1), mark(from, from, sg.start, len));
       };
-      const defLines = [`Predicted definition: ${defText(tokens)}`, '', `= ${segs.map(defPiece).join(' + ')}`];
+      const defLines = [`${defText(tokens)} = ${segs.map(defPiece).join(' + ')}`];
       segs.forEach(sg => {
         defLines.push('');
         if (sg.plain) { defLines.push(`[${tokens[sg.start]}] picked by chance`); return; }
@@ -1071,7 +1070,6 @@ async function main() {
           defLines.push(joinTokens(dt, mark(0, first - sg.ctx, first, len)));
         });
       });
-      defLines.push('', '__underline__ = words matched, **bold** = the new words');
       panel.dataset.copy = defLines.join('\n');
       panel.innerHTML = COPY_BTN + `<div style="line-height:2;">${formula}</div>${blocks}`
         + (anyPlain ? mutedNote('Dashed words matched no definition and were picked by chance.') : '');

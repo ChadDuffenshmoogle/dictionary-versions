@@ -901,43 +901,87 @@ async function main() {
     function renderDefinitionSources(tokens) {
       const panel = document.getElementById('predictedDefinitionSrc');
       if (!tokens.length) { panel.innerHTML = ''; return; }
-      const segs = [];
-      let i = 0;
-      while (i < tokens.length) {
-        let bestLen = 1, bestD = -1, bestPos = -1;
-        for (let d = 0; d < defs.length; d++) {
-          const dt = defs[d].tokens;
-          for (let j = 0; j < dt.length; j++) {
-            if (dt[j] !== tokens[i]) continue;
-            let L = 1;
-            while (i + L < tokens.length && j + L < dt.length && dt[j + L] === tokens[i + L]) L++;
-            if (L > bestLen) { bestLen = L; bestD = d; bestPos = j; }
-          }
+      // Same idea as the word panel: each word (or punctuation mark) was
+      // picked from the DORDER tokens before it, falling back to fewer when
+      // that exact run never appeared. Find the longest run ending at each
+      // token that exists in some definition; only those definitions could
+      // have supplied it.
+      const paddedTokens = [...Array(DORDER).fill(DSTART), ...tokens];
+      const paddedDefs = defs.map(d => [...Array(DORDER).fill(DSTART), ...d.tokens, DEND]);
+      const perToken = [];
+      for (let p = 0; p < tokens.length; p++) {
+        const pp = p + DORDER;
+        let found = null;
+        for (let o = DORDER; o >= 1 && !found; o--) {
+          const gram = paddedTokens.slice(pp - o, pp + 1);
+          const hits = [];
+          paddedDefs.forEach((pd, k) => {
+            for (let i = 0; i + o < pd.length; i++) {
+              let ok = true;
+              for (let g = 0; g <= o; g++) if (pd[i + g] !== gram[g]) { ok = false; break; }
+              if (ok) hits.push({ k, end: i + o });
+            }
+          });
+          if (hits.length) found = { o, hits };
         }
-        if (bestD === -1) { segs.push({ tokens: [tokens[i]] }); i += 1; }
-        else { segs.push({ tokens: tokens.slice(i, i + bestLen), d: bestD, pos: bestPos }); i += bestLen; }
+        perToken.push(found);
+      }
+
+      // Join neighbouring tokens into one piece while at least one
+      // definition supplies them side by side; the next piece's first
+      // tokens overlap the end of the last one.
+      const segs = [];
+      let cur = null;
+      for (let p = 0; p < tokens.length; p++) {
+        const f = perToken[p];
+        if (!f) { cur = null; segs.push({ start: p, end: p, plain: true }); continue; }
+        if (cur) {
+          const next = f.hits.filter(h => cur.hits.some(c => c.k === h.k && c.end + 1 === h.end));
+          if (next.length) { cur.end = p; cur.hits = next; continue; }
+        }
+        cur = { start: p, end: p, ctx: Math.min(f.o, p), hits: f.hits };
+        segs.push(cur);
       }
       let c = 0;
-      segs.forEach(sg => { if (sg.d !== undefined) sg.c = c++; });
-      const flat = [];
-      segs.forEach(sg => sg.tokens.forEach(t => flat.push({ t, c: sg.c })));
-      const defHtml = joinTokens(flat.map(f => f.t), (t, idx) => flat[idx].c !== undefined
-        ? `<span style="${swatch(flat[idx].c)}">${escapeHtml(t)}</span>` : escapeHtml(t));
-      const blocks = segs.filter(sg => sg.c !== undefined).map(sg => {
-        const dt = defs[sg.d].tokens;
-        const from = Math.max(0, sg.pos - 4);
-        const to = Math.min(dt.length, sg.pos + sg.tokens.length + 4);
-        const lo = sg.pos - from, hi = lo + sg.tokens.length;
-        const snippet = joinTokens(dt.slice(from, to), (t, idx) => idx >= lo && idx < hi
-          ? `<span style="${swatch(sg.c)}">${escapeHtml(t)}</span>` : escapeHtml(t));
-        const phrase = joinTokens(sg.tokens, t => escapeHtml(t));
-        return `<div style="margin-top:12px; padding-left:8px; border-left:3px solid ${PALETTE[sg.c % PALETTE.length]};">
-          <div><span style="${swatch(sg.c)} padding:1px 6px; font-weight:700;">${phrase}</span></div>
-          <div style="margin-top:4px;">${from > 0 ? '… ' : ''}${snippet}${to < dt.length ? ' …' : ''} <span style="color:var(--muted);">(${escapeHtml(defs[sg.d].term)})</span></div></div>`;
+      segs.forEach(sg => { if (!sg.plain) sg.c = c++; });
+
+      const fade = 'opacity:.55; font-weight:400; text-decoration:underline;';
+      const chip = (sg) => {
+        if (sg.plain) {
+          return `<span style="border:1px dashed var(--muted); color:var(--muted); border-radius:3px; padding:0 5px;">${escapeHtml(tokens[sg.start])}</span>`;
+        }
+        const piece = tokens.slice(sg.start - sg.ctx, sg.end + 1);
+        const text = joinTokens(piece, (t, idx) => idx < sg.ctx
+          ? `<span style="${fade}">${escapeHtml(t)}</span>` : escapeHtml(t));
+        return `<span style="${swatch(sg.c)} padding:1px 6px; font-weight:700;">${text}</span>`;
+      };
+      const formula = segs.map(chip).join('<span style="color:var(--muted);"> + </span>');
+
+      const blocks = segs.filter(sg => !sg.plain).map(sg => {
+        const len = sg.end - sg.start + 1;
+        const seen = new Set();
+        const rows = [];
+        sg.hits.forEach(h => {
+          if (seen.has(h.k)) return;
+          seen.add(h.k);
+          const dt = defs[h.k].tokens;
+          const first = h.end - (len - 1) - DORDER;   // where the new tokens begin in this definition
+          const ctxStart = first - sg.ctx;
+          const from = Math.max(0, ctxStart - 4);
+          const to = Math.min(dt.length, first + len + 4);
+          const snippet = joinTokens(dt.slice(from, to), (t, idx) => {
+            const abs = from + idx;
+            if (abs >= first && abs < first + len) return `<span style="${swatch(sg.c)}">${escapeHtml(t)}</span>`;
+            if (abs >= ctxStart && abs < first) return `<span style="${swatch(sg.c)} ${fade}">${escapeHtml(t)}</span>`;
+            return escapeHtml(t);
+          });
+          rows.push(`<div style="margin-top:2px;">${from > 0 ? '… ' : ''}${snippet}${to < dt.length ? ' …' : ''} <span style="color:var(--muted);">(${escapeHtml(defs[h.k].term)})</span></div>`);
+        });
+        return `<div style="margin-top:12px; padding-left:8px; border-left:3px solid ${PALETTE[sg.c % PALETTE.length]};">${rows.join('')}</div>`;
       }).join('');
-      const anyPlain = segs.some(sg => sg.c === undefined);
-      panel.innerHTML = `<div style="line-height:1.8;">${defHtml}</div>${blocks}`
-        + (anyPlain ? mutedNote('Uncolored words were picked one at a time from common word pairs.') : '');
+      const anyPlain = segs.some(sg => sg.plain);
+      panel.innerHTML = `<div style="line-height:2;">${formula}</div>${blocks}`
+        + (anyPlain ? mutedNote('Dashed words matched no definition and were picked by chance.') : '');
     }
 
     let definition = '';

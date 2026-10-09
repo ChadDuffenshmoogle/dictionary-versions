@@ -237,6 +237,24 @@
     z-index: 20;
   }
   .hover-src:hover .src-panel:not(:empty) { display: block; }
+  /* invisible bridge over the gap, so the panel stays open while the mouse
+     travels from the word/definition down onto the panel */
+  .src-panel::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: -10px;
+    height: 10px;
+  }
+  .tip .tip-text::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: -10px;
+    height: 10px;
+  }
   .nav-btn {
     display: inline-block;
     padding: 6px 12px;

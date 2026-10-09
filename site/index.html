@@ -213,7 +213,7 @@
     left: 0;
     width: 320px;
     max-width: 85vw;
-    max-height: 280px;
+    max-height: 360px;
     overflow: auto;
     margin-top: 6px;
     padding: 10px 12px;
@@ -798,16 +798,22 @@ async function main() {
       segs.forEach(sg => { if (sg.k !== undefined) sg.c = c++; });
       const wordHtml = segs.map(sg => sg.c !== undefined
         ? `<span style="${swatch(sg.c)}">${escapeHtml(sg.text)}</span>` : escapeHtml(sg.text)).join('');
+      // Every existing entry that contains each piece, one per line.
       const lines = segs.filter(sg => sg.c !== undefined).map(sg => {
-        const t = terms[sg.k];
-        const end = sg.pos + sg.text.length;
-        return `<div style="margin-top:4px;"><span style="${swatch(sg.c)}">${escapeHtml(sg.text)}</span> from ${escapeHtml(t.slice(0, sg.pos))}<span style="${swatch(sg.c)}">${escapeHtml(t.slice(sg.pos, end))}</span>${escapeHtml(t.slice(end))}</div>`;
+        const piece = sg.text.toLowerCase();
+        const matches = terms.filter(t => t.toLowerCase().includes(piece));
+        const rows = matches.map(t => {
+          const pos = t.toLowerCase().indexOf(piece);
+          const end = pos + piece.length;
+          return `<div>${escapeHtml(t.slice(0, pos))}<span style="${swatch(sg.c)}">${escapeHtml(t.slice(pos, end))}</span>${escapeHtml(t.slice(end))}</div>`;
+        }).join('');
+        return `<div style="margin-top:8px;"><span style="${swatch(sg.c)}">${escapeHtml(sg.text)}</span> <span style="color:var(--muted);">appears in ${matches.length} ${matches.length === 1 ? 'entry' : 'entries'}:</span></div>${rows}`;
       }).join('');
       const anyPlain = segs.some(sg => sg.c === undefined);
       panel.innerHTML = `<div style="font-weight:700;">Built from pieces of existing entries</div>
         <div style="font-size:1rem; margin-top:4px;">${wordHtml}</div>${lines}`
         + (anyPlain ? mutedNote('Uncolored letters were picked one at a time by chance.') : '')
-        + mutedNote('Each piece shows one example entry it appears in; many others may contain it too.');
+        + mutedNote('Every existing entry containing each piece is listed, one per line.');
     }
 
     function renderDefinitionSources(tokens) {

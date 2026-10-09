@@ -261,6 +261,18 @@
     line-height: 1.5;
     z-index: 20;
   }
+  .copy-btn {
+    float: right;
+    margin: 0 0 4px 8px;
+    padding: 1px 8px;
+    border: 1px solid var(--muted);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--muted);
+    font-size: 0.7rem;
+    cursor: pointer;
+  }
+  .copy-btn:hover { color: var(--text); border-color: var(--text); }
   .hover-src:hover .src-panel:not(:empty) { display: block; }
   .tip .tip-text::before {
     content: '';
@@ -849,6 +861,7 @@ async function main() {
     // Hover panels: show which existing entries each piece came from.
     const PALETTE = ['#6ee7b7', '#7dd3fc', '#fbbf24', '#f472b6', '#a78bfa', '#fb923c'];
     const swatch = (i) => `background:${PALETTE[i % PALETTE.length]}; color:#0f1115; border-radius:3px; padding:0 2px;`;
+    const COPY_BTN = '<button type="button" class="copy-btn">Copy</button>';
     const mutedNote = (t) => `<div style="color:var(--muted); margin-top:8px;">${t}</div>`;
 
     function renderWordSources(word) {
@@ -926,7 +939,16 @@ async function main() {
           ${rows.join('')}</div>`;
       }).join('');
       const anyPlain = segs.some(sg => sg.plain);
-      panel.innerHTML = `<div style="font-size:1rem; line-height:2;">${formula}</div>${blocks}`
+      const wordPiece = (sg) => sg.plain ? `[${word[sg.start]}]`
+        : (sg.ctx ? `(${word.slice(sg.start - sg.ctx, sg.start)})` : '') + word.slice(sg.start, sg.end + 1);
+      const wordLines = [`Predicted word: ${word}`, '', `${word} = ${segs.map(wordPiece).join(' + ')}`, ''];
+      segs.forEach(sg => {
+        wordLines.push(sg.plain ? `${wordPiece(sg)} <- picked by chance`
+          : `${wordPiece(sg)} <- ${[...new Set(sg.hits.map(h => terms[h.k]))].join(', ')}`);
+      });
+      wordLines.push('', '( ) = letters used as context');
+      panel.dataset.copy = wordLines.join('\n');
+      panel.innerHTML = COPY_BTN + `<div style="font-size:1rem; line-height:2;">${formula}</div>${blocks}`
         + (anyPlain ? mutedNote('Dashed letters matched no entry and were picked by chance.') : '');
     }
 
@@ -1012,7 +1034,17 @@ async function main() {
         return `<div style="margin-top:12px; padding-left:8px; border-left:3px solid ${PALETTE[sg.c % PALETTE.length]};">${rows.join('')}</div>`;
       }).join('');
       const anyPlain = segs.some(sg => sg.plain);
-      panel.innerHTML = `<div style="line-height:2;">${formula}</div>${blocks}`
+      const defText = (arr) => joinTokens(arr, t => t);
+      const defPiece = (sg) => sg.plain ? `[${tokens[sg.start]}]`
+        : (sg.ctx ? `(${defText(tokens.slice(sg.start - sg.ctx, sg.start))}) ` : '') + defText(tokens.slice(sg.start, sg.end + 1));
+      const defLines = [`Predicted definition: ${defText(tokens)}`, '', `= ${segs.map(defPiece).join(' + ')}`, ''];
+      segs.forEach(sg => {
+        defLines.push(sg.plain ? `${defPiece(sg)} <- picked by chance`
+          : `${defPiece(sg)} <- ${[...new Set(sg.hits.map(h => defs[h.k].term))].join(', ')}`);
+      });
+      defLines.push('', '( ) = words used as context');
+      panel.dataset.copy = defLines.join('\n');
+      panel.innerHTML = COPY_BTN + `<div style="line-height:2;">${formula}</div>${blocks}`
         + (anyPlain ? mutedNote('Dashed words matched no definition and were picked by chance.') : '');
     }
 
@@ -1102,6 +1134,15 @@ async function main() {
     predictLater();
   });
   predictModeBtn.addEventListener('animationend', () => predictModeBtn.classList.remove('pop'));
+  document.addEventListener('click', (e) => {
+    const btn = e.target.closest('.copy-btn');
+    if (!btn) return;
+    const text = btn.closest('.src-panel').dataset.copy || '';
+    navigator.clipboard.writeText(text).then(() => {
+      btn.textContent = 'Copied';
+      setTimeout(() => { btn.textContent = 'Copy'; }, 1200);
+    });
+  });
   document.getElementById('speakBtn').addEventListener('click', () => {
     const w = document.getElementById('predictedWord').textContent;
     if (!w || w === '—' || w === '…' || !window.speechSynthesis) return;

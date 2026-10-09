@@ -148,8 +148,8 @@ def predict_next_word(terms, seed_text):
 
 
 def update_zoogliography(word):
-    """Rewrite the 'Predicted Next Word' section at the bottom of
-    Zoogliography.txt. Everything above the marker is left untouched."""
+    """Add the new word to the 'Predicted Next Word' list at the bottom of
+    Zoogliography.txt (kept A to Z). Everything above the marker is left untouched."""
     if not ZOOG_TOKEN or not word:
         print("Skipping Zoogliography update (no token or no word).")
         return
@@ -163,9 +163,15 @@ def update_zoogliography(word):
         resp.raise_for_status()
         info = resp.json()
         text = base64.b64decode(info["content"]).decode("utf-8")
-        base = text.split(ZOOG_MARKER)[0].rstrip("\n")
-        new_text = f"{base}\n\n{ZOOG_MARKER}\n{word}"
-        if new_text == text:
+        base, _, old_section = text.partition(ZOOG_MARKER)
+        base = base.rstrip("\n")
+        # Keep every earlier prediction, add the new one, and sort A to Z.
+        words = {w.strip() for w in old_section.splitlines() if w.strip()}
+        if word.lower() not in {w.lower() for w in words}:
+            words.add(word)
+        listed = "\n".join(sorted(words, key=str.lower))
+        new_text = f"{base}\n\n{ZOOG_MARKER}\n{listed}"
+        if new_text == text.rstrip("\n"):
             return  # already up to date
         put = requests.put(
             url,

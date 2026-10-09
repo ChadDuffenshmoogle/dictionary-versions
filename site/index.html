@@ -666,6 +666,35 @@ async function main() {
     const useAll = !limit;
     const allTerms = stats.words_by_length_asc || [];
     const existing = new Set(allTerms.map(t => t.toLowerCase()));
+    // A new word may not be (or nearly be) anything already in the
+    // dictionary. Compare with spaces, hyphens and punctuation removed, so
+    // "hame tizer" and "hametizer" count as the same word.
+    const norm = (t) => t.toLowerCase().replace(/[^\p{L}\p{N}]/gu, '');
+    const existingNorm = [...new Set(allTerms.map(norm).filter(Boolean))];
+    function editDistance(a, b) {
+      let prev = Array.from({ length: b.length + 1 }, (_, j) => j);
+      for (let i = 1; i <= a.length; i++) {
+        const row = [i];
+        for (let j = 1; j <= b.length; j++) {
+          row[j] = Math.min(prev[j] + 1, row[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+        }
+        prev = row;
+      }
+      return prev[b.length];
+    }
+    // Too similar = the same word, one containing the other (5+ letters),
+    // or only a few letters apart (about a quarter of the length).
+    function tooSimilar(word) {
+      const w = norm(word);
+      if (!w) return true;
+      for (const e of existingNorm) {
+        if (e === w) return true;
+        if (w.length >= 5 && e.length >= 5 && (w.includes(e) || e.includes(w))) return true;
+        const limit = Math.max(1, Math.floor(0.25 * Math.max(w.length, e.length)));
+        if (Math.abs(w.length - e.length) <= limit && editDistance(w, e) <= limit) return true;
+      }
+      return false;
+    }
     // "Last N" uses the order words were added (the timeline), sorted by
     // date; the full dictionary is still used to reject duplicates.
     const timeline = (stats.added_terms_timeline || [])
@@ -723,11 +752,11 @@ async function main() {
         word += ch;
       }
       const clean = word.trim();
-      if (clean.length >= 4 && clean.length < 24 && !existing.has(clean.toLowerCase())) result = clean;
+      if (clean.length >= 4 && clean.length < 24 && !tooSimilar(clean)) result = clean;
     }
     // For "All words", use the one word made by generate_stats.py so the
     // card and Zoogliography.txt always show the same word.
-    if (useAll && ORDER === 3 && stats.predicted_word) result = stats.predicted_word;
+    if (useAll && ORDER === 3 && stats.predicted_word && !tooSimilar(stats.predicted_word)) result = stats.predicted_word;
     if (silent) return result; // only the word was wanted, no card update
     document.getElementById('predictedWord').textContent = result || '—';
     // Predicted definition: same idea, but one word at a time, using the
@@ -862,8 +891,7 @@ async function main() {
           rows.push(`<div>${escapeHtml(t.slice(0, ctxStart))}<span style="${swatch(sg.c)} ${fade}">${escapeHtml(t.slice(ctxStart, first))}</span><span style="${swatch(sg.c)}">${escapeHtml(t.slice(first, first + len))}</span>${escapeHtml(t.slice(first + len))}</div>`);
         });
         return `<div style="margin-top:12px; padding-left:8px; border-left:3px solid ${PALETTE[sg.c % PALETTE.length]};">
-          <div>${chip(sg)} <span style="color:var(--muted);">in ${rows.length} ${rows.length === 1 ? 'entry' : 'entries'}</span></div>
-          <div style="margin-top:4px;">${rows.join('')}</div></div>`;
+          ${rows.join('')}</div>`;
       }).join('');
       const anyPlain = segs.some(sg => sg.plain);
       panel.innerHTML = `<div style="font-size:1rem; line-height:2;">${formula}</div>${blocks}`

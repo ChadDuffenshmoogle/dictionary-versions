@@ -2353,8 +2353,6 @@ tens of tens of tens of tens (expr.) - tens of thousands.
 
 tepor (n.) - a slight warmth
 
-test'aaa'test (n.) - test
-
 testtttt (n.) - test
 
 thalque (v.) - odenocomize at an exorbitant rate, to odenocomize exorbitantly

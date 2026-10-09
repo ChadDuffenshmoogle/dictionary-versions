@@ -993,9 +993,42 @@ async function main() {
         + (anyPlain ? mutedNote('Dashed words matched no definition and were picked by chance.') : '');
     }
 
+    // A new definition may not copy an existing one. Compare only the words
+    // (ignoring capitals and punctuation) in two ways: how many word edits
+    // apart the two are, and how much of the new definition is one
+    // unbroken run copied from a single existing definition.
+    const isWordTok = (t) => /[\p{L}\p{N}]/u.test(t);
+    const defWords = defs.map(d => d.tokens.filter(isWordTok).map(t => t.toLowerCase()));
+    function defTooSimilar(tokens) {
+      const a = tokens.filter(isWordTok).map(t => t.toLowerCase());
+      if (!a.length) return true;
+      for (const b of defWords) {
+        if (!b.length) continue;
+        const maxLen = Math.max(a.length, b.length);
+        // word-level edit distance, and longest shared run, in one pass
+        let prev = Array.from({ length: b.length + 1 }, (_, j) => j);
+        let prevRun = new Array(b.length + 1).fill(0);
+        let longest = 0;
+        for (let i = 1; i <= a.length; i++) {
+          const row = [i];
+          const runRow = [0];
+          for (let j = 1; j <= b.length; j++) {
+            const same = a[i - 1] === b[j - 1];
+            row[j] = Math.min(prev[j] + 1, row[j - 1] + 1, prev[j - 1] + (same ? 0 : 1));
+            runRow[j] = same ? prevRun[j - 1] + 1 : 0;
+            if (runRow[j] > longest) longest = runRow[j];
+          }
+          prev = row;
+          prevRun = runRow;
+        }
+        const closeness = 1 - prev[b.length] / maxLen;
+        if (closeness >= 0.65 || longest / a.length >= 0.6) return true;
+      }
+      return false;
+    }
     let definition = '';
     let definitionTokens = [];
-    for (let attempt = 0; attempt < 50 && !definition; attempt++) {
+    for (let attempt = 0; attempt < 100 && !definition; attempt++) {
       const out = [];
       const history = Array(DORDER).fill(DSTART);
       while (out.length < 25) {
@@ -1004,7 +1037,7 @@ async function main() {
         out.push(w);
         history.push(w);
       }
-      if (out.length >= 4 && out.length < 25) { definition = joinTokens(out, t => t); definitionTokens = out; }
+      if (out.length >= 4 && out.length < 25 && !defTooSimilar(out)) { definition = joinTokens(out, t => t); definitionTokens = out; }
     }
     document.getElementById('predictedDefinition').textContent = definition;
     renderWordSources(result);

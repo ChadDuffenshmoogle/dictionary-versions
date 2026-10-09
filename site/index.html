@@ -944,7 +944,18 @@ async function main() {
       const wordLines = [`Predicted word: ${word}`, '', `${word} = ${segs.map(wordPiece).join(' + ')}`, ''];
       segs.forEach(sg => {
         wordLines.push(sg.plain ? `${wordPiece(sg)} <- picked by chance`
-          : `${wordPiece(sg)} <- ${[...new Set(sg.hits.map(h => terms[h.k]))].join(', ')}`);
+          : `${wordPiece(sg)} <- ${(() => {
+              const len = sg.end - sg.start + 1, seen = new Set(), out = [];
+              sg.hits.forEach(h => {
+                if (seen.has(h.k)) return;
+                seen.add(h.k);
+                const t = terms[h.k];
+                const first = h.end - (len - 1) - ORDER;
+                const cs = first - sg.ctx;
+                out.push(t.slice(0, cs) + (sg.ctx ? `(${t.slice(cs, first)})` : '') + t.slice(first));
+              });
+              return out.join(' | ');
+            })()}`);
       });
       wordLines.push('', '( ) = letters used as context');
       panel.dataset.copy = wordLines.join('\n');
@@ -1040,7 +1051,18 @@ async function main() {
       const defLines = [`Predicted definition: ${defText(tokens)}`, '', `= ${segs.map(defPiece).join(' + ')}`, ''];
       segs.forEach(sg => {
         defLines.push(sg.plain ? `${defPiece(sg)} <- picked by chance`
-          : `${defPiece(sg)} <- ${[...new Set(sg.hits.map(h => defs[h.k].term))].join(', ')}`);
+          : `${defPiece(sg)} <- ${(() => {
+              const len = sg.end - sg.start + 1, seen = new Set(), out = [];
+              sg.hits.forEach(h => {
+                if (seen.has(h.k)) return;
+                seen.add(h.k);
+                const dt = defs[h.k].tokens;
+                const first = h.end - (len - 1) - DORDER;
+                const cs = first - sg.ctx;
+                out.push(joinTokens(dt, (t, i) => (sg.ctx && i === cs ? '(' : '') + t + (sg.ctx && i === first - 1 ? ')' : '')));
+              });
+              return out.join(' | ');
+            })()}`);
       });
       defLines.push('', '( ) = words used as context');
       panel.dataset.copy = defLines.join('\n');

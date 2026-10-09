@@ -913,7 +913,7 @@ async function main() {
   // The Zoogliography file text plus a separate section at the bottom for
   // the predicted next word (all-words version, no definition).
   function zoogText() {
-    return zoogContent + (predictedAllWord
+    return zoogContent + (predictedAllWord && !zoogContent.includes('--- Predicted Next Word ---')
       ? `\n\n--- Predicted Next Word ---\n${predictedAllWord}` : '');
   }
   function refreshZoogModal() {

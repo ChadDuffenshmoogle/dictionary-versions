@@ -710,6 +710,9 @@ async function main() {
       const clean = word.trim();
       if (clean.length >= 4 && clean.length < 24 && !existing.has(clean.toLowerCase())) result = clean;
     }
+    // For "All words", use the one word made by generate_stats.py so the
+    // card and Zoogliography.txt always show the same word.
+    if (limit === 'all' && stats.predicted_word) result = stats.predicted_word;
     if (silent) return result; // only the word was wanted, no card update
     document.getElementById('predictedWord').textContent = result || '—';
     // Predicted definition: same idea, but one word at a time, using the

@@ -1429,6 +1429,12 @@ async function main() {
     if (e.target === searchModalOverlay) searchModalOverlay.style.display = 'none';
   });
 
+  // Esc closes whichever popup is open.
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape') return;
+    [fileModalOverlay, zoogModalOverlay, searchModalOverlay].forEach(o => { o.style.display = 'none'; });
+  });
+
   // Total word count over time, with an editable-length linear projection
   let growthChartInstance = null;
   let currentDailyRate = null;

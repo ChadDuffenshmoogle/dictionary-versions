@@ -647,7 +647,8 @@ async function main() {
   // Next predicted word: a letter-by-letter (order-3 Markov) guess built
   // from every existing entry. A seeded random generator keeps the guess
   // the same until the dictionary changes.
-  function predictNextWord(limit) {
+  let predictedAllWord = null; // the all-words prediction, shown in the Zoogliography
+  function predictNextWord(limit, silent) {
     const allTerms = stats.words_by_length_asc || [];
     const existing = new Set(allTerms.map(t => t.toLowerCase()));
     // "Last N" uses the order words were added (the timeline), sorted by
@@ -709,6 +710,7 @@ async function main() {
       const clean = word.trim();
       if (clean.length >= 4 && clean.length < 24 && !existing.has(clean.toLowerCase())) result = clean;
     }
+    if (silent) return result; // only the word was wanted, no card update
     document.getElementById('predictedWord').textContent = result || '—';
     // Predicted definition: same idea, but one word at a time, using the
     // two previous words as context (falls back to one word).
@@ -872,7 +874,13 @@ async function main() {
     document.getElementById('predictedDefinition').textContent = '';
     document.getElementById('predictedWordSrc').innerHTML = '';
     document.getElementById('predictedDefinitionSrc').innerHTML = '';
-    requestAnimationFrame(() => setTimeout(() => predictNextWord(predictLimitSelect.value), 0));
+    requestAnimationFrame(() => setTimeout(() => {
+      predictNextWord(predictLimitSelect.value);
+      if (predictedAllWord === null) {
+        predictedAllWord = predictNextWord('all', true) || '';
+        refreshZoogModal();
+      }
+    }, 0));
   }
   predictLater();
   predictLimitSelect.addEventListener('change', predictLater);
@@ -902,6 +910,16 @@ async function main() {
   let zoogContent = null;
   let zoogFetchPromise = null;
 
+  // The Zoogliography file text plus a separate section at the bottom for
+  // the predicted next word (all-words version, no definition).
+  function zoogText() {
+    return zoogContent + (predictedAllWord
+      ? `\n\n--- Predicted Next Word ---\n${predictedAllWord}` : '');
+  }
+  function refreshZoogModal() {
+    if (zoogContent !== null) zoogModalContent.textContent = zoogText() || '(empty)';
+  }
+
   function fetchZoogliography() {
     if (zoogFetchPromise) return zoogFetchPromise;
     zoogFetchPromise = fetch('https://raw.githubusercontent.com/ChadDuffenshmoogle/dictionary-versions/main/Zoogliography.txt', { cache: 'no-store' })
@@ -911,7 +929,7 @@ async function main() {
       })
       .then(text => {
         zoogContent = text;
-        zoogModalContent.textContent = text || '(empty)';
+        refreshZoogModal();
       })
       .catch(err => {
         zoogModalContent.textContent = 'Could not load Zoogliography: ' + err.message;
@@ -934,7 +952,7 @@ async function main() {
     if (e.target === zoogModalOverlay) zoogModalOverlay.style.display = 'none';
   });
   document.getElementById('zoogDownloadBtn').addEventListener('click', () => {
-    if (zoogContent) downloadBlob(zoogContent, 'Zoogliography.txt', 'text/plain');
+    if (zoogContent !== null) downloadBlob(zoogText(), 'Zoogliography.txt', 'text/plain');
   });
 
   function downloadBlob(text, filename, mimeType) {

@@ -230,6 +230,15 @@
     60%  { transform: scale(1.08); }
     100% { transform: scale(1); }
   }
+  .speak-btn {
+    padding: 2px 8px;
+    border: 1px solid var(--accent);
+    border-radius: 999px;
+    background: transparent;
+    font-size: 0.9rem;
+    cursor: pointer;
+  }
+  .speak-btn:active { transform: scale(0.94); }
   .hover-src { position: relative; cursor: help; padding-bottom: 6px; }
   .src-panel {
     display: none;
@@ -370,7 +379,10 @@
         <button id="predictModeBtn" class="mode-btn" type="button">Normal</button>
       </h2>
       <div class="hover-src">
-        <div class="stat-big" id="predictedWord" style="font-size:1.6rem;">—</div>
+        <div style="display:flex; align-items:center; gap:10px;">
+          <div class="stat-big" id="predictedWord" style="font-size:1.6rem;">—</div>
+          <button id="speakBtn" class="speak-btn" type="button" title="Hear it">🔊</button>
+        </div>
         <div class="src-panel" id="predictedWordSrc"></div>
       </div>
       <div class="hover-src" style="margin-top:4px;">
@@ -1086,6 +1098,12 @@ async function main() {
     predictLater();
   });
   predictModeBtn.addEventListener('animationend', () => predictModeBtn.classList.remove('pop'));
+  document.getElementById('speakBtn').addEventListener('click', () => {
+    const w = document.getElementById('predictedWord').textContent;
+    if (!w || w === '—' || w === '…' || !window.speechSynthesis) return;
+    speechSynthesis.cancel();
+    speechSynthesis.speak(new SpeechSynthesisUtterance(w));
+  });
 
   const fileModalOverlay = document.getElementById('fileModalOverlay');
   const fileModalTitle = document.getElementById('fileModalTitle');

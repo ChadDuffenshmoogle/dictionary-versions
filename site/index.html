@@ -911,6 +911,12 @@ async function main() {
       }
       let c = 0;
       segs.forEach(sg => { if (!sg.plain) sg.c = c++; });
+      // Underline each piece of the big word in its hover-panel colour.
+      document.getElementById('predictedWord').innerHTML = segs.map(sg => {
+        const col = sg.plain ? 'var(--muted)' : PALETTE[sg.c % PALETTE.length];
+        const style = `text-decoration:underline ${sg.plain ? 'dashed ' : ''}${col}; text-decoration-thickness:3px; text-underline-offset:5px;`;
+        return `<span style="${style}">${escapeHtml(word.slice(sg.start, sg.end + 1))}</span>`;
+      }).join('');
 
       const fade = 'opacity:.55; font-weight:400; text-decoration:underline;';
       const chip = (sg) => {

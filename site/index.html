@@ -796,10 +796,13 @@ async function main() {
       }
       let c = 0;
       segs.forEach(sg => { if (sg.k !== undefined) sg.c = c++; });
-      const wordHtml = segs.map(sg => sg.c !== undefined
-        ? `<span style="${swatch(sg.c)}">${escapeHtml(sg.text)}</span>` : escapeHtml(sg.text)).join('');
-      // Every existing entry that contains each piece, one per line.
-      const lines = segs.filter(sg => sg.c !== undefined).map(sg => {
+      // Top row: the word as its pieces, e.g.  [shoo] + [b] + [dooble]
+      const chip = (sg) => sg.c !== undefined
+        ? `<span style="${swatch(sg.c)} padding:1px 6px; font-weight:700;">${escapeHtml(sg.text)}</span>`
+        : `<span style="border:1px dashed var(--muted); color:var(--muted); border-radius:3px; padding:0 5px;">${escapeHtml(sg.text)}</span>`;
+      const formula = segs.map(chip).join('<span style="color:var(--muted);"> + </span>');
+      // One block per piece, with a matching colored edge, listing the entries.
+      const blocks = segs.filter(sg => sg.c !== undefined).map(sg => {
         const piece = sg.text.toLowerCase();
         const matches = terms.filter(t => t.toLowerCase().includes(piece));
         const rows = matches.map(t => {
@@ -807,13 +810,13 @@ async function main() {
           const end = pos + piece.length;
           return `<div>${escapeHtml(t.slice(0, pos))}<span style="${swatch(sg.c)}">${escapeHtml(t.slice(pos, end))}</span>${escapeHtml(t.slice(end))}</div>`;
         }).join('');
-        return `<div style="margin-top:8px;"><span style="${swatch(sg.c)}">${escapeHtml(sg.text)}</span> <span style="color:var(--muted);">appears in ${matches.length} ${matches.length === 1 ? 'entry' : 'entries'}:</span></div>${rows}`;
+        return `<div style="margin-top:12px; padding-left:8px; border-left:3px solid ${PALETTE[sg.c % PALETTE.length]};">
+          <div>${chip(sg)} <span style="color:var(--muted);">in ${matches.length} ${matches.length === 1 ? 'entry' : 'entries'}</span></div>
+          <div style="margin-top:4px;">${rows}</div></div>`;
       }).join('');
       const anyPlain = segs.some(sg => sg.c === undefined);
-      panel.innerHTML = `<div style="font-weight:700;">Built from pieces of existing entries</div>
-        <div style="font-size:1rem; margin-top:4px;">${wordHtml}</div>${lines}`
-        + (anyPlain ? mutedNote('Uncolored letters were picked one at a time by chance.') : '')
-        + mutedNote('Every existing entry containing each piece is listed, one per line.');
+      panel.innerHTML = `<div style="font-size:1rem; line-height:2;">${formula}</div>${blocks}`
+        + (anyPlain ? mutedNote('Dashed letters were picked one at a time by chance.') : '');
     }
 
     function renderDefinitionSources(tokens) {
@@ -841,20 +844,21 @@ async function main() {
       segs.forEach(sg => sg.tokens.forEach(t => flat.push({ t, c: sg.c })));
       const defHtml = joinTokens(flat.map(f => f.t), (t, idx) => flat[idx].c !== undefined
         ? `<span style="${swatch(flat[idx].c)}">${escapeHtml(t)}</span>` : escapeHtml(t));
-      const lines = segs.filter(sg => sg.c !== undefined).map(sg => {
+      const blocks = segs.filter(sg => sg.c !== undefined).map(sg => {
         const dt = defs[sg.d].tokens;
         const from = Math.max(0, sg.pos - 4);
         const to = Math.min(dt.length, sg.pos + sg.tokens.length + 4);
         const lo = sg.pos - from, hi = lo + sg.tokens.length;
         const snippet = joinTokens(dt.slice(from, to), (t, idx) => idx >= lo && idx < hi
           ? `<span style="${swatch(sg.c)}">${escapeHtml(t)}</span>` : escapeHtml(t));
-        return `<div style="margin-top:4px;">${from > 0 ? '… ' : ''}${snippet}${to < dt.length ? ' …' : ''} <span style="color:var(--muted);">(${escapeHtml(defs[sg.d].term)})</span></div>`;
+        const phrase = joinTokens(sg.tokens, t => escapeHtml(t));
+        return `<div style="margin-top:12px; padding-left:8px; border-left:3px solid ${PALETTE[sg.c % PALETTE.length]};">
+          <div><span style="${swatch(sg.c)} padding:1px 6px; font-weight:700;">${phrase}</span></div>
+          <div style="margin-top:4px;">${from > 0 ? '… ' : ''}${snippet}${to < dt.length ? ' …' : ''} <span style="color:var(--muted);">(${escapeHtml(defs[sg.d].term)})</span></div></div>`;
       }).join('');
       const anyPlain = segs.some(sg => sg.c === undefined);
-      panel.innerHTML = `<div style="font-weight:700;">Built from phrases in existing definitions</div>
-        <div style="margin-top:4px;">${defHtml}</div>${lines}`
-        + (anyPlain ? mutedNote('Uncolored words were picked one at a time from common word pairs.') : '')
-        + mutedNote('Each phrase shows one example definition it appears in.');
+      panel.innerHTML = `<div style="line-height:1.8;">${defHtml}</div>${blocks}`
+        + (anyPlain ? mutedNote('Uncolored words were picked one at a time from common word pairs.') : '');
     }
 
     let definition = '';

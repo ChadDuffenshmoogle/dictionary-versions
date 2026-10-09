@@ -709,12 +709,12 @@ def main():
     )
     total_entries = len(all_terms)
 
-    # Save the all-words prediction into Zoogliography.txt. A failure here
-    # must never stop the stats from being built.
+    # ONE prediction, made here. It goes into stats.json (the page shows this
+    # exact word) and into Zoogliography.txt. A failure while saving to the
+    # txt must never stop the stats from being built.
+    predicted_word = predict_next_word(all_terms, f"all|{total_entries}|{latest_word_term}")
     try:
-        update_zoogliography(
-            predict_next_word(all_terms, f"all|{total_entries}|{latest_word_term}")
-        )
+        update_zoogliography(predicted_word)
     except Exception as e:
         print(f"Zoogliography update failed: {e}", file=sys.stderr)
 
@@ -805,6 +805,7 @@ def main():
     stats = {
         "latest_version": latest_name,
         "latest_word_term": latest_word_term,
+        "predicted_word": predicted_word,
         "latest_word_timestamp": latest_word_timestamp,
         "latest_file_content": content,
         "total_entries": total_entries,

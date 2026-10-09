@@ -14,8 +14,10 @@ automatically by GitHub Actions is enough to raise the anonymous rate
 limit from 60/hr to 1000/hr.
 """
 
+import base64
 import json
 import os
+import random
 import re
 import sys
 from collections import Counter
@@ -66,6 +68,89 @@ TOKEN = os.environ.get("GITHUB_TOKEN")
 HEADERS = {"Accept": "application/vnd.github+json"}
 if TOKEN:
     HEADERS["Authorization"] = f"Bearer {TOKEN}"
+
+
+# --- Predicted next word, saved into Zoogliography.txt ---------------------
+ZOOG_FILE = "Zoogliography.txt"
+ZOOG_MARKER = "--- Predicted Next Word ---"
+# A separate token that is allowed to write to the dictionary repo. It comes
+# from a GitHub Actions secret, so it never appears in this file.
+ZOOG_TOKEN = os.environ.get("ZOOG_WRITE_TOKEN")
+
+
+def predict_next_word(terms, seed_text):
+    """Guess a new word letter by letter from the spelling of every entry
+    (a 3-letter Markov chain). The same seed gives the same word, so it only
+    changes when the dictionary changes."""
+    order, start, end = 3, "\x02", "\x03"
+    existing = {t.lower() for t in terms}
+    table = {}
+    for t in terms:
+        padded = start * order + t + end
+        for i in range(order, len(padded)):
+            for o in range(1, order + 1):
+                table.setdefault(padded[i - o:i], Counter())[padded[i]] += 1
+
+    rng = random.Random(seed_text)
+
+    def pick_next(word):
+        padded = start * order + word
+        for o in range(order, 0, -1):
+            options = table.get(padded[len(padded) - o:])
+            if options:
+                return rng.choices(list(options), weights=list(options.values()))[0]
+        return end
+
+    for _ in range(500):
+        word = ""
+        while len(word) < 24:
+            ch = pick_next(word)
+            if ch == end:
+                break
+            word += ch
+        word = word.strip()
+        if 4 <= len(word) < 24 and word.lower() not in existing:
+            return word
+    return ""
+
+
+def update_zoogliography(word):
+    """Rewrite the 'Predicted Next Word' section at the bottom of
+    Zoogliography.txt. Everything above the marker is left untouched."""
+    if not ZOOG_TOKEN or not word:
+        print("Skipping Zoogliography update (no token or no word).")
+        return
+    headers = {
+        "Accept": "application/vnd.github+json",
+        "Authorization": f"Bearer {ZOOG_TOKEN}",
+    }
+    url = f"{API_ROOT}/contents/{requests.utils.quote(ZOOG_FILE)}"
+    for _ in range(3):
+        resp = requests.get(url, headers=headers, params={"ref": GITHUB_BRANCH}, timeout=30)
+        resp.raise_for_status()
+        info = resp.json()
+        text = base64.b64decode(info["content"]).decode("utf-8")
+        base = text.split(ZOOG_MARKER)[0].rstrip("\n")
+        new_text = f"{base}\n\n{ZOOG_MARKER}\n{word}"
+        if new_text == text:
+            return  # already up to date
+        put = requests.put(
+            url,
+            headers=headers,
+            json={
+                "message": f"Update predicted next word: {word}",
+                "content": base64.b64encode(new_text.encode("utf-8")).decode("ascii"),
+                "sha": info["sha"],  # fails if the bot saved the file first
+                "branch": GITHUB_BRANCH,
+            },
+            timeout=30,
+        )
+        if put.status_code in (200, 201):
+            print(f"Zoogliography predicted word set to: {word}")
+            return
+        if put.status_code in (409, 422):
+            continue  # the file changed while we worked; read it again and retry
+        put.raise_for_status()
 
 
 def api_get(url, params=None):
@@ -623,6 +708,15 @@ def main():
         key=sort_key_ignore_punct,
     )
     total_entries = len(all_terms)
+
+    # Save the all-words prediction into Zoogliography.txt. A failure here
+    # must never stop the stats from being built.
+    try:
+        update_zoogliography(
+            predict_next_word(all_terms, f"all|{total_entries}|{latest_word_term}")
+        )
+    except Exception as e:
+        print(f"Zoogliography update failed: {e}", file=sys.stderr)
 
     # --- Cumulative growth series, anchored to the real current total ---
     # (see the long note in git history: the baseline is solved backward

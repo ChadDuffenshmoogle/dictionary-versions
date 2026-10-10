@@ -86,7 +86,9 @@
   .fun-count { color: var(--muted); font-weight: 400; }
   .fun-note { color: var(--muted); font-size: 0.75rem; margin-top: 2px; }
   .fun-list { display: flex; flex-wrap: wrap; gap: 4px 10px; margin-top: 8px; font-size: 0.85rem; }
-  .fun-entry { overflow-wrap: anywhere; }
+  .fun-entry { display: inline-flex; flex-wrap: wrap; align-items: baseline; column-gap: 5px; min-width: 0; max-width: 100%; }
+  .fun-entry .fun-note { margin-top: 0; }
+  .fun-hl { color: var(--accent); }
   .fun-term { cursor: pointer; display: inline-block; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: bottom; }
   .fun-title-link { cursor: pointer; }
   .fun-title-link:hover { text-decoration: underline; }
@@ -2524,59 +2526,93 @@ async function main() {
     const box = document.getElementById('funFacts');
     if (!box) return;
     const terms = [...new Set(stats.words_by_length_asc || [])];
+    // l = the letters, idx = where each letter sits in the original text (for highlighting).
     const info = terms
-      .map(t => { const l = [...t.toLowerCase()].filter(ch => /\p{L}/u.test(ch)); return { t, l, s: l.join('') }; })
+      .map(t => {
+        const l = [], idx = [];
+        [...t].forEach((ch, i) => { const lc = ch.toLowerCase(); if (/\p{L}/u.test(lc)) { l.push(lc); idx.push(i); } });
+        return { t, l, idx, s: l.join('') };
+      })
       .filter(x => x.l.length);
+    const infoByTerm = new Map(info.map(x => [x.t, x]));
     const isV = (ch) => 'aeiou'.includes(ch);
-    const longestFirst = (a, b) => b.l.length - a.l.length || a.t.localeCompare(b.t);
+    const shortestFirst = (a, b) => a.l.length - b.l.length || a.t.localeCompare(b.t);
     const byTermLen = (a, b) => b.length - a.length || a.localeCompare(b);
     const tally = (arr) => arr.reduce((m, c) => { m[c] = (m[c] || 0) + 1; return m; }, {});
     const runMax = (arr, ok) => { let best = 0, cur = 0; arr.forEach(c => { cur = ok(c) ? cur + 1 : 0; if (cur > best) best = cur; }); return best; };
     const ALPHA = [...'abcdefghijklmnopqrstuvwxyz'];
+
+    // Highlighters: given a word, return which letter positions to colour.
+    const vowelHl = x => x.l.map((c, i) => isV(c) ? i : -1).filter(i => i >= 0);
+    const runHl = (ok) => x => {
+      let best = 0, bestEnd = -1, cur = 0;
+      x.l.forEach((c, i) => { cur = ok(c) ? cur + 1 : 0; if (cur > best) { best = cur; bestEnd = i; } });
+      return Array.from({ length: best }, (_, k) => bestEnd - best + 1 + k);
+    };
+    const subHl = (sub) => x => {
+      const r = [];
+      let i = x.s.indexOf(sub);
+      while (i >= 0) { for (let k = 0; k < sub.length; k++) r.push(i + k); i = x.s.indexOf(sub, i + 1); }
+      return r;
+    };
+    const topLetter = (x) => {
+      const t = tally(x.l);
+      const m = Math.max(...Object.values(t));
+      return [Object.keys(t).find(k => t[k] === m), m];
+    };
+
     const facts = [];
-    const listFact = (title, arr, note, runners = []) => {
+    const listFact = (title, arr, note, runners = [], opts = {}) => {
       if (!arr.length) return;
       const entries = arr.map(x => Array.isArray(x) ? x : [typeof x === 'string' ? x : x.t]);
       const have = new Set(entries.flat().map(t => t.toLowerCase()));
       const runnersUp = entries.length <= 2
         ? runners.filter(r => !have.has(r.t.toLowerCase())).slice(0, 2).map(r => ({ t: r.t, n: r.n || '' }))
         : [];
-      facts.push({ title, note, entries, runners: runnersUp });
+      facts.push({ title, note, entries, runners: runnersUp, hl: opts.hl, tag: opts.tag });
     };
     const statFact = (title, text) => facts.push({ title, text });
-    const topFact = (title, score, noteFn, filter = () => true) => {
+    const topFact = (title, score, noteFn, filter = () => true, opts = {}) => {
       const scored = info.filter(filter).map(x => ({ x, v: score(x) }));
       if (!scored.length) return;
       const best = Math.max(...scored.map(s => s.v));
-      const group = scored.filter(s => s.v === best).map(s => s.x).sort(longestFirst);
+      const group = scored.filter(s => s.v === best).map(s => s.x).sort(shortestFirst);
       const runners = scored.filter(s => s.v < best)
-        .sort((a, b) => b.v - a.v || longestFirst(a.x, b.x))
+        .sort((a, b) => b.v - a.v || shortestFirst(a.x, b.x))
         .slice(0, 2).map(s => ({ t: s.x.t, n: noteFn(s.v) }));
-      listFact(title, group, noteFn(best), runners);
+      listFact(title, group, noteFn(best), runners, opts);
     };
     const rowFact = (title, letters, minLen, note) =>
-      listFact(title, info.filter(x => x.l.length >= minLen && x.l.every(c => letters.includes(c))).sort(longestFirst), note,
-        info.filter(x => x.l.length >= 3 && x.l.every(c => letters.includes(c))).sort(longestFirst));
+      listFact(title, info.filter(x => x.l.length >= minLen && x.l.every(c => letters.includes(c))).sort(shortestFirst), note,
+        info.filter(x => x.l.length >= 3 && x.l.every(c => letters.includes(c))).sort(shortestFirst));
 
-    listFact('Palindromes', info.filter(x => x.l.length >= 3 && x.s === [...x.s].reverse().join('')).sort(longestFirst), 'Read the same backwards (3+ letters)');
-    listFact('All five vowels', info.filter(x => [...'aeiou'].every(v => x.l.includes(v))).sort(longestFirst), 'Contain a, e, i, o and u');
+    listFact('Palindromes', info.filter(x => x.l.length >= 3 && x.s === [...x.s].reverse().join('')).sort(shortestFirst), 'Read the same backwards (3+ letters)');
+    listFact('All five vowels', info.filter(x => [...'aeiou'].every(v => x.l.includes(v))).sort(shortestFirst), 'Contain a, e, i, o and u', [], { hl: vowelHl });
     topFact('Longest with no repeated letters', x => x.l.length, n => `${n} letters, every one different`, x => new Set(x.l).size === x.l.length);
-    listFact('No repeated letters', info.filter(x => x.l.length >= 7 && new Set(x.l).size === x.l.length).sort(longestFirst), '7+ letters, every one different');
+    listFact('No repeated letters', info.filter(x => x.l.length >= 7 && new Set(x.l).size === x.l.length).sort(shortestFirst), '7+ letters, every one different');
     topFact('Most different letters', x => new Set(x.l).size, n => `${n} different letters`);
-    topFact('Most of the same letter', x => Math.max(...Object.values(tally(x.l))), n => `One letter used ${n} times`);
-    listFact('No vowels', info.filter(x => x.l.length >= 2 && !x.l.some(isV)).sort(longestFirst), 'No a, e, i, o or u');
-    listFact('Only one kind of vowel', info.filter(x => x.l.length >= 7 && new Set(x.l.filter(isV)).size === 1).sort(longestFirst), '7+ letters, a single vowel used');
-    topFact('Longest run of consonants', x => runMax(x.l, c => !isV(c)), n => `${n} in a row`);
-    topFact('Longest run of vowels', x => runMax(x.l, isV), n => `${n} in a row`);
-    listFact('Consonant, vowel, consonant, vowel…', info.filter(x => x.l.length >= 6 && x.l.every((c, i) => i === 0 || isV(c) !== isV(x.l[i - 1]))).sort(longestFirst), '6+ letters, strictly alternating');
-    listFact('Starts and ends with the same letter', info.filter(x => x.l.length >= 3 && x.l[0] === x.l[x.l.length - 1]).sort(longestFirst));
-    listFact('Letters in alphabetical order', info.filter(x => x.l.length >= 4 && x.l.every((c, i) => i === 0 || x.l[i - 1] <= c)).sort(longestFirst), '4+ letters, A to Z',
-      info.filter(x => x.l.length >= 3 && x.l.every((c, i) => i === 0 || x.l[i - 1] <= c)).sort(longestFirst));
-    listFact('Letters in reverse alphabetical order', info.filter(x => x.l.length >= 4 && x.l.every((c, i) => i === 0 || x.l[i - 1] >= c)).sort(longestFirst), '4+ letters, Z to A',
-      info.filter(x => x.l.length >= 3 && x.l.every((c, i) => i === 0 || x.l[i - 1] >= c)).sort(longestFirst));
-    listFact('Two different double letters', info.filter(x => new Set(x.l.filter((c, i) => i > 0 && c === x.l[i - 1])).size >= 2).sort(longestFirst), 'Like “bookkeeper”');
+    topFact('Most of the same letter', x => Math.max(...Object.values(tally(x.l))), n => 'One letter repeated the most', undefined, {
+      hl: x => { const c = topLetter(x)[0]; return x.l.map((ch, i) => ch === c ? i : -1).filter(i => i >= 0); },
+      tag: x => { const [c, m] = topLetter(x); return `“${c}” ×${m.toLocaleString()}`; },
+    });
+    listFact('No vowels', info.filter(x => x.l.length >= 2 && !x.l.some(isV)).sort(shortestFirst), 'No a, e, i, o or u');
+    listFact('Only one kind of vowel', info.filter(x => x.l.length >= 7 && new Set(x.l.filter(isV)).size === 1).sort(shortestFirst), '7+ letters, a single vowel used', [], { hl: vowelHl });
+    topFact('Longest run of consonants', x => runMax(x.l, c => !isV(c)), n => `${n} in a row`, undefined, { hl: runHl(c => !isV(c)) });
+    topFact('Longest run of vowels', x => runMax(x.l, isV), n => `${n} in a row`, undefined, { hl: runHl(isV) });
+    listFact('Consonant, vowel, consonant, vowel…', info.filter(x => x.l.length >= 6 && x.l.every((c, i) => i === 0 || isV(c) !== isV(x.l[i - 1]))).sort(shortestFirst), '6+ letters, strictly alternating', [], { hl: vowelHl });
+    listFact('Starts and ends with the same letter', info.filter(x => x.l.length >= 3 && x.l[0] === x.l[x.l.length - 1]).sort(shortestFirst), undefined, [], { hl: x => [0, x.l.length - 1] });
+    listFact('Letters in alphabetical order', info.filter(x => x.l.length >= 4 && x.l.every((c, i) => i === 0 || x.l[i - 1] <= c)).sort(shortestFirst), '4+ letters, A to Z',
+      info.filter(x => x.l.length >= 3 && x.l.every((c, i) => i === 0 || x.l[i - 1] <= c)).sort(shortestFirst));
+    listFact('Letters in reverse alphabetical order', info.filter(x => x.l.length >= 4 && x.l.every((c, i) => i === 0 || x.l[i - 1] >= c)).sort(shortestFirst), '4+ letters, Z to A',
+      info.filter(x => x.l.length >= 3 && x.l.every((c, i) => i === 0 || x.l[i - 1] >= c)).sort(shortestFirst));
+    listFact('Two different double letters', info.filter(x => new Set(x.l.filter((c, i) => i > 0 && c === x.l[i - 1])).size >= 2).sort(shortestFirst), 'Like “bookkeeper”', [], {
+      hl: x => x.l.flatMap((c, i) => i > 0 && c === x.l[i - 1] ? [i - 1, i] : []),
+    });
     const V = { a:1,e:1,i:1,o:1,u:1,l:1,n:1,s:1,t:1,r:1,d:2,g:2,b:3,c:3,m:3,p:3,f:4,h:4,v:4,w:4,y:4,k:5,j:8,x:8,q:10,z:10 };
-    topFact('Highest Scrabble score', x => x.l.reduce((sum, c) => sum + (V[c] || 0), 0), n => `${n} points`);
+    const scrabbleOk = new Set(dictEntries.filter(e => e.scrabble === 'legal' || e.scrabble === 'normalized').map(e => e.term));
+    topFact('Highest Scrabble score', x => x.l.reduce((sum, c) => sum + (V[c] || 0), 0), n => `${n} points, Scrabble-legal only`, x => scrabbleOk.has(x.t) && x.l.length <= 15, {
+      hl: x => x.l.map((c, i) => (V[c] || 0) >= 8 ? i : -1).filter(i => i >= 0),
+    });
     rowFact('Top keyboard row only', 'qwertyuiop', 3, 'Typed using only Q to P');
     rowFact('Home row only', 'asdfghjkl', 3, 'Typed using only A to L');
     rowFact('Bottom keyboard row only', 'zxcvbnm', 3, 'Typed using only Z to M');
@@ -2584,8 +2620,8 @@ async function main() {
     rowFact('Right hand only', 'yuiophjklnm', 5, 'Typed with just your right hand');
     const groups = {};
     info.filter(x => x.l.length >= 3).forEach(x => { const k = [...x.l].sort().join(''); (groups[k] = groups[k] || []).push(x.t); });
-    listFact('Anagrams', Object.values(groups).filter(g => new Set(g.map(w => w.toLowerCase())).size > 1).sort((a, b) => b[0].length - a[0].length), 'Same letters, different word');
-    ['uni', 'cycl'].forEach(sub => listFact(`Contains “${sub}”`, info.filter(x => x.s.includes(sub)).sort(longestFirst)));
+    listFact('Anagrams', Object.values(groups).filter(g => new Set(g.map(w => w.toLowerCase())).size > 1).sort((a, b) => a[0].length - b[0].length), 'Same letters, different word');
+    ['uni', 'cycl'].forEach(sub => listFact(`Contains “${sub}”`, info.filter(x => x.s.includes(sub)).sort(shortestFirst), undefined, [], { hl: subHl(sub) }));
     listFact('Phrases (with spaces)', terms.filter(t => /\s/.test(t)).sort(byTermLen));
     listFact('Hyphenated', terms.filter(t => t.includes('-')).sort(byTermLen));
     listFact('With apostrophes', terms.filter(t => /['’]/.test(t)).sort(byTermLen));
@@ -2619,17 +2655,38 @@ async function main() {
     });
 
     const MAX = 6;
-    const shorten = (t) => t.length > 40 ? t.slice(0, 40) + '…' : t;
-    const chip = (t) => `<span class="fun-term" data-term="${escapeHtml(t)}">${escapeHtml(shorten(t))}</span>`;
+    const attr = (t) => escapeHtml(t).replace(/"/g, '&quot;');
+    // One clickable word: long ones are cut short, and the letters of interest are coloured.
+    const chip = (t, f) => {
+      const x = infoByTerm.get(t);
+      const chars = [...t];
+      const hi = x && f && f.hl ? new Set(f.hl(x).map(i => x.idx[i])) : null;
+      let html = '', open = false;
+      chars.slice(0, 40).forEach((ch, i) => {
+        const on = !!(hi && hi.has(i));
+        if (on && !open) html += '<span class="fun-hl">';
+        if (!on && open) html += '</span>';
+        open = on;
+        html += escapeHtml(ch);
+      });
+      if (open) html += '</span>';
+      if (chars.length > 40) html += '…';
+      const full = t.length > 200 ? t.slice(0, 200) + '…' : t;
+      return `<span class="fun-term" data-term="${attr(t)}"${chars.length > 16 ? ` title="${attr(full)}"` : ''}>${html}</span>`;
+    };
+    const tagHtml = (t, f) => {
+      const x = infoByTerm.get(t);
+      return f.tag && x ? `<span class="fun-note">${escapeHtml(f.tag(x))}</span>` : '';
+    };
     function itemHtml(f) {
-      const head = `<div class="fun-title"><span${f.entries ? ` class="fun-title-link" data-fun="${escapeHtml(f.title.toLowerCase())}"` : ''}>${escapeHtml(f.title)}</span>${f.entries ? `<span class="fun-count">${f.entries.length.toLocaleString()}</span>` : ''}</div>`;
+      const head = `<div class="fun-title"><span${f.entries ? ` class="fun-title-link" data-fun="${attr(f.title.toLowerCase())}"` : ''}>${escapeHtml(f.title)}</span>${f.entries ? `<span class="fun-count">${f.entries.length.toLocaleString()}</span>` : ''}</div>`;
       const note = f.note ? `<div class="fun-note">${escapeHtml(f.note)}</div>` : '';
       if (!f.entries) return head + `<div class="fun-text">${escapeHtml(f.text)}</div>`;
       const shown = f.open ? f.entries : f.entries.slice(0, MAX);
-      const list = shown.map(g => `<span class="fun-entry">${g.map(chip).join('<span class="fun-note"> ⇄ </span>')}</span>`).join('');
+      const list = shown.map(g => `<span class="fun-entry">${g.map(t => chip(t, f) + tagHtml(t, f)).join('<span class="fun-note"> ⇄ </span>')}</span>`).join('');
       const more = f.entries.length > MAX ? `<span class="fun-more">${f.open ? 'show less' : `+${f.entries.length - MAX} more`}</span>` : '';
       const runs = f.runners && f.runners.length
-        ? `<div class="fun-note" style="margin-top:8px;">Runner-up${f.runners.length > 1 ? 's' : ''}</div><div class="fun-list" style="margin-top:2px;">${f.runners.map(r => `<span class="fun-entry">${chip(r.t)}${r.n ? `<span class="fun-note"> — ${escapeHtml(r.n)}</span>` : ''}</span>`).join('')}</div>`
+        ? `<div class="fun-note" style="margin-top:8px;">Runner-up${f.runners.length > 1 ? 's' : ''}</div><div class="fun-list" style="margin-top:2px;">${f.runners.map(r => `<span class="fun-entry">${chip(r.t, f)}${tagHtml(r.t, f) || (r.n ? `<span class="fun-note">${escapeHtml(r.n)}</span>` : '')}</span>`).join('')}</div>`
         : '';
       return head + note + `<div class="fun-list">${list}${more}</div>` + runs;
     }

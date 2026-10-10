@@ -87,7 +87,9 @@
   .fun-note { color: var(--muted); font-size: 0.75rem; margin-top: 2px; }
   .fun-list { display: flex; flex-wrap: wrap; gap: 4px 10px; margin-top: 8px; font-size: 0.85rem; }
   .fun-entry { overflow-wrap: anywhere; }
-  .fun-term { cursor: pointer; }
+  .fun-term { cursor: pointer; display: inline-block; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: bottom; }
+  .fun-title-link { cursor: pointer; }
+  .fun-title-link:hover { text-decoration: underline; }
   .fun-term:hover { text-decoration: underline; }
   .fun-more { color: var(--muted); cursor: pointer; font-size: 0.75rem; align-self: center; }
   .fun-more:hover { color: var(--text); }
@@ -641,7 +643,6 @@
     </div>
 
     <div class="card wide">
-      <h2>Fun Facts</h2>
       <div id="funFacts" class="fun-grid"></div>
     </div>
 
@@ -1436,6 +1437,7 @@ async function main() {
     .slice()
     .sort((a, b) => a.term.toLowerCase().localeCompare(b.term.toLowerCase()));
 
+  const funSets = new Map();
   const termsByDate = new Map();
   (stats.added_terms_timeline || []).forEach(({ date, term }) => {
     if (!termsByDate.has(date)) termsByDate.set(date, new Set());
@@ -1472,12 +1474,14 @@ async function main() {
     const startsWithMatch = raw.match(/^startswith:\s*(.*)$/);
     const posMatch = raw.match(/^pos:\s*(.*)$/);
     const dateMatch = raw.match(/^date:\s*(.*)$/);
+    const funMatch = raw.match(/^fun:\s*(.*)$/);
     const lengthMatch = raw.match(/^length:\s*(.*)$/);
     const usedMatch = raw.match(/^used:(characters|words):(entries|definitions|both):(.*)$/);
     const scrabbleMatch = raw.match(/^scrabble(legal|normalized|illegal):?\s*(.*)$/);
     const q = startsWithMatch ? startsWithMatch[1]
             : posMatch ? posMatch[1]
             : dateMatch ? dateMatch[1]
+            : funMatch ? funMatch[1]
             : lengthMatch ? lengthMatch[1]
             : usedMatch ? usedMatch[3]
             : scrabbleMatch ? scrabbleMatch[2]
@@ -1485,6 +1489,8 @@ async function main() {
     const isPrefix = !!startsWithMatch;
     const isPos = !!posMatch;
     const isDate = !!dateMatch;
+    const isFun = !!funMatch;
+    const funSet = isFun ? (funSets.get(q.trim()) || new Set()) : null;
     const isLength = !!lengthMatch;
     const isUsed = !!usedMatch;
     const isScrabble = !!scrabbleMatch;
@@ -1505,6 +1511,7 @@ async function main() {
           : text.split(/\s+/).some(w => w.replace(/^[^a-z0-9]+|[^a-z0-9]+$/g, '') === q);
         match = (usedMatch[2] !== 'definitions' && inText(term)) || (usedMatch[2] !== 'entries' && inText(def));
       }
+      else if (isFun) match = funSet.has(term);
       else if (isDate) match = dateTerms.has(term);
       else if (isLength) {
         const [w, m, n] = q.split(':');
@@ -1521,7 +1528,7 @@ async function main() {
       entryEls[i].style.display = match ? '' : 'none';
       if (match) {
         visible++;
-        const noHighlight = isPos || isDate || isLength || isScrabble;
+        const noHighlight = isPos || isDate || isLength || isScrabble || isFun;
         const highlightTerm = isUsed ? usedMatch[2] !== 'definitions'
           : noHighlight ? false : (q && (isPrefix || searchScope !== 'definition'));
         const highlightDef = isUsed ? usedMatch[2] !== 'entries'
@@ -2527,20 +2534,29 @@ async function main() {
     const runMax = (arr, ok) => { let best = 0, cur = 0; arr.forEach(c => { cur = ok(c) ? cur + 1 : 0; if (cur > best) best = cur; }); return best; };
     const ALPHA = [...'abcdefghijklmnopqrstuvwxyz'];
     const facts = [];
-    const listFact = (title, arr, note) => {
-      if (arr.length) facts.push({ title, note, entries: arr.map(x => Array.isArray(x) ? x : [typeof x === 'string' ? x : x.t]) });
+    const listFact = (title, arr, note, runners = []) => {
+      if (!arr.length) return;
+      const entries = arr.map(x => Array.isArray(x) ? x : [typeof x === 'string' ? x : x.t]);
+      const have = new Set(entries.flat().map(t => t.toLowerCase()));
+      const runnersUp = entries.length <= 2
+        ? runners.filter(r => !have.has(r.t.toLowerCase())).slice(0, 2).map(r => ({ t: r.t, n: r.n || '' }))
+        : [];
+      facts.push({ title, note, entries, runners: runnersUp });
     };
     const statFact = (title, text) => facts.push({ title, text });
     const topFact = (title, score, noteFn, filter = () => true) => {
-      let best = -Infinity, group = [];
-      info.filter(filter).forEach(x => {
-        const v = score(x);
-        if (v > best) { best = v; group = [x]; } else if (v === best) group.push(x);
-      });
-      if (group.length) listFact(title, group.sort(longestFirst), noteFn(best));
+      const scored = info.filter(filter).map(x => ({ x, v: score(x) }));
+      if (!scored.length) return;
+      const best = Math.max(...scored.map(s => s.v));
+      const group = scored.filter(s => s.v === best).map(s => s.x).sort(longestFirst);
+      const runners = scored.filter(s => s.v < best)
+        .sort((a, b) => b.v - a.v || longestFirst(a.x, b.x))
+        .slice(0, 2).map(s => ({ t: s.x.t, n: noteFn(s.v) }));
+      listFact(title, group, noteFn(best), runners);
     };
     const rowFact = (title, letters, minLen, note) =>
-      listFact(title, info.filter(x => x.l.length >= minLen && x.l.every(c => letters.includes(c))).sort(longestFirst), note);
+      listFact(title, info.filter(x => x.l.length >= minLen && x.l.every(c => letters.includes(c))).sort(longestFirst), note,
+        info.filter(x => x.l.length >= 3 && x.l.every(c => letters.includes(c))).sort(longestFirst));
 
     listFact('Palindromes', info.filter(x => x.l.length >= 3 && x.s === [...x.s].reverse().join('')).sort(longestFirst), 'Read the same backwards (3+ letters)');
     listFact('All five vowels', info.filter(x => [...'aeiou'].every(v => x.l.includes(v))).sort(longestFirst), 'Contain a, e, i, o and u');
@@ -2554,8 +2570,10 @@ async function main() {
     topFact('Longest run of vowels', x => runMax(x.l, isV), n => `${n} in a row`);
     listFact('Consonant, vowel, consonant, vowel…', info.filter(x => x.l.length >= 6 && x.l.every((c, i) => i === 0 || isV(c) !== isV(x.l[i - 1]))).sort(longestFirst), '6+ letters, strictly alternating');
     listFact('Starts and ends with the same letter', info.filter(x => x.l.length >= 3 && x.l[0] === x.l[x.l.length - 1]).sort(longestFirst));
-    listFact('Letters in alphabetical order', info.filter(x => x.l.length >= 4 && x.l.every((c, i) => i === 0 || x.l[i - 1] <= c)).sort(longestFirst), '4+ letters, A to Z');
-    listFact('Letters in reverse alphabetical order', info.filter(x => x.l.length >= 4 && x.l.every((c, i) => i === 0 || x.l[i - 1] >= c)).sort(longestFirst), '4+ letters, Z to A');
+    listFact('Letters in alphabetical order', info.filter(x => x.l.length >= 4 && x.l.every((c, i) => i === 0 || x.l[i - 1] <= c)).sort(longestFirst), '4+ letters, A to Z',
+      info.filter(x => x.l.length >= 3 && x.l.every((c, i) => i === 0 || x.l[i - 1] <= c)).sort(longestFirst));
+    listFact('Letters in reverse alphabetical order', info.filter(x => x.l.length >= 4 && x.l.every((c, i) => i === 0 || x.l[i - 1] >= c)).sort(longestFirst), '4+ letters, Z to A',
+      info.filter(x => x.l.length >= 3 && x.l.every((c, i) => i === 0 || x.l[i - 1] >= c)).sort(longestFirst));
     listFact('Two different double letters', info.filter(x => new Set(x.l.filter((c, i) => i > 0 && c === x.l[i - 1])).size >= 2).sort(longestFirst), 'Like “bookkeeper”');
     const V = { a:1,e:1,i:1,o:1,u:1,l:1,n:1,s:1,t:1,r:1,d:2,g:2,b:3,c:3,m:3,p:3,f:4,h:4,v:4,w:4,y:4,k:5,j:8,x:8,q:10,z:10 };
     topFact('Highest Scrabble score', x => x.l.reduce((sum, c) => sum + (V[c] || 0), 0), n => `${n} points`);
@@ -2580,10 +2598,10 @@ async function main() {
       statFact('Most common letter', `“${common}” appears ${all[common].toLocaleString()} times`);
       statFact('Rarest letter', `“${rare}” appears only ${all[rare].toLocaleString()} time${all[rare] === 1 ? '' : 's'}`);
       const missing = ALPHA.filter(c => !all[c]);
-      statFact('Letters never used', missing.length ? missing.join(', ') : 'Every letter of the alphabet appears');
+      if (missing.length) statFact('Letters never used', missing.join(', '));
       const starts = new Set(info.map(x => x.l[0]));
       const noStart = ALPHA.filter(c => !starts.has(c));
-      statFact('Letters that never start a word', noStart.length ? noStart.join(', ') : 'Every letter starts at least one entry');
+      if (noStart.length) statFact('Letters that never start a word', noStart.join(', '));
       const lens = info.map(x => x.l.length).sort((a, b) => a - b);
       const lenTally = tally(lens);
       const modeLen = Object.keys(lenTally).sort((a, b) => lenTally[b] - lenTally[a])[0];
@@ -2591,21 +2609,36 @@ async function main() {
       statFact('Total letters', `${lens.reduce((a, b) => a + b, 0).toLocaleString()} letters across ${lens.length.toLocaleString()} entries`);
     }
 
+    // Anything that applies to more than 50 entries isn't special, so drop it.
+    for (let i = facts.length - 1; i >= 0; i--) {
+      if (facts[i].entries && facts[i].entries.length > 50) facts.splice(i, 1);
+    }
+    // Remember each category's words so clicking its title can search them.
+    facts.forEach(f => {
+      if (f.entries) funSets.set(f.title.toLowerCase(), new Set(f.entries.flat().map(t => t.toLowerCase())));
+    });
+
     const MAX = 6;
-    const chip = (t) => `<span class="fun-term" data-term="${escapeHtml(t)}">${escapeHtml(t)}</span>`;
+    const shorten = (t) => t.length > 40 ? t.slice(0, 40) + '…' : t;
+    const chip = (t) => `<span class="fun-term" data-term="${escapeHtml(t)}">${escapeHtml(shorten(t))}</span>`;
     function itemHtml(f) {
-      const head = `<div class="fun-title"><span>${escapeHtml(f.title)}</span>${f.entries ? `<span class="fun-count">${f.entries.length.toLocaleString()}</span>` : ''}</div>`;
+      const head = `<div class="fun-title"><span${f.entries ? ` class="fun-title-link" data-fun="${escapeHtml(f.title.toLowerCase())}"` : ''}>${escapeHtml(f.title)}</span>${f.entries ? `<span class="fun-count">${f.entries.length.toLocaleString()}</span>` : ''}</div>`;
       const note = f.note ? `<div class="fun-note">${escapeHtml(f.note)}</div>` : '';
       if (!f.entries) return head + `<div class="fun-text">${escapeHtml(f.text)}</div>`;
       const shown = f.open ? f.entries : f.entries.slice(0, MAX);
       const list = shown.map(g => `<span class="fun-entry">${g.map(chip).join('<span class="fun-note"> ⇄ </span>')}</span>`).join('');
       const more = f.entries.length > MAX ? `<span class="fun-more">${f.open ? 'show less' : `+${f.entries.length - MAX} more`}</span>` : '';
-      return head + note + `<div class="fun-list">${list}${more}</div>`;
+      const runs = f.runners && f.runners.length
+        ? `<div class="fun-note" style="margin-top:8px;">Runner-up${f.runners.length > 1 ? 's' : ''}</div><div class="fun-list" style="margin-top:2px;">${f.runners.map(r => `<span class="fun-entry">${chip(r.t)}${r.n ? `<span class="fun-note"> — ${escapeHtml(r.n)}</span>` : ''}</span>`).join('')}</div>`
+        : '';
+      return head + note + `<div class="fun-list">${list}${more}</div>` + runs;
     }
     box.innerHTML = facts.map((f, i) => `<div class="fun-item" data-f="${i}">${itemHtml(f)}</div>`).join('');
     box.addEventListener('click', (e) => {
       const term = e.target.closest('[data-term]');
       if (term) { openSearchModal(term.dataset.term); return; }
+      const titleLink = e.target.closest('[data-fun]');
+      if (titleLink) { openSearchModal('fun:' + titleLink.dataset.fun); return; }
       if (e.target.closest('.fun-more')) {
         const item = e.target.closest('.fun-item');
         const f = facts[Number(item.dataset.f)];

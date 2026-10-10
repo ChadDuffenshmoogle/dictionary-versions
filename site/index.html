@@ -2530,7 +2530,10 @@ async function main() {
     const info = terms
       .map(t => {
         const l = [], idx = [];
-        [...t].forEach((ch, i) => { const lc = ch.toLowerCase(); if (/\p{L}/u.test(lc)) { l.push(lc); idx.push(i); } });
+        // Accents are stripped (é counts as e) whether typed as one character or two; digits, spaces and punctuation are skipped.
+        [...t].forEach((ch, i) => {
+          [...ch.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase()].forEach(b => { if (/\p{L}/u.test(b)) { l.push(b); idx.push(i); } });
+        });
         return { t, l, idx, s: l.join('') };
       })
       .filter(x => x.l.length);
@@ -2609,8 +2612,7 @@ async function main() {
       hl: x => x.l.flatMap((c, i) => i > 0 && c === x.l[i - 1] ? [i - 1, i] : []),
     });
     const V = { a:1,e:1,i:1,o:1,u:1,l:1,n:1,s:1,t:1,r:1,d:2,g:2,b:3,c:3,m:3,p:3,f:4,h:4,v:4,w:4,y:4,k:5,j:8,x:8,q:10,z:10 };
-    const scrabbleOk = new Set(dictEntries.filter(e => e.scrabble === 'legal' || e.scrabble === 'normalized').map(e => e.term));
-    topFact('Highest Scrabble score', x => x.l.reduce((sum, c) => sum + (V[c] || 0), 0), n => `${n} points, Scrabble-legal only`, x => scrabbleOk.has(x.t) && x.l.length <= 15, {
+    topFact('Highest Scrabble score', x => x.l.reduce((sum, c) => sum + (V[c] || 0), 0), n => `${n} points, 15 letters or fewer`, x => x.l.length <= 15, {
       hl: x => x.l.map((c, i) => (V[c] || 0) >= 8 ? i : -1).filter(i => i >= 0),
     });
     rowFact('Top keyboard row only', 'qwertyuiop', 3, 'Typed using only Q to P');

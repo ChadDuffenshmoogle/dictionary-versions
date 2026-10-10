@@ -2526,26 +2526,30 @@ async function main() {
     const box = document.getElementById('funFacts');
     if (!box) return;
     const terms = [...new Set(stats.words_by_length_asc || [])];
-    // l = the letters, idx = where each letter sits in the original text (for highlighting).
-    const info = terms
-      .map(t => {
+    // A slash separates different spellings of one word, so each spelling is checked on its own.
+    // l = its letters (accents stripped, digits/spaces/punctuation skipped), idx = where each letter sits in the text.
+    const allVars = terms.flatMap(term => {
+      const seen = new Set();
+      let parts = term.split(/\s*\/\s*/).map(v => v.trim()).filter(v => v && !seen.has(v.toLowerCase()) && seen.add(v.toLowerCase()));
+      if (!parts.length) parts = [term];
+      return parts.map(t => {
         const l = [], idx = [];
-        // Accents are stripped (é counts as e) whether typed as one character or two; digits, spaces and punctuation are skipped.
         [...t].forEach((ch, i) => {
           [...ch.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase()].forEach(b => { if (/\p{L}/u.test(b)) { l.push(b); idx.push(i); } });
         });
-        return { t, l, idx, s: l.join('') };
-      })
-      .filter(x => x.l.length);
-    const infoByTerm = new Map(info.map(x => [x.t, x]));
+        return { t, term, l, idx, s: l.join('') };
+      });
+    });
+    const info = allVars.filter(x => x.l.length);
     const isV = (ch) => 'aeiou'.includes(ch);
     const shortestFirst = (a, b) => a.l.length - b.l.length || a.t.localeCompare(b.t);
-    const byTermLen = (a, b) => b.length - a.length || a.localeCompare(b);
+    const longestFirst = (a, b) => b.l.length - a.l.length || a.t.localeCompare(b.t);
+    const byTextLen = (a, b) => a.t.length - b.t.length || a.t.localeCompare(b.t);
     const tally = (arr) => arr.reduce((m, c) => { m[c] = (m[c] || 0) + 1; return m; }, {});
     const runMax = (arr, ok) => { let best = 0, cur = 0; arr.forEach(c => { cur = ok(c) ? cur + 1 : 0; if (cur > best) best = cur; }); return best; };
     const ALPHA = [...'abcdefghijklmnopqrstuvwxyz'];
 
-    // Highlighters: given a word, return which letter positions to colour.
+    // Highlighters: given a spelling, return which letter positions to colour.
     const vowelHl = x => x.l.map((c, i) => isV(c) ? i : -1).filter(i => i >= 0);
     const runHl = (ok) => x => {
       let best = 0, bestEnd = -1, cur = 0;
@@ -2565,13 +2569,24 @@ async function main() {
     };
 
     const facts = [];
+    // Joins the spellings of the same term into one item: { term, xs: [spellings] }.
+    const toItems = (group) => {
+      const m = new Map();
+      group.forEach(x => { if (!m.has(x.term)) m.set(x.term, { term: x.term, xs: [] }); m.get(x.term).xs.push(x); });
+      return [...m.values()];
+    };
     const listFact = (title, arr, note, runners = [], opts = {}) => {
       if (!arr.length) return;
-      const entries = arr.map(x => Array.isArray(x) ? x : [typeof x === 'string' ? x : x.t]);
-      const have = new Set(entries.flat().map(t => t.toLowerCase()));
-      const runnersUp = entries.length <= 2
-        ? runners.filter(r => !have.has(r.t.toLowerCase())).slice(0, 2).map(r => ({ t: r.t, n: r.n || '' }))
-        : [];
+      const entries = Array.isArray(arr[0]) ? arr.map(toItems) : toItems(arr).map(it => [it]);
+      const have = new Set(entries.flat().map(it => it.term));
+      const runnersUp = [];
+      if (entries.length <= 2) {
+        runners.map(r => r.x ? r : { x: r }).forEach(r => {
+          if (runnersUp.length >= 2 || have.has(r.x.term)) return;
+          have.add(r.x.term);
+          runnersUp.push({ item: { term: r.x.term, xs: [r.x] }, n: r.n || '' });
+        });
+      }
       facts.push({ title, note, entries, runners: runnersUp, hl: opts.hl, tag: opts.tag });
     };
     const statFact = (title, text) => facts.push({ title, text });
@@ -2582,38 +2597,39 @@ async function main() {
       const group = scored.filter(s => s.v === best).map(s => s.x).sort(shortestFirst);
       const runners = scored.filter(s => s.v < best)
         .sort((a, b) => b.v - a.v || shortestFirst(a.x, b.x))
-        .slice(0, 2).map(s => ({ t: s.x.t, n: noteFn(s.v) }));
+        .slice(0, 12).map(s => ({ x: s.x, n: opts.val ? opts.val(s.v) : '' }));
       listFact(title, group, noteFn(best), runners, opts);
     };
     const rowFact = (title, letters, minLen, note) =>
       listFact(title, info.filter(x => x.l.length >= minLen && x.l.every(c => letters.includes(c))).sort(shortestFirst), note,
-        info.filter(x => x.l.length >= 3 && x.l.every(c => letters.includes(c))).sort(shortestFirst));
+        info.filter(x => x.l.length >= 3 && x.l.every(c => letters.includes(c))).sort(longestFirst));
 
     listFact('Palindromes', info.filter(x => x.l.length >= 3 && x.s === [...x.s].reverse().join('')).sort(shortestFirst), 'Read the same backwards (3+ letters)');
     listFact('All five vowels', info.filter(x => [...'aeiou'].every(v => x.l.includes(v))).sort(shortestFirst), 'Contain a, e, i, o and u', [], { hl: vowelHl });
-    topFact('Longest with no repeated letters', x => x.l.length, n => `${n} letters, every one different`, x => new Set(x.l).size === x.l.length);
+    topFact('Longest with no repeated letters', x => x.l.length, n => `${n} letters, every one different`, x => new Set(x.l).size === x.l.length, { val: n => `${n} letters` });
     listFact('No repeated letters', info.filter(x => x.l.length >= 7 && new Set(x.l).size === x.l.length).sort(shortestFirst), '7+ letters, every one different');
-    topFact('Most different letters', x => new Set(x.l).size, n => `${n} different letters`);
+    topFact('Most different letters', x => new Set(x.l).size, n => `${n} different letters`, undefined, { val: n => `${n} different` });
     topFact('Most of the same letter', x => Math.max(...Object.values(tally(x.l))), n => 'One letter repeated the most', undefined, {
       hl: x => { const c = topLetter(x)[0]; return x.l.map((ch, i) => ch === c ? i : -1).filter(i => i >= 0); },
       tag: x => { const [c, m] = topLetter(x); return `“${c}” ×${m.toLocaleString()}`; },
     });
     listFact('No vowels', info.filter(x => x.l.length >= 2 && !x.l.some(isV)).sort(shortestFirst), 'No a, e, i, o or u');
     listFact('Only one kind of vowel', info.filter(x => x.l.length >= 7 && new Set(x.l.filter(isV)).size === 1).sort(shortestFirst), '7+ letters, a single vowel used', [], { hl: vowelHl });
-    topFact('Longest run of consonants', x => runMax(x.l, c => !isV(c)), n => `${n} in a row`, undefined, { hl: runHl(c => !isV(c)) });
-    topFact('Longest run of vowels', x => runMax(x.l, isV), n => `${n} in a row`, undefined, { hl: runHl(isV) });
+    topFact('Longest run of consonants', x => runMax(x.l, c => !isV(c)), n => `${n} in a row`, undefined, { hl: runHl(c => !isV(c)), val: n => `${n} in a row` });
+    topFact('Longest run of vowels', x => runMax(x.l, isV), n => `${n} in a row`, undefined, { hl: runHl(isV), val: n => `${n} in a row` });
     listFact('Consonant, vowel, consonant, vowel…', info.filter(x => x.l.length >= 6 && x.l.every((c, i) => i === 0 || isV(c) !== isV(x.l[i - 1]))).sort(shortestFirst), '6+ letters, strictly alternating', [], { hl: vowelHl });
     listFact('Starts and ends with the same letter', info.filter(x => x.l.length >= 3 && x.l[0] === x.l[x.l.length - 1]).sort(shortestFirst), undefined, [], { hl: x => [0, x.l.length - 1] });
     listFact('Letters in alphabetical order', info.filter(x => x.l.length >= 4 && x.l.every((c, i) => i === 0 || x.l[i - 1] <= c)).sort(shortestFirst), '4+ letters, A to Z',
-      info.filter(x => x.l.length >= 3 && x.l.every((c, i) => i === 0 || x.l[i - 1] <= c)).sort(shortestFirst));
+      info.filter(x => x.l.length >= 3 && x.l.every((c, i) => i === 0 || x.l[i - 1] <= c)).sort(longestFirst));
     listFact('Letters in reverse alphabetical order', info.filter(x => x.l.length >= 4 && x.l.every((c, i) => i === 0 || x.l[i - 1] >= c)).sort(shortestFirst), '4+ letters, Z to A',
-      info.filter(x => x.l.length >= 3 && x.l.every((c, i) => i === 0 || x.l[i - 1] >= c)).sort(shortestFirst));
+      info.filter(x => x.l.length >= 3 && x.l.every((c, i) => i === 0 || x.l[i - 1] >= c)).sort(longestFirst));
     listFact('Two different double letters', info.filter(x => new Set(x.l.filter((c, i) => i > 0 && c === x.l[i - 1])).size >= 2).sort(shortestFirst), 'Like “bookkeeper”', [], {
       hl: x => x.l.flatMap((c, i) => i > 0 && c === x.l[i - 1] ? [i - 1, i] : []),
     });
     const V = { a:1,e:1,i:1,o:1,u:1,l:1,n:1,s:1,t:1,r:1,d:2,g:2,b:3,c:3,m:3,p:3,f:4,h:4,v:4,w:4,y:4,k:5,j:8,x:8,q:10,z:10 };
     topFact('Highest Scrabble score', x => x.l.reduce((sum, c) => sum + (V[c] || 0), 0), n => `${n} points, 15 letters or fewer`, x => x.l.length <= 15, {
       hl: x => x.l.map((c, i) => (V[c] || 0) >= 8 ? i : -1).filter(i => i >= 0),
+      val: n => `${n} points`,
     });
     rowFact('Top keyboard row only', 'qwertyuiop', 3, 'Typed using only Q to P');
     rowFact('Home row only', 'asdfghjkl', 3, 'Typed using only A to L');
@@ -2621,14 +2637,19 @@ async function main() {
     rowFact('Left hand only', 'qwertasdfgzxcvb', 5, 'Typed with just your left hand');
     rowFact('Right hand only', 'yuiophjklnm', 5, 'Typed with just your right hand');
     const groups = {};
-    info.filter(x => x.l.length >= 3).forEach(x => { const k = [...x.l].sort().join(''); (groups[k] = groups[k] || []).push(x.t); });
-    listFact('Anagrams', Object.values(groups).filter(g => new Set(g.map(w => w.toLowerCase())).size > 1).sort((a, b) => a[0].length - b[0].length), 'Same letters, different word');
+    info.filter(x => x.l.length >= 3).forEach(x => { const k = [...x.l].sort().join(''); (groups[k] = groups[k] || []).push(x); });
+    listFact('Anagrams', Object.values(groups)
+      .filter(g => new Set(g.map(x => x.term)).size > 1 && new Set(g.map(x => x.t.toLowerCase())).size > 1)
+      .sort((a, b) => a[0].l.length - b[0].l.length), 'Same letters, different word');
     ['uni', 'cycl'].forEach(sub => listFact(`Contains “${sub}”`, info.filter(x => x.s.includes(sub)).sort(shortestFirst), undefined, [], { hl: subHl(sub) }));
-    listFact('Phrases (with spaces)', terms.filter(t => /\s/.test(t)).sort(byTermLen));
-    listFact('Hyphenated', terms.filter(t => t.includes('-')).sort(byTermLen));
-    listFact('With apostrophes', terms.filter(t => /['’]/.test(t)).sort(byTermLen));
+    listFact('Phrases (with spaces)', allVars.filter(x => /\s/.test(x.t)).sort(byTextLen));
+    listFact('Hyphenated', allVars.filter(x => x.t.includes('-')).sort(byTextLen));
+    listFact('With apostrophes', allVars.filter(x => /['’]/.test(x.t)).sort(byTextLen));
 
-    const all = tally(info.flatMap(x => x.l));
+    // Whole-dictionary stats use each term's first spelling so alternates aren't counted twice.
+    const firstSeen = new Set();
+    const primaries = info.filter(x => !firstSeen.has(x.term) && firstSeen.add(x.term));
+    const all = tally(primaries.flatMap(x => x.l));
     const used = ALPHA.filter(c => all[c]);
     if (used.length) {
       const common = [...used].sort((a, b) => all[b] - all[a])[0];
@@ -2637,10 +2658,10 @@ async function main() {
       statFact('Rarest letter', `“${rare}” appears only ${all[rare].toLocaleString()} time${all[rare] === 1 ? '' : 's'}`);
       const missing = ALPHA.filter(c => !all[c]);
       if (missing.length) statFact('Letters never used', missing.join(', '));
-      const starts = new Set(info.map(x => x.l[0]));
+      const starts = new Set(primaries.map(x => x.l[0]));
       const noStart = ALPHA.filter(c => !starts.has(c));
       if (noStart.length) statFact('Letters that never start a word', noStart.join(', '));
-      const lens = info.map(x => x.l.length).sort((a, b) => a - b);
+      const lens = primaries.map(x => x.l.length).sort((a, b) => a - b);
       const lenTally = tally(lens);
       const modeLen = Object.keys(lenTally).sort((a, b) => lenTally[b] - lenTally[a])[0];
       statFact('Word length', `Average ${(lens.reduce((a, b) => a + b, 0) / lens.length).toFixed(1)} letters, median ${lens[Math.floor(lens.length / 2)]}, most common ${modeLen}`);
@@ -2653,16 +2674,15 @@ async function main() {
     }
     // Remember each category's words so clicking its title can search them.
     facts.forEach(f => {
-      if (f.entries) funSets.set(f.title.toLowerCase(), new Set(f.entries.flat().map(t => t.toLowerCase())));
+      if (f.entries) funSets.set(f.title.toLowerCase(), new Set(f.entries.flat().map(it => it.term.toLowerCase())));
     });
 
     const MAX = 6;
     const attr = (t) => escapeHtml(t).replace(/"/g, '&quot;');
-    // One clickable word: long ones are cut short, and the letters of interest are coloured.
-    const chip = (t, f) => {
-      const x = infoByTerm.get(t);
-      const chars = [...t];
-      const hi = x && f && f.hl ? new Set(f.hl(x).map(i => x.idx[i])) : null;
+    // One spelling: long ones are cut short, and the letters of interest are coloured.
+    const spellingHtml = (x, f) => {
+      const chars = [...x.t];
+      const hi = f && f.hl ? new Set(f.hl(x).map(i => x.idx[i])) : null;
       let html = '', open = false;
       chars.slice(0, 40).forEach((ch, i) => {
         const on = !!(hi && hi.has(i));
@@ -2673,22 +2693,27 @@ async function main() {
       });
       if (open) html += '</span>';
       if (chars.length > 40) html += '…';
-      const full = t.length > 200 ? t.slice(0, 200) + '…' : t;
-      return `<span class="fun-term" data-term="${attr(t)}"${chars.length > 16 ? ` title="${attr(full)}"` : ''}>${html}</span>`;
+      return html;
     };
-    const tagHtml = (t, f) => {
-      const x = infoByTerm.get(t);
-      return f.tag && x ? `<span class="fun-note">${escapeHtml(f.tag(x))}</span>` : '';
+    // One clickable term (clicking searches its full entry, including any other spellings).
+    const chip = (item, f) => {
+      const html = item.xs.map(x => spellingHtml(x, f)).join(' / ');
+      const needsTip = item.term.length > 16 || item.xs.length > 1 || item.xs[0].t !== item.term;
+      const tip = item.term.length > 200 ? item.term.slice(0, 200) + '…' : item.term;
+      return `<span class="fun-term" data-term="${attr(item.term)}"${needsTip ? ` title="${attr(tip)}"` : ''}>${html}</span>`;
     };
+    const tagHtml = (item, f) => f.tag
+      ? `<span class="fun-note">${item.xs.map(x => escapeHtml(f.tag(x))).join(' / ')}</span>`
+      : '';
     function itemHtml(f) {
       const head = `<div class="fun-title"><span${f.entries ? ` class="fun-title-link" data-fun="${attr(f.title.toLowerCase())}"` : ''}>${escapeHtml(f.title)}</span>${f.entries ? `<span class="fun-count">${f.entries.length.toLocaleString()}</span>` : ''}</div>`;
       const note = f.note ? `<div class="fun-note">${escapeHtml(f.note)}</div>` : '';
       if (!f.entries) return head + `<div class="fun-text">${escapeHtml(f.text)}</div>`;
       const shown = f.open ? f.entries : f.entries.slice(0, MAX);
-      const list = shown.map(g => `<span class="fun-entry">${g.map(t => chip(t, f) + tagHtml(t, f)).join('<span class="fun-note"> ⇄ </span>')}</span>`).join('');
+      const list = shown.map(g => `<span class="fun-entry">${g.map(it => chip(it, f) + tagHtml(it, f)).join('<span class="fun-note"> ⇄ </span>')}</span>`).join('');
       const more = f.entries.length > MAX ? `<span class="fun-more">${f.open ? 'show less' : `+${f.entries.length - MAX} more`}</span>` : '';
       const runs = f.runners && f.runners.length
-        ? `<div class="fun-note" style="margin-top:8px;">Runner-up${f.runners.length > 1 ? 's' : ''}</div><div class="fun-list" style="margin-top:2px;">${f.runners.map(r => `<span class="fun-entry">${chip(r.t, f)}${tagHtml(r.t, f) || (r.n ? `<span class="fun-note">${escapeHtml(r.n)}</span>` : '')}</span>`).join('')}</div>`
+        ? `<div class="fun-note" style="margin-top:8px;">Runner-up${f.runners.length > 1 ? 's' : ''}</div><div class="fun-list" style="margin-top:2px;">${f.runners.map(r => `<span class="fun-entry">${chip(r.item, f)}${tagHtml(r.item, f) || (r.n ? `<span class="fun-note">${escapeHtml(r.n)}</span>` : '')}</span>`).join('')}</div>`
         : '';
       return head + note + `<div class="fun-list">${list}${more}</div>` + runs;
     }

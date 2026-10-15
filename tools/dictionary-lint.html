@@ -315,26 +315,26 @@ function runCheck() {
     missingPos.forEach(e => out.push(`   - "${e.parsed.term}"`));
   }
 
-  // A slash in a term separates alternate spellings. Keep the spacing
-  // around it consistent: the majority style across the dictionary is the
-  // standard, and any term using a different (or uneven) style is flagged.
-  const slashStyle = term => {
-    const gaps = [...term.matchAll(/(\s*)\/(\s*)/g)];
-    if (!gaps.length) return null;
-    const styles = new Set(gaps.map(g => (g[1] && g[2] ? 'spaced' : !g[1] && !g[2] ? 'tight' : 'uneven')));
-    return styles.size === 1 ? [...styles][0] : 'uneven';
-  };
-  const slashed = properEntries
-    .map(e => ({ term: e.parsed.term, style: slashStyle(e.parsed.term) }))
-    .filter(x => x.style);
-  const spacedCount = slashed.filter(x => x.style === 'spaced').length;
-  const tightCount = slashed.filter(x => x.style === 'tight').length;
-  const slashStandard = tightCount > spacedCount ? 'tight' : 'spaced';
-  const slashOdd = slashed.filter(x => x.style !== slashStandard);
-  if (slashOdd.length) {
-    const label = slashStandard === 'spaced' ? 'spaces on both sides ("a / b")' : 'no spaces ("a/b")';
-    out.push(`\n\u26A0 ${slashOdd.length} term(s) with a slash (alternate spellings) don't match the most common style, which is ${label} (${slashed.length - slashOdd.length} of ${slashed.length}):`);
-    slashOdd.forEach(x => out.push(`   - "${x.term}" (${x.style === 'uneven' ? 'spacing differs around the slash' : x.style === 'tight' ? 'no spaces' : 'spaces on both sides'})`));
+  // Slash rule: " / " (a space on BOTH sides) separates alternate spellings
+  // ("aa / ab" is two spellings). A slash with no spaces is part of the word
+  // ("aa/ab" is one word). A space on only one side ("aa /ab") is unclear, so
+  // it is flagged. Terms that keep a no-space slash are also listed so any
+  // leftover alternate spellings written as "a/b" can be changed to "a / b".
+  const slashGaps = term => [...term.matchAll(/(\s*)\/(\s*)/g)].map(g => (g[1] && g[2] ? 'spaced' : !g[1] && !g[2] ? 'tight' : 'uneven'));
+  const slashUneven = [];
+  const slashTight = [];
+  properEntries.forEach(e => {
+    const gaps = slashGaps(e.parsed.term);
+    if (gaps.includes('uneven')) slashUneven.push(e.parsed.term);
+    else if (gaps.includes('tight')) slashTight.push(e.parsed.term);
+  });
+  if (slashUneven.length) {
+    out.push(`\n\u274C ${slashUneven.length} term(s) have a space on only one side of a slash. Use " / " (spaces on both sides) to separate spellings, or no spaces if the slash is part of the word:`);
+    slashUneven.forEach(t => out.push(`   - "${t}"`));
+  }
+  if (slashTight.length) {
+    out.push(`\n\u26A0 ${slashTight.length} term(s) have a slash with no spaces, so each counts as ONE word. If any are really alternate spellings, change "a/b" to "a / b":`);
+    slashTight.forEach(t => out.push(`   - "${t}"`));
   }
 
   const properDupes = [...properNorm.entries()].filter(([, v]) => v.length > 1);

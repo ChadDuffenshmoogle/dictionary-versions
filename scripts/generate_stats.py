@@ -73,9 +73,27 @@ if TOKEN:
 # --- Predicted next word, saved into Zoogliography.txt ---------------------
 ZOOG_FILE = "Zoogliography.txt"
 ZOOG_MARKER = "--- Predicted Next Word ---"
+ZOOG_NONSENSE_MARKER = "--- Predicted Nonsense Word ---"
 # A separate token that is allowed to write to the dictionary repo. It comes
 # from a GitHub Actions secret, so it never appears in this file.
 ZOOG_TOKEN = os.environ.get("ZOOG_WRITE_TOKEN")
+
+
+def split_spellings(terms):
+    """A slash separates alternate spellings of one entry ("a / b", "a/b"),
+    so every spelling counts as its own word. The spaces around a slash are
+    part of the separator, not of either spelling."""
+    out = []
+    for t in terms:
+        seen = set()
+        parts = []
+        for v in re.split(r"\s*/\s*", t):
+            v = v.strip()
+            if v and v.lower() not in seen:
+                seen.add(v.lower())
+                parts.append(v)
+        out.extend(parts or [t])
+    return out
 
 
 def _norm_term(s):
@@ -111,11 +129,13 @@ def too_similar(word, existing_norm):
     return False
 
 
-def predict_next_word(terms, seed_text):
+def predict_next_word(terms, seed_text, order=4):
     """Guess a new word letter by letter from the spelling of every entry
-    (a 4-letter Markov chain). The same seed gives the same word, so it only
-    changes when the dictionary changes."""
-    order, start, end = 4, "\x02", "\x03"
+    (a Markov chain; order = how many letters back it looks, 4 for the normal
+    guess and 2 for the looser nonsense guess). The same seed gives the same
+    word, so it only changes when the dictionary changes. Pass the terms
+    already split into single spellings (see split_spellings)."""
+    start, end = "\x02", "\x03"
     existing_norm = list({_norm_term(t) for t in terms if _norm_term(t)})
     table = {}
     for t in terms:
@@ -142,15 +162,16 @@ def predict_next_word(terms, seed_text):
                 break
             word += ch
         word = word.strip()
-        if 4 <= len(word) < 24 and not too_similar(word, existing_norm):
+        if 4 <= len(word) < 24 and "/" not in word and not too_similar(word, existing_norm):
             return word
     return ""
 
 
-def update_zoogliography(word):
-    """Add the new word to the 'Predicted Next Word' list at the bottom of
-    Zoogliography.txt (kept A to Z). Everything above the marker is left untouched."""
-    if not ZOOG_TOKEN or not word:
+def update_zoogliography(word, nonsense_word=""):
+    """Add the new words to the two lists at the bottom of Zoogliography.txt
+    (each kept A to Z): 'Predicted Next Word', then 'Predicted Nonsense Word'.
+    Everything above the first marker is left untouched."""
+    if not ZOOG_TOKEN or not (word or nonsense_word):
         print("Skipping Zoogliography update (no token or no word).")
         return
     headers = {
@@ -158,6 +179,14 @@ def update_zoogliography(word):
         "Authorization": f"Bearer {ZOOG_TOKEN}",
     }
     url = f"{API_ROOT}/contents/{requests.utils.quote(ZOOG_FILE)}"
+
+    def merged(old_lines, new_word):
+        # Keep every earlier prediction, add the new one, and sort A to Z.
+        words = {w.strip() for w in old_lines.splitlines() if w.strip()}
+        if new_word and new_word.lower() not in {w.lower() for w in words}:
+            words.add(new_word)
+        return "\n".join(sorted(words, key=str.lower))
+
     for _ in range(3):
         resp = requests.get(url, headers=headers, params={"ref": GITHUB_BRANCH}, timeout=30)
         resp.raise_for_status()
@@ -165,19 +194,18 @@ def update_zoogliography(word):
         text = base64.b64decode(info["content"]).decode("utf-8")
         base, _, old_section = text.partition(ZOOG_MARKER)
         base = base.rstrip("\n")
-        # Keep every earlier prediction, add the new one, and sort A to Z.
-        words = {w.strip() for w in old_section.splitlines() if w.strip()}
-        if word.lower() not in {w.lower() for w in words}:
-            words.add(word)
-        listed = "\n".join(sorted(words, key=str.lower))
-        new_text = f"{base}\n\n{ZOOG_MARKER}\n{listed}"
+        old_normal, _, old_nonsense = old_section.partition(ZOOG_NONSENSE_MARKER)
+        new_text = (
+            f"{base}\n\n{ZOOG_MARKER}\n{merged(old_normal, word)}"
+            f"\n\n{ZOOG_NONSENSE_MARKER}\n{merged(old_nonsense, nonsense_word)}"
+        )
         if new_text == text.rstrip("\n"):
             return  # already up to date
         put = requests.put(
             url,
             headers=headers,
             json={
-                "message": f"Update predicted next word: {word} [skip ci]",
+                "message": f"Update predicted next word: {word}; nonsense: {nonsense_word} [skip ci]",
                 "content": base64.b64encode(new_text.encode("utf-8")).decode("ascii"),
                 "sha": info["sha"],  # fails if the bot saved the file first
                 "branch": GITHUB_BRANCH,
@@ -185,7 +213,7 @@ def update_zoogliography(word):
             timeout=30,
         )
         if put.status_code in (200, 201):
-            print(f"Zoogliography predicted word set to: {word}")
+            print(f"Zoogliography predicted words set to: {word} / nonsense: {nonsense_word}")
             return
         if put.status_code in (409, 422):
             continue  # the file changed while we worked; read it again and retry
@@ -771,9 +799,15 @@ def main():
     # ONE prediction, made here. It goes into stats.json (the page shows this
     # exact word) and into Zoogliography.txt. A failure while saving to the
     # txt must never stop the stats from being built.
-    predicted_word = predict_next_word(all_terms, f"all|{total_entries}|{latest_word_term}")
+    # Each alternate spelling ("a / b") is its own word for the guess.
+    spellings = split_spellings(all_terms)
+    predicted_word = predict_next_word(spellings, f"all|{total_entries}|{latest_word_term}")
+    # Nonsense: same idea, but only 2 letters of memory, so it is looser.
+    predicted_nonsense_word = predict_next_word(
+        spellings, f"nonsense|{total_entries}|{latest_word_term}", order=2
+    )
     try:
-        update_zoogliography(predicted_word)
+        update_zoogliography(predicted_word, predicted_nonsense_word)
     except Exception as e:
         print(f"Zoogliography update failed: {e}", file=sys.stderr)
 
@@ -865,6 +899,7 @@ def main():
         "latest_version": latest_name,
         "latest_word_term": latest_word_term,
         "predicted_word": predicted_word,
+        "predicted_nonsense_word": predicted_nonsense_word,
         "latest_word_timestamp": latest_word_timestamp,
         "latest_file_content": content,
         "total_entries": total_entries,

@@ -175,6 +175,11 @@ let linkRegex = null, linkMap = null;
 function buildLinker() {
   linkMap = new Map();
   entries.forEach(e => linkMap.set(e.term.toLowerCase(), e.term));
+  // " / " (spaces both sides) separates alternate spellings: each one links to its entry too.
+  // A slash without spaces is part of the word, so it is left alone.
+  entries.forEach(e => e.term.split(/\s+\/\s+/).map(v => v.trim()).filter(Boolean).forEach(sp => {
+    if (!linkMap.has(sp.toLowerCase())) linkMap.set(sp.toLowerCase(), e.term);
+  }));
   const terms = [...linkMap.keys()].filter(t => t.trim()).sort((a, b) => b.length - a.length)
     .map(t => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
   linkRegex = terms.length ? new RegExp('(?<![\\p{L}\\p{N}_])(?:' + terms.join('|') + ')(?![\\p{L}\\p{N}_])', 'giu') : null;

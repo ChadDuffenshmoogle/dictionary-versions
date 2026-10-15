@@ -826,11 +826,12 @@ async function main() {
   // the same until the dictionary changes.
   let predictedAllWord = null; // the all-words prediction, shown in the Zoogliography
   let predictedNonsenseWord = null; // the nonsense prediction, shown below it
-  // A slash separates alternate spellings, so each spelling is its own word
-  // (spaces around the slash are part of the separator).
+  // A slash with spaces on both sides ("aa / ab") separates alternate spellings,
+  // so each spelling is its own word. A slash without those spaces ("aa/ab")
+  // is part of the word.
   const splitSpellings = (list) => list.flatMap(t => {
     const seen = new Set();
-    const parts = t.split(/\s*\/\s*/).map(v => v.trim()).filter(v => v && !seen.has(v.toLowerCase()) && seen.add(v.toLowerCase()));
+    const parts = t.split(/\s+\/\s+/).map(v => v.trim()).filter(v => v && !seen.has(v.toLowerCase()) && seen.add(v.toLowerCase()));
     return parts.length ? parts : [t];
   });
   function predictNextWord(opts, silent) {
@@ -2498,12 +2499,12 @@ async function main() {
     return Math.max(1, v);
   }
 
-  // A slash separates alternate spellings, so every spelling is its own entry
-  // (spaces around the slash do not make it multi-word).
+  // " / " (spaces both sides) separates alternate spellings, so every spelling
+  // is its own entry; a slash without those spaces is part of the word.
   const wordVariants = [];
   stats.words_by_length_asc.forEach(term => {
     const seen = new Set();
-    let parts = term.split(/\s*\/\s*/).map(v => v.trim()).filter(v => v && !seen.has(v.toLowerCase()) && seen.add(v.toLowerCase()));
+    let parts = term.split(/\s+\/\s+/).map(v => v.trim()).filter(v => v && !seen.has(v.toLowerCase()) && seen.add(v.toLowerCase()));
     if (!parts.length) parts = [term];
     parts.forEach(text => {
       const base = text.split(' (')[0].trim();
@@ -2542,11 +2543,11 @@ async function main() {
     const box = document.getElementById('funFacts');
     if (!box) return;
     const terms = [...new Set(stats.words_by_length_asc || [])];
-    // A slash separates different spellings of one word, so each spelling is checked on its own.
+    // " / " (spaces both sides) separates different spellings of one word, so each spelling is checked on its own.
     // l = its letters (accents stripped, digits/spaces/punctuation skipped), idx = where each letter sits in the text.
     const allVars = terms.flatMap(term => {
       const seen = new Set();
-      let parts = term.split(/\s*\/\s*/).map(v => v.trim()).filter(v => v && !seen.has(v.toLowerCase()) && seen.add(v.toLowerCase()));
+      let parts = term.split(/\s+\/\s+/).map(v => v.trim()).filter(v => v && !seen.has(v.toLowerCase()) && seen.add(v.toLowerCase()));
       if (!parts.length) parts = [term];
       return parts.map(t => {
         const l = [], idx = [];

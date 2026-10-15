@@ -825,10 +825,18 @@ async function main() {
   // from every existing entry. A seeded random generator keeps the guess
   // the same until the dictionary changes.
   let predictedAllWord = null; // the all-words prediction, shown in the Zoogliography
+  let predictedNonsenseWord = null; // the nonsense prediction, shown below it
+  // A slash separates alternate spellings, so each spelling is its own word
+  // (spaces around the slash are part of the separator).
+  const splitSpellings = (list) => list.flatMap(t => {
+    const seen = new Set();
+    const parts = t.split(/\s*\/\s*/).map(v => v.trim()).filter(v => v && !seen.has(v.toLowerCase()) && seen.add(v.toLowerCase()));
+    return parts.length ? parts : [t];
+  });
   function predictNextWord(opts, silent) {
     const { limit, order: ORDER, dorder: DORDER } = opts;
     const useAll = !limit;
-    const allTerms = stats.words_by_length_asc || [];
+    const allTerms = splitSpellings(stats.words_by_length_asc || []);
     const existing = new Set(allTerms.map(t => t.toLowerCase()));
     // A new word may not be (or nearly be) anything already in the
     // dictionary. Compare with spaces, hyphens and punctuation removed, so
@@ -866,7 +874,7 @@ async function main() {
       .sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : a.i - b.i));
     const terms = useAll || !timeline.length
       ? allTerms
-      : timeline.slice(-limit).map(e => e.term);
+      : splitSpellings(timeline.slice(-limit).map(e => e.term));
     const START = '\u0002', END = '\u0003';
     const table = {};
     terms.forEach(t => {
@@ -920,14 +928,16 @@ async function main() {
     }
     // For "All words", use the one word made by generate_stats.py so the
     // card and Zoogliography.txt always show the same word.
+    // The nonsense card likewise uses the word saved in stats.json.
     if (useAll && ORDER === 4 && stats.predicted_word && !tooSimilar(stats.predicted_word)) result = stats.predicted_word;
+    else if (useAll && ORDER === 2 && stats.predicted_nonsense_word && !tooSimilar(stats.predicted_nonsense_word)) result = stats.predicted_nonsense_word;
     if (silent) return result; // only the word was wanted, no card update
     document.getElementById('predictedWord').textContent = result || '—';
     // Predicted definition: same idea, but one word at a time, using the
     // two previous words as context (falls back to one word).
     const termSet = new Set(terms.map(t => t.toLowerCase()));
     const defs = (stats.definitions_by_length_asc || [])
-      .filter(d => useAll || termSet.has(d.term.toLowerCase()))
+      .filter(d => useAll || splitSpellings([d.term]).some(v => termSet.has(v.toLowerCase())))
       .map(d => ({ term: d.term, tokens: d.definition.match(/[\p{L}\p{N}]+(?:['’\-][\p{L}\p{N}]+)*|[^\s\p{L}\p{N}]/gu) || [] }));
     const DSTART = '\u0002', DEND = '\u0003';
     const dTable = {};
@@ -1271,6 +1281,7 @@ async function main() {
       if (predictedAllWord === null) {
         // the Zoogliography always uses Normal
         predictedAllWord = predictNextWord(PREDICT_MODES.normal, true) || '';
+        predictedNonsenseWord = predictNextWord(PREDICT_MODES.nonsense, true) || '';
         refreshZoogModal();
       }
     }, 0));
@@ -1334,10 +1345,17 @@ async function main() {
   let zoogFetchPromise = null;
 
   // The Zoogliography file text plus a separate section at the bottom for
-  // the predicted next word (all-words version, no definition).
+  // the predicted next word (all-words version, no definition), then
+  // another for the predicted nonsense word.
   function zoogText() {
-    return zoogContent + (predictedAllWord && !zoogContent.includes('--- Predicted Next Word ---')
-      ? `\n\n--- Predicted Next Word ---\n${predictedAllWord}` : '');
+    let text = zoogContent;
+    if (predictedAllWord && !text.includes('--- Predicted Next Word ---')) {
+      text += `\n\n--- Predicted Next Word ---\n${predictedAllWord}`;
+    }
+    if (predictedNonsenseWord && !text.includes('--- Predicted Nonsense Word ---')) {
+      text += `\n\n--- Predicted Nonsense Word ---\n${predictedNonsenseWord}`;
+    }
+    return text;
   }
   function refreshZoogModal() {
     if (zoogContent !== null) zoogModalContent.textContent = zoogText() || '(empty)';

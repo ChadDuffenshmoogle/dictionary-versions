@@ -110,7 +110,7 @@ function praiseFor(n) {
   const i = Math.min(n, 6) - 1;
   const term = dictTerms.get(PRAISE[i]);
   if (!term) return FALLBACK_PRAISE[i];
-  const first = term.split(' / ')[0];
+  const first = term.split(/\s+\/\s+/)[0];
   return first.charAt(0).toUpperCase() + first.slice(1) + '!';
 }
 const $ = (id) => document.getElementById(id);
@@ -130,7 +130,7 @@ function load(key, fallback) { try { return JSON.parse(localStorage.getItem(key)
 function save(key, value) { try { localStorage.setItem(key, JSON.stringify(value)); } catch (e) {} }
 
 const today = dayString();
-let answer = '', answerTerm = '', answerPos = '', definition = '', len = 5;
+let answer = '', answerTerm = '', answerFullTerm = '', answerPos = '', definition = '', len = 5;
 let valid = new Set(), looseMode = false;
 let state = null, current = '', busy = false;
 let stats = load('dwg-stats', { played: 0, wins: 0, streak: 0, maxStreak: 0, lastWinDay: '', dist: [0, 0, 0, 0, 0, 0] });
@@ -402,7 +402,7 @@ function showStats() {
       <div class="muted">${state.status === 'won' ? 'You got it!' : 'The word was'}</div>
       <div class="w">${esc(answerTerm)}</div>
       <p>${esc(definition)}</p>
-      <p><a href="wiktionary.html#w=${encodeURIComponent(answerTerm)}">See it in the dictionary</a></p>
+      <p><a href="wiktionary.html#w=${encodeURIComponent(answerFullTerm || answerTerm)}">See it in the dictionary</a></p>
     </div>
     <div class="bottom">
       <div class="next">Next word<div class="t" id="nextTimer"></div></div>
@@ -452,7 +452,10 @@ async function init() {
   const allRows = data.definitions_by_length_asc || [];
   allRows.forEach(r => dictTerms.set(r.term.toLowerCase(), r.term));
   // only use word lengths that have a Scrabble word list, so every guess can be checked
-  const eligible = allRows.filter(r => /^[A-Za-z]{3,15}$/.test(r.term));
+  // " / " (spaces both sides) separates alternate spellings, so each spelling can be an answer;
+  // a slash without spaces is part of the word, so that entry is skipped.
+  const spellingRows = allRows.flatMap(r => r.term.split(/\s+\/\s+/).map(v => v.trim()).filter(Boolean).map(sp => Object.assign({}, r, { term: sp, fullTerm: r.term })));
+  const eligible = spellingRows.filter(r => /^[A-Za-z]{3,15}$/.test(r.term));
   const lens = [...new Set(eligible.map(r => r.term.length))];
   const found = (await Promise.all(lens.map(n =>
     fetch(`wordlist/${n}.txt`, { method: 'HEAD' }).then(r => r.ok ? n : null).catch(() => null)))).filter(n => n !== null);
@@ -465,6 +468,7 @@ async function init() {
   const score = (r) => fnv(today + '|' + r.term.toLowerCase());
   const pick = rows.reduce((best, r) => (!best || score(r) < score(best)) ? r : best, null);
   answerTerm = pick.term;
+  answerFullTerm = pick.fullTerm;
   answer = pick.term.toLowerCase();
   len = answer.length;
   const posText = (pick.pos_list || [pick.pos]).filter(p => p && p !== '(no pos)').map(p => p.toLowerCase()).join(', ');

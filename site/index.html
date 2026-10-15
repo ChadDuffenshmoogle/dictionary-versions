@@ -2480,13 +2480,28 @@ async function main() {
     return Math.max(1, v);
   }
 
+  // A slash separates alternate spellings, so every spelling is its own entry
+  // (spaces around the slash do not make it multi-word).
+  const wordVariants = [];
+  stats.words_by_length_asc.forEach(term => {
+    const seen = new Set();
+    let parts = term.split(/\s*\/\s*/).map(v => v.trim()).filter(v => v && !seen.has(v.toLowerCase()) && seen.add(v.toLowerCase()));
+    if (!parts.length) parts = [term];
+    parts.forEach(text => {
+      const base = text.split(' (')[0].trim();
+      const len = [...base.replace(/^[ '\-"]+/, '').replace(/^the /i, '')].length;
+      wordVariants.push({ text, term, len, single: !/\s/.test(base) });
+    });
+  });
+  wordVariants.sort((a, b) => a.len - b.len);
+
   function renderWords() {
     const n = clampN(document.getElementById('nWords').value);
     const longest = document.getElementById('wordsMode').value === 'longest';
     const singleOnly = document.getElementById('wordsScope').value === 'single';
-    const all = singleOnly ? stats.words_by_length_asc.filter(w => !/\s/.test(w)) : stats.words_by_length_asc;
+    const all = singleOnly ? wordVariants.filter(w => w.single) : wordVariants;
     fillList('wordsList', longest ? all.slice(-n).reverse() : all.slice(0, n),
-      w => `<span class="def-term" data-term="${escapeHtml(w)}">${escapeHtml(w)}</span>`);
+      w => `<span class="def-term" data-term="${escapeHtml(w.term)}">${escapeHtml(w.text)}</span>`);
   }
   function renderDefs() {
     const n = clampN(document.getElementById('nDefs').value);

@@ -589,41 +589,31 @@
 
     <div class="wide" style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
       <div class="card">
-        <h2 id="shortestWordsTitle" style="display:flex; align-items:center; gap:8px;">
-          Shortest
-          <input type="number" id="nShortestWords" value="5" min="1" step="1" class="n-input">
+        <h2 id="wordsTitle" style="display:flex; align-items:center; flex-wrap:wrap; gap:8px;">
+          <select id="wordsMode" class="inline-select">
+            <option value="shortest">Shortest</option>
+            <option value="longest">Longest</option>
+          </select>
+          <input type="number" id="nWords" value="5" min="1" step="1" class="n-input">
+          <select id="wordsScope" class="inline-select">
+            <option value="all">All</option>
+            <option value="single">Single-word</option>
+          </select>
           Words
         </h2>
-        <ol id="shortestWords"></ol>
+        <ol id="wordsList"></ol>
       </div>
 
       <div class="card">
-        <h2 id="longestWordsTitle" style="display:flex; align-items:center; gap:8px;">
-          Longest
-          <input type="number" id="nLongestWords" value="5" min="1" step="1" class="n-input">
-          Words
-        </h2>
-        <ol id="longestWords"></ol>
-      </div>
-    </div>
-
-    <div class="wide" style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
-      <div class="card">
-        <h2 id="shortestDefsTitle" style="display:flex; align-items:center; gap:8px;">
-          Shortest
-          <input type="number" id="nShortestDefs" value="5" min="1" step="1" class="n-input">
+        <h2 id="defsTitle" style="display:flex; align-items:center; flex-wrap:wrap; gap:8px;">
+          <select id="defsMode" class="inline-select">
+            <option value="shortest">Shortest</option>
+            <option value="longest">Longest</option>
+          </select>
+          <input type="number" id="nDefs" value="5" min="1" step="1" class="n-input">
           Definitions
         </h2>
-        <ol id="shortestDefs"></ol>
-      </div>
-
-      <div class="card">
-        <h2 id="longestDefsTitle" style="display:flex; align-items:center; gap:8px;">
-          Longest
-          <input type="number" id="nLongestDefs" value="5" min="1" step="1" class="n-input">
-          Definitions
-        </h2>
-        <ol id="longestDefs"></ol>
+        <ol id="defsList"></ol>
       </div>
     </div>
 
@@ -2491,30 +2481,24 @@ async function main() {
     return Math.max(1, v);
   }
 
-  function renderShortestWords() {
-    const n = clampN(document.getElementById('nShortestWords').value);
-    fillList('shortestWords', stats.words_by_length_asc.slice(0, n),
+  function renderWords() {
+    const n = clampN(document.getElementById('nWords').value);
+    const longest = document.getElementById('wordsMode').value === 'longest';
+    const singleOnly = document.getElementById('wordsScope').value === 'single';
+    const all = singleOnly ? stats.words_by_length_asc.filter(w => !/\s/.test(w)) : stats.words_by_length_asc;
+    fillList('wordsList', longest ? all.slice(-n).reverse() : all.slice(0, n),
       w => `<span class="def-term" data-term="${escapeHtml(w)}">${escapeHtml(w)}</span>`);
   }
-  function renderLongestWords() {
-    const n = clampN(document.getElementById('nLongestWords').value);
-    fillList('longestWords', stats.words_by_length_asc.slice(-n).reverse(),
-      w => `<span class="def-term" data-term="${escapeHtml(w)}">${escapeHtml(w)}</span>`);
-  }
-  function renderShortestDefs() {
-    const n = clampN(document.getElementById('nShortestDefs').value);
-    fillList('shortestDefs', stats.definitions_by_length_asc.slice(0, n),
-      d => `<span class="def-term" data-term="${escapeHtml(d.term)}">${escapeHtml(d.term)}</span> — <span class="def-text">${escapeHtml(d.definition)}</span>`);
-  }
-  function renderLongestDefs() {
-    const n = clampN(document.getElementById('nLongestDefs').value);
-    fillList('longestDefs', stats.definitions_by_length_asc.slice(-n).reverse(),
+  function renderDefs() {
+    const n = clampN(document.getElementById('nDefs').value);
+    const longest = document.getElementById('defsMode').value === 'longest';
+    const all = stats.definitions_by_length_asc;
+    fillList('defsList', longest ? all.slice(-n).reverse() : all.slice(0, n),
       d => `<span class="def-term" data-term="${escapeHtml(d.term)}">${escapeHtml(d.term)}</span> — <span class="def-text">${escapeHtml(d.definition)}</span>`);
   }
 
-  // Clicking a term in any of the shortest/longest lists opens the
-  // searchable dictionary for it.
-  ['shortestWords', 'longestWords', 'shortestDefs', 'longestDefs'].forEach(id => {
+  // Clicking a term in either list opens the searchable dictionary for it.
+  ['wordsList', 'defsList'].forEach(id => {
     document.getElementById(id).addEventListener('click', (e) => {
       const el = e.target.closest('[data-term]');
       if (el) openSearchModal(el.dataset.term);
@@ -2732,14 +2716,14 @@ async function main() {
     });
   })();
 
-  renderShortestWords();
-  renderLongestWords();
-  renderShortestDefs();
-  renderLongestDefs();
-  document.getElementById('nShortestWords').addEventListener('input', renderShortestWords);
-  document.getElementById('nLongestWords').addEventListener('input', renderLongestWords);
-  document.getElementById('nShortestDefs').addEventListener('input', renderShortestDefs);
-  document.getElementById('nLongestDefs').addEventListener('input', renderLongestDefs);
+  renderWords();
+  renderDefs();
+  ['nWords', 'wordsMode', 'wordsScope'].forEach(id => {
+    document.getElementById(id).addEventListener(id === 'nWords' ? 'input' : 'change', renderWords);
+  });
+  ['nDefs', 'defsMode'].forEach(id => {
+    document.getElementById(id).addEventListener(id === 'nDefs' ? 'input' : 'change', renderDefs);
+  });
 }
 
 main();

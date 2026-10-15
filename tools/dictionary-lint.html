@@ -315,6 +315,28 @@ function runCheck() {
     missingPos.forEach(e => out.push(`   - "${e.parsed.term}"`));
   }
 
+  // A slash in a term separates alternate spellings. Keep the spacing
+  // around it consistent: the majority style across the dictionary is the
+  // standard, and any term using a different (or uneven) style is flagged.
+  const slashStyle = term => {
+    const gaps = [...term.matchAll(/(\s*)\/(\s*)/g)];
+    if (!gaps.length) return null;
+    const styles = new Set(gaps.map(g => (g[1] && g[2] ? 'spaced' : !g[1] && !g[2] ? 'tight' : 'uneven')));
+    return styles.size === 1 ? [...styles][0] : 'uneven';
+  };
+  const slashed = properEntries
+    .map(e => ({ term: e.parsed.term, style: slashStyle(e.parsed.term) }))
+    .filter(x => x.style);
+  const spacedCount = slashed.filter(x => x.style === 'spaced').length;
+  const tightCount = slashed.filter(x => x.style === 'tight').length;
+  const slashStandard = tightCount > spacedCount ? 'tight' : 'spaced';
+  const slashOdd = slashed.filter(x => x.style !== slashStandard);
+  if (slashOdd.length) {
+    const label = slashStandard === 'spaced' ? 'spaces on both sides ("a / b")' : 'no spaces ("a/b")';
+    out.push(`\n\u26A0 ${slashOdd.length} term(s) with a slash (alternate spellings) don't match the most common style, which is ${label} (${slashed.length - slashOdd.length} of ${slashed.length}):`);
+    slashOdd.forEach(x => out.push(`   - "${x.term}" (${x.style === 'uneven' ? 'spacing differs around the slash' : x.style === 'tight' ? 'no spaces' : 'spaces on both sides'})`));
+  }
+
   const properDupes = [...properNorm.entries()].filter(([, v]) => v.length > 1);
   if (properDupes.length) {
     out.push(`\n\u26A0 ${properDupes.length} term(s) appear more than once with the same part of speech (spelled the same and tagged as the same kind of word isn't usually two separate senses -- likely a real duplicate):`);

@@ -80,14 +80,15 @@ ZOOG_TOKEN = os.environ.get("ZOOG_WRITE_TOKEN")
 
 
 def split_spellings(terms):
-    """A slash separates alternate spellings of one entry ("a / b", "a/b"),
-    so every spelling counts as its own word. The spaces around a slash are
-    part of the separator, not of either spelling."""
+    """A slash WITH spaces on both sides separates alternate spellings of one
+    entry ("aa / ab" is two spellings). A slash without those spaces is part
+    of the word ("aa/ab" is one word). The spaces are part of the separator,
+    not of either spelling."""
     out = []
     for t in terms:
         seen = set()
         parts = []
-        for v in re.split(r"\s*/\s*", t):
+        for v in re.split(r"\s+/\s+", t):
             v = v.strip()
             if v and v.lower() not in seen:
                 seen.add(v.lower())
@@ -162,7 +163,7 @@ def predict_next_word(terms, seed_text, order=4):
                 break
             word += ch
         word = word.strip()
-        if 4 <= len(word) < 24 and "/" not in word and not too_similar(word, existing_norm):
+        if 4 <= len(word) < 24 and " / " not in word and not too_similar(word, existing_norm):
             return word
     return ""
 
@@ -422,8 +423,10 @@ def _emit(results, entry):
     entry = _move_leading_ipa(entry)
     term = entry["term"]
     results.append(dict(entry, primary=True))
-    if "/" in term:
-        for part in term.split("/"):
+    # " / " (spaces both sides) separates alternate spellings; a slash
+    # without those spaces is part of the word.
+    if re.search(r"\s/\s", term):
+        for part in re.split(r"\s+/\s+", term):
             part = part.strip()
             if part and part != term:
                 results.append(dict(entry, term=part, primary=False))
@@ -519,7 +522,7 @@ def extract_definitions(content):
     """Return a list of entry dicts: term, sections (pos + numbered senses +
     examples), etymology, pronunciation, primary. A word with several parts
     of speech is ONE entry with several sections. primary is True for the
-    real term and False for a derived alternate form (a "/"-split variant
+    real term and False for a derived alternate form (a " / "-split variant
     or a "the "-stripped variant).
 
     Uses a simple linear state machine (in-block / not-in-block) so a stray
@@ -769,7 +772,7 @@ def main():
         if t in current_terms or _clean_term(t).lower() in current_terms:
             return True
         # entries written as "a / b" are stored as separate terms
-        parts = [p.strip() for p in t.split("/") if p.strip()]
+        parts = [p.strip() for p in re.split(r"\s+/\s+", t) if p.strip()]
         return len(parts) > 1 and all(p in current_terms for p in parts)
 
     kept, dropped, seen = [], [], set()

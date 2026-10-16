@@ -2364,7 +2364,7 @@ stick-bouncing (n.) - a movement technique involving throwing a stick, then jump
 
 Sticky Wicket (n.) - another name for the sport Cricket
 
-Streakeeper (n.) - a person who keeps a streak alive
+streakeeper (n.) - a person who keeps a streak alive
 
 strifeguy (n.) - person who farms engagement on social media by talking about wars and conflicts
 

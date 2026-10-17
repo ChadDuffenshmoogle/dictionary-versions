@@ -721,7 +721,7 @@ de (v.) - to perform two complementary actions on an object that are both prefix
     *I accidentally just* **deed** *the light, when I only meant to debig it.*
 ---------------------------------------------
 
-death by 1000 dead horses (expr.) - self-sexplanatory
+death by 1000 dead horses (expr.) - self-explanatory
 
 ---------------------------------------------
 debear (v.) - to remove the bear from

@@ -706,11 +706,13 @@ def strip_accents(s):
 
 
 def scrabble_status(term, scrabble_set):
-    """Returns 'legal', 'normalized', or 'illegal'.
+    """Returns 'legal', 'phrase', 'normalized', or 'illegal'.
 
     'legal'      -- the term, letters-only, is a single unbroken word in
                      the list exactly as typed (no spaces/hyphens/accents
                      to begin with, or they just happen not to matter).
+    'phrase'     -- two or more words (split on spaces, hyphens, slashes)
+                     and every one of those words is in the list.
     'normalized' -- only legal after stripping spaces, hyphens,
                      apostrophes, and accents -- i.e. it needed help to
                      qualify.
@@ -719,6 +721,11 @@ def scrabble_status(term, scrabble_set):
     stripped_raw = term.strip()
     if re.fullmatch(r"[A-Za-z]+", stripped_raw) and stripped_raw.upper() in scrabble_set:
         return "legal"
+
+    pieces = re.split(r"[\s\-\u2013\u2014/]+", strip_accents(stripped_raw))
+    words = [re.sub(r"[^A-Za-z]", "", p) for p in pieces if p]
+    if len(words) >= 2 and all(w and w.upper() in scrabble_set for w in words):
+        return "phrase"
 
     normalized = strip_accents(stripped_raw)
     normalized = re.sub(r"[^A-Za-z]", "", normalized)
@@ -916,6 +923,7 @@ def main():
         "scrabble_legal_count": scrabble_counts.get("legal", 0),
         "scrabble_normalized_count": scrabble_counts.get("normalized", 0),
         "scrabble_illegal_count": scrabble_counts.get("illegal", 0),
+        "scrabble_phrase_count": scrabble_counts.get("phrase", 0),
         "scrabble_source_url": SCRABBLE_SOURCE_URL,
         "scrabble_source_label": SCRABBLE_SOURCE_LABEL,
     }

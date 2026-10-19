@@ -453,6 +453,7 @@ const CATEGORIES = [
   { key: 'multi-pos', label: 'Words with several parts of speech', test: e => (e.pos_list || []).length > 1 },
   { key: 'multi-def', label: 'Words with several definitions', test: e => senseCount(e) > 1 },
   { key: 'xref', label: 'Cross-references other words', test: e => crossRefs(e).length > 0 },
+  { key: 'scrabble-phrase', label: 'Phrases made of Scrabble-legal words', test: e => e.scrabble === 'phrase' },
 ];
 
 function pluralize(w) {

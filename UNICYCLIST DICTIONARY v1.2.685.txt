@@ -357,7 +357,7 @@ bunderstand (v.) - failing to grasp or comprehend something despite their effort
 
 ---------------------------------------------
 buoyg (n.) - (slang) a chimkin bouygee
-	*I got* **the buoyg** *right here!*
+- Example: I got the buoyg right here!
 ---------------------------------------------
 
 burgequere (n.) - a burger place, a restaurant known for burgers

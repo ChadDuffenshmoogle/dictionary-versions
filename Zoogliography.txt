@@ -242,6 +242,7 @@ rof grish
 sagy
 sath-oun
 Schapeater
+setrany pric
 ske inkred biram
 snoseig
 sous-ma

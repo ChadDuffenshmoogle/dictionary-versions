@@ -140,6 +140,7 @@ ones
 onions
 pent
 pistancers
+pistands
 pogocyclopedia
 Portile
 Postrainlight
@@ -265,6 +266,7 @@ Spwen D'Pornese
 Spwensaush
 sual
 Sulti Mexaxxin
+sunag
 swixt
 tosvert
 Tsart

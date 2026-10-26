@@ -103,6 +103,7 @@ choccheburber
 cinnabeat Again
 cinnamunchable
 Clabberg
+convening
 corn
 corner soup
 cornes
@@ -214,6 +215,7 @@ you can't bread
 zoogemiclor/kemiklor
 
 --- Predicted Nonsense Word ---
+'zzle
 affeggche
 aforrood-les
 aftost

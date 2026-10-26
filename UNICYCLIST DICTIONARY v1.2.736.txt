@@ -2054,7 +2054,7 @@ quorrel (n.) - an argument on Quora
 
 quotription (n.) - when a program misinterprets a quotation mark (single or double, any style) as a parsing character.
 
-Quousquous (n.) - a mixture of quinoa and couscous
+quousquous (n.) - a mixture of quinoa and couscous
 
 ---------------------------------------------
 Etymology: from Millenium Standard Lusitanian "qomp" or Millenium Zelanes Lusitanian "qomf", both from Middle Lusitanian "qompe", from Old Lusitanian "qomplua", ultimately from Latin complūra ("many things").

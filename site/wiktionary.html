@@ -176,6 +176,14 @@ function letterOf(term) {
 // ---- cross-links: any dictionary word inside a definition, example or etymology becomes a link ----
 let linkRegex = null, linkMap = null;
 
+function inflections(w) {   // simple English plural and verb endings for a lowercase word
+  const out = [w + 's', w + 'es', w + 'ed', w + 'd', w + 'ing'];
+  if (/[^aeiou]y$/.test(w)) out.push(w.slice(0, -1) + 'ies', w.slice(0, -1) + 'ied');
+  if (/e$/.test(w)) out.push(w.slice(0, -1) + 'ing');
+  if (/[^aeiou][aeiou][bdgklmnprstz]$/.test(w)) out.push(w + w.slice(-1) + 'ed', w + w.slice(-1) + 'ing');
+  return out;
+}
+
 function buildLinker() {
   linkMap = new Map();
   entries.forEach(e => linkMap.set(e.term.toLowerCase(), e.term));
@@ -184,6 +192,12 @@ function buildLinker() {
   entries.forEach(e => e.term.split(/\s+\/\s+/).map(v => v.trim()).filter(Boolean).forEach(sp => {
     if (!linkMap.has(sp.toLowerCase())) linkMap.set(sp.toLowerCase(), e.term);
   }));
+  // plurals and verb forms (bikes, rides, riding, hopped...) link to the base word; real entries always win
+  [...linkMap.entries()].forEach(([key, term]) => {
+    const m = key.match(/^(.*?)(\p{L}{3,})$/u);
+    if (!m) return;
+    inflections(m[2]).forEach(v => { const k = m[1] + v; if (!linkMap.has(k)) linkMap.set(k, term); });
+  });
   const terms = [...linkMap.keys()].filter(t => t.trim()).sort((a, b) => b.length - a.length)
     .map(t => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
   linkRegex = terms.length ? new RegExp('(?<![\\p{L}\\p{N}_])(?:' + terms.join('|') + ')(?![\\p{L}\\p{N}_])', 'giu') : null;
@@ -611,7 +625,6 @@ function bulkBarHtml() {
     <button id="bulkAll" type="button">Select all shown</button>
     <button id="bulkClear" type="button">Clear</button>
     <button id="bulkCancel" type="button">Done</button>
-    ${bulkCat ? `<span class="muted">Faded, locked boxes are already in “${esc(bulkCat)}”.</span>` : ''}
   </div>`;
 }
 

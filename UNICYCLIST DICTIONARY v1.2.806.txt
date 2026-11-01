@@ -290,7 +290,7 @@ beevening (n.) - the period of time when it shouldn't be the evening, but yet th
 
 befunge (v.) - to obfuscate (something); to make (something) more confusing
 
-Beggi (n.) - A spweeming service with a great selection! When you attempt to cancel, you have to go through a 38 step process to cancel. The pleas become increasingly more desperate.
+Beggi (p.n.) - A spweeming service with a great selection! When you attempt to cancel, you have to go through a 38 step process to cancel. The pleas become increasingly more desperate.
 
 beigneyonet (n.) - A knife on the end of a beignet
 

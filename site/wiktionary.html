@@ -509,7 +509,7 @@ function categoriesOf(e) {
       k = parent;
     }
   });
-  return out;
+  return sortByLabel(out);
 }
 
 // ---- custom categories (saved in site/categories.json; anyone can read, only signed-in editors change them) ----
@@ -518,9 +518,12 @@ let customCats = [];   // [{ name, words: [term, ...] }]
 
 function isSignedIn() { try { return !!localStorage.getItem('ghToken'); } catch (e) { return false; } }
 
+function sortCats(arr) { return arr.sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' })); }
+function sortByLabel(arr) { return arr.sort((a, b) => a.label.localeCompare(b.label, undefined, { sensitivity: 'base' })); }
+
 function normalizeCats(j) {
-  return ((j && j.categories) || []).filter(c => c && c.name)
-    .map(c => ({ name: String(c.name), parent: c.parent ? String(c.parent) : '', words: Array.isArray(c.words) ? c.words.map(String) : [] }));
+  return sortCats(((j && j.categories) || []).filter(c => c && c.name)
+    .map(c => ({ name: String(c.name), parent: c.parent ? String(c.parent) : '', words: Array.isArray(c.words) ? c.words.map(String) : [] })));
 }
 
 async function loadCustomCategories() {
@@ -559,6 +562,7 @@ async function saveCategories(mutate, message) {
   }
   const cats = normalizeCats(data);
   mutate(cats);
+  sortCats(cats);
   const body = { message, content: toBase64(JSON.stringify({ categories: cats.map(c => c.parent ? c : { name: c.name, words: c.words }) }, null, 2) + '\n'), branch: BRANCH };
   if (sha) body.sha = sha;
   const put = await fetch(url, { method: 'PUT', headers: { ...ghHeaders(token), 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
@@ -795,7 +799,7 @@ function showPick(name) {
 }
 
 function showCategoryIndex() {
-  const auto = allCategories().filter(c => !c.custom);
+  const auto = sortByLabel(allCategories().filter(c => !c.custom));
   const li = c => `<li><a href="#c=${encodeURIComponent(c.key)}">${esc(c.label)}</a> <span class="muted">(${entries.filter(c.test).length})</span></li>`;
   const tree = (parent, depth) => {
     const kids = parent === null ? customCats.filter(k => !k.parent || !findCat(customCats, k.parent)) : catKids(customCats, parent);

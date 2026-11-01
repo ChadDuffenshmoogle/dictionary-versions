@@ -112,6 +112,9 @@
   .cat-edit input { padding:5px 8px; width:220px; max-width:100%; }
   .cat-edit .danger { color:var(--error); border-color:var(--error); }
   .rm-word, .rm-cat { color:var(--error); }
+  .bulk-bar { display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin:10px 0; padding:8px 10px; border:1px solid var(--line); background:var(--panel); }
+  .bulk-bar select, .bulk-bar button { padding:5px 10px; font-size:0.95rem; cursor:pointer; }
+  .bulk-cb { margin-right:4px; vertical-align:middle; }
   /* hover preview card, styled after Wiktionary's page previews */
   .pv { box-sizing:border-box; overflow-wrap:anywhere; position:absolute; z-index:1000; display:none; width:360px; max-width:calc(100vw - 16px); background:var(--bg); color:var(--text);
         border:1px solid var(--line); border-radius:2px; padding:12px 16px; font-size:0.9rem; line-height:1.55;
@@ -276,15 +279,17 @@ function showHome() {
     <h1>Unicyclist Wiktionary</h1>
     <p>${entries.length} entries. Pick a letter or search above.</p>
     ${lettersBar('')}
+    ${bulkBarHtml()}
     ${latest && byTerm.has(latest.toLowerCase()) ? `<p>Newest word: ${wordLink(byTerm.get(latest.toLowerCase()).term)}</p>` : ''}
     <div class="top-row">${wordOfTheDayHtml()}${picksBoxHtml()}</div>
     ${'#ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').map(letter => {
       const list = entries.filter(e => letterOf(e.term) === letter);
       if (list.length === 0) return '';
       return `<h2>${letter}</h2>
-        <ul class="word-list">${list.map(e => `<li>${wordLink(e.term)}</li>`).join('')}</ul>`;
+        <ul class="word-list">${list.map(e => `<li>${bulkBoxHtml(e.term)}${wordLink(e.term)}</li>`).join('')}</ul>`;
     }).join('')}`;
   wirePicks();
+  wireBulk();
 }
 
 // ---- hover previews ----
@@ -582,6 +587,53 @@ function catDescendants(cats, name) {
   return out;
 }
 
+// ---- bulk select (signed-in editors only): tick words on the main, letter and search pages, then add them all to one category ----
+let bulkOn = false;
+const bulkSel = new Set();
+
+function bulkBoxHtml(term) {
+  return bulkOn && isSignedIn() ? `<input type="checkbox" class="bulk-cb" data-t="${esc(term)}"${bulkSel.has(term) ? ' checked' : ''}> ` : '';
+}
+
+function bulkBarHtml() {
+  if (!isSignedIn()) return '';
+  if (!bulkOn) return '<div class="bulk-bar"><button id="bulkStart" type="button">Select words</button></div>';
+  return `<div class="bulk-bar">
+    <select id="bulkCat"><option value="">Add selected to…</option>${customCats.map(k => `<option value="${esc(k.name)}">${esc(k.name)}</option>`).join('')}<option value="__new__">➕ New category…</option></select>
+    <button id="bulkGo" type="button">Add <span id="bulkCount">${bulkSel.size}</span> selected</button>
+    <button id="bulkAll" type="button">Select all shown</button>
+    <button id="bulkClear" type="button">Clear</button>
+    <button id="bulkCancel" type="button">Done</button>
+  </div>`;
+}
+
+function wireBulk() {
+  const on = (id, fn) => { const b = document.getElementById(id); if (b) b.onclick = fn; };
+  const boxes = () => [...view.querySelectorAll('.bulk-cb')];
+  const count = () => { const c = document.getElementById('bulkCount'); if (c) c.textContent = bulkSel.size; };
+  on('bulkStart', () => { bulkOn = true; route(); });
+  on('bulkCancel', () => { bulkOn = false; bulkSel.clear(); route(); });
+  on('bulkClear', () => { bulkSel.clear(); boxes().forEach(b => { b.checked = false; }); count(); });
+  on('bulkAll', () => { boxes().forEach(b => { b.checked = true; bulkSel.add(b.dataset.t); }); count(); });
+  boxes().forEach(b => { b.onchange = () => { if (b.checked) bulkSel.add(b.dataset.t); else bulkSel.delete(b.dataset.t); count(); }; });
+  on('bulkGo', async () => {
+    if (!bulkSel.size) { alert('Tick at least one word first.'); return; }
+    let name = document.getElementById('bulkCat').value;
+    if (!name) { alert('Pick a category first.'); return; }
+    if (name === '__new__') { name = (prompt('Name of the new category:') || '').trim(); if (!name) return; }
+    const terms = [...bulkSel];
+    try {
+      await saveCategories(cats => {
+        let k = findCat(cats, name);
+        if (!k) { k = { name, parent: '', words: [] }; cats.push(k); }
+        terms.forEach(t => { if (!hasWord(k, t)) k.words.push(t); });
+      }, `Edit categories: add ${terms.length} words to '${name}'`);
+      bulkSel.clear(); bulkOn = false;
+    } catch (err) { if (err.message !== 'Cancelled.') alert(err.message); }
+    route();
+  });
+}
+
 // ---- Editor's Picks (saved in site/picks.json; anyone can read, only signed-in editors change them) ----
 const PICKS_PATH = 'site/picks.json';
 const PICK_EDITORS = ['J. C.', 'Louis', 'Rory'];
@@ -835,7 +887,9 @@ function showLetter(letter) {
     <h1>${esc(letter)}</h1>
     ${lettersBar(letter)}
     <p class="muted">${list.length} entries</p>
-    <ul class="word-list">${list.map(e => `<li>${wordLink(e.term)}</li>`).join('')}</ul>`;
+    ${bulkBarHtml()}
+    <ul class="word-list">${list.map(e => `<li>${bulkBoxHtml(e.term)}${wordLink(e.term)}</li>`).join('')}</ul>`;
+  wireBulk();
 }
 
 function entryBodyHtml(e) {
@@ -1024,9 +1078,11 @@ function showSearch(q) {
   view.innerHTML = `
     <h1>Search: ${esc(q)}</h1>
     <p class="muted">${starts.length + contains.length + inDef.length} matches${shown.length === 100 ? ' (showing first 100)' : ''}</p>
+    ${bulkBarHtml()}
     <ol class="defs">${shown.map(e => `
-      <li>${wordLink(e.term)} <span class="muted">${esc(e.definition.slice(0, 140))}${e.definition.length > 140 ? '…' : ''}</span></li>`).join('')}
+      <li>${bulkBoxHtml(e.term)}${wordLink(e.term)} <span class="muted">${esc(e.definition.slice(0, 140))}${e.definition.length > 140 ? '…' : ''}</span></li>`).join('')}
     </ol>`;
+  wireBulk();
 }
 
 // ===== Editing (word-processor style form; saves a new commit onto the newest dictionary file) =====

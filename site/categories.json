@@ -377,7 +377,11 @@
     },
     {
       "name": "AI",
-      "words": []
+      "words": [
+        "chat",
+        "chatlighting",
+        "Jeepeety"
+      ]
     }
   ]
 }

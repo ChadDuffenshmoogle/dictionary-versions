@@ -115,6 +115,7 @@
   .bulk-bar { display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin:10px 0; padding:8px 10px; border:1px solid var(--line); background:var(--panel); }
   .bulk-bar select, .bulk-bar button { padding:5px 10px; font-size:0.95rem; cursor:pointer; }
   .bulk-cb { margin-right:4px; vertical-align:middle; }
+  .bulk-cb:disabled { opacity:0.4; cursor:not-allowed; }
   /* hover preview card, styled after Wiktionary's page previews */
   .pv { box-sizing:border-box; overflow-wrap:anywhere; position:absolute; z-index:1000; display:none; width:360px; max-width:calc(100vw - 16px); background:var(--bg); color:var(--text);
         border:1px solid var(--line); border-radius:2px; padding:12px 16px; font-size:0.9rem; line-height:1.55;
@@ -589,46 +590,71 @@ function catDescendants(cats, name) {
 
 // ---- bulk select (signed-in editors only): tick words on the main, letter and search pages, then add them all to one category ----
 let bulkOn = false;
+let bulkCat = '';   // the category picked in the dropdown
 const bulkSel = new Set();
 
+function bulkCatObj() { return bulkCat ? findCat(customCats, bulkCat) : null; }
+
 function bulkBoxHtml(term) {
-  return bulkOn && isSignedIn() ? `<input type="checkbox" class="bulk-cb" data-t="${esc(term)}"${bulkSel.has(term) ? ' checked' : ''}> ` : '';
+  if (!(bulkOn && isSignedIn())) return '';
+  const c = bulkCatObj();
+  if (c && hasWord(c, term)) return `<input type="checkbox" class="bulk-cb" checked disabled title="Already in ${esc(c.name)}"> `;
+  return `<input type="checkbox" class="bulk-cb" data-t="${esc(term)}"${bulkSel.has(term) ? ' checked' : ''}> `;
 }
 
 function bulkBarHtml() {
   if (!isSignedIn()) return '';
   if (!bulkOn) return '<div class="bulk-bar"><button id="bulkStart" type="button">Select words</button></div>';
   return `<div class="bulk-bar">
-    <select id="bulkCat"><option value="">Add selected to…</option>${customCats.map(k => `<option value="${esc(k.name)}">${esc(k.name)}</option>`).join('')}<option value="__new__">➕ New category…</option></select>
+    <select id="bulkCat"><option value="">Add selected to…</option>${customCats.map(k => `<option value="${esc(k.name)}"${k.name === bulkCat ? ' selected' : ''}>${esc(k.name)}</option>`).join('')}<option value="__new__">➕ New category…</option></select>
     <button id="bulkGo" type="button">Add <span id="bulkCount">${bulkSel.size}</span> selected</button>
     <button id="bulkAll" type="button">Select all shown</button>
     <button id="bulkClear" type="button">Clear</button>
     <button id="bulkCancel" type="button">Done</button>
+    ${bulkCat ? `<span class="muted">Faded, locked boxes are already in “${esc(bulkCat)}”.</span>` : ''}
   </div>`;
 }
 
 function wireBulk() {
   const on = (id, fn) => { const b = document.getElementById(id); if (b) b.onclick = fn; };
-  const boxes = () => [...view.querySelectorAll('.bulk-cb')];
+  const boxes = () => [...view.querySelectorAll('.bulk-cb:not(:disabled)')];
   const count = () => { const c = document.getElementById('bulkCount'); if (c) c.textContent = bulkSel.size; };
   on('bulkStart', () => { bulkOn = true; route(); });
-  on('bulkCancel', () => { bulkOn = false; bulkSel.clear(); route(); });
+  on('bulkCancel', () => { bulkOn = false; bulkCat = ''; bulkSel.clear(); route(); });
   on('bulkClear', () => { bulkSel.clear(); boxes().forEach(b => { b.checked = false; }); count(); });
   on('bulkAll', () => { boxes().forEach(b => { b.checked = true; bulkSel.add(b.dataset.t); }); count(); });
   boxes().forEach(b => { b.onchange = () => { if (b.checked) bulkSel.add(b.dataset.t); else bulkSel.delete(b.dataset.t); count(); }; });
+
+  const sel = document.getElementById('bulkCat');
+  if (sel) sel.onchange = async () => {
+    let name = sel.value;
+    if (name === '__new__') {
+      name = (prompt('Name of the new category:') || '').trim();
+      if (!name) { sel.value = bulkCat; return; }
+      if (!findCat(customCats, name)) {
+        try {
+          await saveCategories(cats => { if (!findCat(cats, name)) cats.push({ name, parent: '', words: [] }); }, `Edit categories: create '${name}'`);
+        } catch (err) { if (err.message !== 'Cancelled.') alert(err.message); sel.value = bulkCat; return; }
+      }
+      name = findCat(customCats, name).name;
+    }
+    bulkCat = name;
+    const c = bulkCatObj();
+    if (c) [...bulkSel].forEach(t => { if (hasWord(c, t)) bulkSel.delete(t); });
+    route();
+  };
+
   on('bulkGo', async () => {
+    if (!bulkCat) { alert('Pick a category first.'); return; }
     if (!bulkSel.size) { alert('Tick at least one word first.'); return; }
-    let name = document.getElementById('bulkCat').value;
-    if (!name) { alert('Pick a category first.'); return; }
-    if (name === '__new__') { name = (prompt('Name of the new category:') || '').trim(); if (!name) return; }
-    const terms = [...bulkSel];
+    const name = bulkCat, terms = [...bulkSel];
     try {
       await saveCategories(cats => {
         let k = findCat(cats, name);
         if (!k) { k = { name, parent: '', words: [] }; cats.push(k); }
         terms.forEach(t => { if (!hasWord(k, t)) k.words.push(t); });
       }, `Edit categories: add ${terms.length} words to '${name}'`);
-      bulkSel.clear(); bulkOn = false;
+      bulkSel.clear(); bulkOn = false; bulkCat = '';
     } catch (err) { if (err.message !== 'Cancelled.') alert(err.message); }
     route();
   });

@@ -277,6 +277,11 @@
       ]
     },
     {
+      "name": "Restaurants",
+      "parent": "Cuisine",
+      "words": []
+    },
+    {
       "name": "Robot Unicyclists",
       "parent": "Robots",
       "words": [

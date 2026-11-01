@@ -279,7 +279,12 @@
     {
       "name": "Restaurants",
       "parent": "Cuisine",
-      "words": []
+      "words": [
+        "Ldoba",
+        "H. S. C. D'Poba'Denucks",
+        "Wdoba",
+        "A'Dobo"
+      ]
     },
     {
       "name": "Robot Unicyclists",

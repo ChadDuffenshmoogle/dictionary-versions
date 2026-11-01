@@ -1952,7 +1952,7 @@ Etymology: from hangover, hungover
 ovor (n.) - a generic term for any substance-induced symptom or delirium
 ---------------------------------------------
 
-Owen Bots (n.) - Robo Owen
+Owen Bots (p.n.) - Robo Owen
 
 parchee (n.) - a Parchisi pawn
 

@@ -35,6 +35,11 @@
       ]
     },
     {
+      "name": "Chee",
+      "parent": "Cuisine",
+      "words": []
+    },
+    {
       "name": "Cuisine",
       "words": [
         "A'Dobo",

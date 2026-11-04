@@ -94,6 +94,8 @@
   .solved.flip { animation: flipIn 0.6s ease both; }
   .solved .cat-name { font-weight: 700; text-transform: uppercase; font-size: 1rem; }
   .solved .cat-words { text-transform: uppercase; font-size: 0.85rem; margin-top: 2px; }
+  .solved a { color: inherit; text-decoration: underline; }
+  .solved a:hover { text-decoration-thickness: 2px; }
   .c-yellow { background: var(--yellow); }
   .c-green { background: var(--green); }
   .c-blue { background: var(--blue); }
@@ -533,8 +535,19 @@ function render() {
     const g = P.groups[gi];
     const row = document.createElement('div');
     row.className = 'solved c-' + g.color + (gi === justSolved ? ' flip' : '');
-    const name = document.createElement('div'); name.className = 'cat-name'; name.textContent = g.name;
-    const words = document.createElement('div'); words.className = 'cat-words'; words.textContent = g.words.join(', ');
+    const name = document.createElement('div'); name.className = 'cat-name';
+    const nameLink = document.createElement('a');
+    nameLink.href = 'wiktionary.html#c=' + encodeURIComponent('custom:' + g.name);
+    nameLink.textContent = g.name;
+    name.appendChild(nameLink);
+    const words = document.createElement('div'); words.className = 'cat-words';
+    g.words.forEach((w, i) => {
+      if (i) words.appendChild(document.createTextNode(', '));
+      const a = document.createElement('a');
+      a.href = 'wiktionary.html#w=' + encodeURIComponent(w);
+      a.textContent = w;
+      words.appendChild(a);
+    });
     row.append(name, words);
     board.appendChild(row);
   });

@@ -43,7 +43,7 @@
       ]
     },
     {
-      "name": "Birds",
+      "name": "Bird-Related",
       "words": [
         "birbed wire",
         "pridge",
@@ -56,7 +56,7 @@
     },
     {
       "name": "Geese",
-      "parent": "Birds",
+      "parent": "Bird-Related",
       "words": [
         "göse",
         "gooze",
@@ -65,7 +65,7 @@
       ]
     },
     {
-      "name": "Chairs",
+      "name": "Chair-Related",
       "words": [
         "chairaoke",
         "charcane",
@@ -140,7 +140,7 @@
       ]
     },
     {
-      "name": "Cutlery",
+      "name": "Cutlery-Related",
       "words": [
         "forcine",
         "Forkton",
@@ -177,7 +177,7 @@
       ]
     },
     {
-      "name": "Pershlaps",
+      "name": "Pershlaps-Related",
       "parent": "Cyrilisms",
       "words": [
         "pershlaps",
@@ -190,7 +190,7 @@
       ]
     },
     {
-      "name": "Death",
+      "name": "Death-Related",
       "words": [
         "biceased",
         "perschbeased",
@@ -204,8 +204,8 @@
       ]
     },
     {
-      "name": "Burial",
-      "parent": "Death",
+      "name": "Burial-Related",
+      "parent": "Death-Related",
       "words": [
         "tombplace",
         "catacombé(e)",
@@ -214,7 +214,7 @@
       ]
     },
     {
-      "name": "Relatives",
+      "name": "Kin-Related",
       "words": [
         "brothe",
         "daughte",
@@ -229,8 +229,8 @@
       ]
     },
     {
-      "name": "Figurative Relatives",
-      "parent": "Relatives",
+      "name": "Figurative Kin",
+      "parent": "Kin-Related",
       "words": [
         "chibling",
         "goofy goobrother",
@@ -240,7 +240,7 @@
       ]
     },
     {
-      "name": "Food",
+      "name": "Food-Related",
       "words": [
         "tuna of the land",
         "baguetti",
@@ -385,8 +385,8 @@
       ]
     },
     {
-      "name": "Dairy",
-      "parent": "Food",
+      "name": "Dairy-Related",
+      "parent": "Food-Related",
       "words": [
         "caseine / caseose",
         "acaseine",
@@ -402,8 +402,8 @@
       ]
     },
     {
-      "name": "Drinks",
-      "parent": "Food",
+      "name": "Drink-Related",
+      "parent": "Food-Related",
       "words": [
         "Bep!",
         "churoffee",
@@ -438,7 +438,7 @@
     },
     {
       "name": "Restaurants",
-      "parent": "Food",
+      "parent": "Food-Related",
       "words": [
         "burgequere",
         "Culvert's",
@@ -468,7 +468,21 @@
       ]
     },
     {
+      "name": "Sandwich-Related",
+      "parent": "Food-Related",
+      "words": [
+        "nostunalgia",
+        "uncrustor",
+        "Burgerkeley",
+        "sauseggchepock",
+        "beerkegcheecrois",
+        "baceggchevator",
+        "sauseggchevator"
+      ]
+    },
+    {
       "name": "Sandwiches",
+      "parent": "Sandwich-Related",
       "words": [
         "baceggchebag",
         "croiseggchesaus",
@@ -516,20 +530,25 @@
         "waffwich",
         "gilburger",
         "gerbacceggcheecrois",
-        "shmangus burger",
-        "nostunalgia",
-        "uncrustor",
-        "Burgerkeley",
-        "sauseggchepock",
-        "beerkegcheecrois",
-        "baceggchevator",
-        "sauseggchevator"
-      ],
-      "parent": "Food"
+        "shmangus burger"
+      ]
+    },
+    {
+      "name": "Onion-Related",
+      "parent": "Food-Related",
+      "words": [
+        "onionic / Onionic",
+        "Oniuary",
+        "Hallowonion",
+        "Onionoic cycle",
+        "sault years",
+        "compault year",
+        "shellarckish"
+      ]
     },
     {
       "name": "Onions",
-      "parent": "Food",
+      "parent": "Onion-Related",
       "words": [
         "oneion",
         "blunions",
@@ -539,7 +558,7 @@
     },
     {
       "name": "Kitchen Appliances",
-      "parent": "Food",
+      "parent": "Food-Related",
       "words": [
         "meh-crowave",
         "mid-crowave",
@@ -567,7 +586,7 @@
       ]
     },
     {
-      "name": "Games",
+      "name": "Game-Related",
       "words": [
         "Yahtzeeconomy",
         "appict",
@@ -577,7 +596,7 @@
     },
     {
       "name": "Tabletop Games",
-      "parent": "Games",
+      "parent": "Game-Related",
       "words": [
         "Bille Bornes",
         "Parqisi",
@@ -588,7 +607,7 @@
     },
     {
       "name": "Word Games",
-      "parent": "Games",
+      "parent": "Game-Related",
       "words": [
         "Clabble",
         "Cloggle",
@@ -600,8 +619,8 @@
       ]
     },
     {
-      "name": "Video Games",
-      "parent": "Games",
+      "name": "Video Game-Related",
+      "parent": "Game-Related",
       "words": [
         "Kirby and the Forgotten World",
         "Keep Talking and Listening and Seeing and Nobody Explodes",
@@ -616,7 +635,7 @@
     },
     {
       "name": "Video Game Characters",
-      "parent": "Video Games",
+      "parent": "Video Game-Related",
       "words": [
         "gorf",
         "olimario",
@@ -627,8 +646,8 @@
       ]
     },
     {
-      "name": "Pikmin",
-      "parent": "Video Games",
+      "name": "Pikmin-Related",
+      "parent": "Video Game-Related",
       "words": [
         "Pikmeve",
         "pikuota",
@@ -648,7 +667,7 @@
       ]
     },
     {
-      "name": "Horse",
+      "name": "Horse-Related",
       "words": [
         "amputorse",
         "equestrigram",
@@ -661,7 +680,7 @@
     },
     {
       "name": "Dead Horse Idioms",
-      "parent": "Horse",
+      "parent": "Horse-Related",
       "words": [
         "Don't look a dead horse in the mouth",
         "beat around the dead horse bush",
@@ -692,7 +711,7 @@
       ]
     },
     {
-      "name": "Idioms",
+      "name": "Sayings",
       "words": [
         "Achilles heels",
         "a sound for sore ears",
@@ -758,11 +777,14 @@
       ]
     },
     {
-      "name": "Law",
+      "name": "Law-Related",
       "words": [
         "triple jeopardy",
         "subsequent restraint",
-        "lawye"
+        "lawye",
+        "polief occifer",
+        "yee-hawfficer",
+        "party car"
       ]
     },
     {
@@ -775,16 +797,8 @@
       ]
     },
     {
-      "name": "Police",
-      "words": [
-        "polief occifer",
-        "yee-hawfficer",
-        "party car"
-      ]
-    },
-    {
       "name": "Undercover",
-      "parent": "Police",
+      "parent": "Law-Related",
       "words": [
         "overcover undercover civcopcivcop",
         "undercop civilicover",
@@ -795,7 +809,7 @@
       ]
     },
     {
-      "name": "Language",
+      "name": "Language-Related",
       "words": [
         "aphorist",
         "malenmajusclism",
@@ -806,8 +820,8 @@
       ]
     },
     {
-      "name": "Puns",
-      "parent": "Language",
+      "name": "Wordplay",
+      "parent": "Language-Related",
       "words": [
         "nontendre / null entendre",
         "single entendre",
@@ -817,7 +831,7 @@
     },
     {
       "name": "Verbosity",
-      "parent": "Language",
+      "parent": "Language-Related",
       "words": [
         "sesquip",
         "sesquipedale",
@@ -828,17 +842,23 @@
     },
     {
       "name": "Word Types",
-      "parent": "Language",
+      "parent": "Language-Related",
       "words": [
         "pourtnoilale",
         "hyperpourtnoilale",
-        "autodefinicial",
-        "froz",
-        "zorf",
         "fictionalism",
         "twice-proper noun / doubly proper noun",
         "tricontapontasesquipedontaverbonta",
         "tricontapontasesquipedontaverbontic"
+      ]
+    },
+    {
+      "name": "Definition Types",
+      "parent": "Language-Related",
+      "words": [
+        "autodefinicial",
+        "froz",
+        "zorf"
       ]
     },
     {
@@ -873,7 +893,7 @@
       ]
     },
     {
-      "name": "NIU",
+      "name": "NIU-Related",
       "words": [
         "conward",
         "twarr",
@@ -886,8 +906,8 @@
       ]
     },
     {
-      "name": "Residence Halls",
-      "parent": "NIU",
+      "name": "Residence Hall-Related",
+      "parent": "NIU-Related",
       "words": [
         "Nahll",
         "forch",
@@ -897,7 +917,7 @@
     },
     {
       "name": "Gilbert",
-      "parent": "Residence Halls",
+      "parent": "Residence Hall-Related",
       "words": [
         "Gilbert caféte",
         "Gilbertian",
@@ -919,7 +939,7 @@
     },
     {
       "name": "Neptune",
-      "parent": "Residence Halls",
+      "parent": "Residence Hall-Related",
       "words": [
         "Noopton",
         "Naptune",
@@ -930,7 +950,7 @@
       ]
     },
     {
-      "name": "Numbers",
+      "name": "Number-Related",
       "words": [
         "millexicon",
         "millexeme",
@@ -940,7 +960,7 @@
     },
     {
       "name": "Named Numbers",
-      "parent": "Numbers",
+      "parent": "Number-Related",
       "words": [
         "doob",
         "shoob",
@@ -954,7 +974,7 @@
     },
     {
       "name": "N-Times Words",
-      "parent": "Numbers",
+      "parent": "Number-Related",
       "words": [
         "deice",
         "eice",
@@ -968,7 +988,7 @@
     },
     {
       "name": "Ordinals",
-      "parent": "Numbers",
+      "parent": "Number-Related",
       "words": [
         "penimary",
         "pentultimate",
@@ -979,8 +999,8 @@
       ]
     },
     {
-      "name": "Fractions",
-      "parent": "Numbers",
+      "name": "Fraction-Related",
+      "parent": "Number-Related",
       "words": [
         "thirge",
         "thrish",
@@ -990,7 +1010,7 @@
     },
     {
       "name": "Number Phrases",
-      "parent": "Numbers",
+      "parent": "Number-Related",
       "words": [
         "ones of ones",
         "ones of ones of ones",
@@ -1004,7 +1024,7 @@
       ]
     },
     {
-      "name": "Jobs",
+      "name": "Job-Related",
       "words": [
         "doct",
         "lawye",
@@ -1039,7 +1059,7 @@
       ]
     },
     {
-      "name": "Slogans",
+      "name": "Political Slogans",
       "parent": "Politics",
       "words": [
         "Great America Make America Again / GAMAA",
@@ -1053,7 +1073,7 @@
       ]
     },
     {
-      "name": "Quora",
+      "name": "Quora-Related",
       "words": [
         "one-sided quorrel",
         "quor",
@@ -1136,7 +1156,7 @@
       ]
     },
     {
-      "name": "Sleep",
+      "name": "Sleep-Related",
       "words": [
         "all-dayer",
         "antalarm",
@@ -1150,7 +1170,7 @@
       ]
     },
     {
-      "name": "Sports",
+      "name": "Sports-Related",
       "words": [
         "cracked on the lanes",
         "foosdogger",
@@ -1162,8 +1182,8 @@
       ]
     },
     {
-      "name": "Invented Sports",
-      "parent": "Sports",
+      "name": "Sports",
+      "parent": "Sports-Related",
       "words": [
         "luleton",
         "skege",
@@ -1172,7 +1192,7 @@
       ]
     },
     {
-      "name": "Streaming",
+      "name": "Streaming-Related",
       "words": [
         "netflick",
         "Swamblwing"
@@ -1180,7 +1200,7 @@
     },
     {
       "name": "Streaming Services",
-      "parent": "Streaming",
+      "parent": "Streaming-Related",
       "words": [
         "Boingby",
         "Clibbi",
@@ -1215,7 +1235,7 @@
     },
     {
       "name": "Spweemy",
-      "parent": "Streaming",
+      "parent": "Streaming-Related",
       "words": [
         "Spweemy",
         "Spweeming service",
@@ -1231,7 +1251,7 @@
       ]
     },
     {
-      "name": "Time",
+      "name": "Time-Related",
       "words": [
         "est",
         "hibernum",
@@ -1243,7 +1263,7 @@
     },
     {
       "name": "Holidays",
-      "parent": "Time",
+      "parent": "Time-Related",
       "words": [
         "Christmas Beve",
         "FahThursday",
@@ -1254,7 +1274,7 @@
     },
     {
       "name": "Onionic Calendar",
-      "parent": "Time",
+      "parent": "Time-Related",
       "words": [
         "Oniuary",
         "Onionoic cycle",
@@ -1265,7 +1285,7 @@
       ]
     },
     {
-      "name": "Turkeys",
+      "name": "Turkey-Related",
       "words": [
         "aerkey",
         "butterkey",
@@ -1278,7 +1298,7 @@
       ]
     },
     {
-      "name": "Cyclexicon",
+      "name": "Unicyclist Dictionary",
       "words": [
         "Cyclexicon",
         "cyclexicalism",
@@ -1291,7 +1311,7 @@
       ]
     },
     {
-      "name": "Zoogs",
+      "name": "Zoog-Related",
       "words": [
         "zoog",
         "zoogdra effect",

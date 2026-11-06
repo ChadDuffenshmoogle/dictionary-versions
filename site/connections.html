@@ -356,6 +356,14 @@
 </div>
 
 <script>
+// HIDDEN LINKS (things in other files that depend on this page):
+//  - puzzle-rules.js   loaded above; PUZZLE_RULES and puzzleSpans() make the letter-pattern categories.
+//  - categories.json   site/categories.json. Edited in wiktionary.html (and by .github/workflows/sync-categories.yml when a word is renamed).
+//  - stats.json        made by generate_stats.py from the dictionary .txt. Its word list decides which category words count as real.
+//  - wiktionary.html   word pop-ups come from it, and the "go to the categories" link opens wiktionary.html#c=.
+//  - localStorage 'unicyclistConnectionsState' and 'unicyclistConnectionsStats'   saved game and stats; changing the puzzle format can reset them.
+//  - localStorage 'theme'   shared with wiktionary.html and the other pages.
+//  - index.html        the Home link.
 // ---------- settings you might want to change ----------
 const START_DATE = { y: 2026, m: 10, d: 4 };   // the day that counts as Puzzle #1
 const MAX_MISTAKES = 4;
@@ -477,11 +485,22 @@ function buildPuzzle(cats, validTerms, day) {
   const ranked = found.slice().sort((a, b) =>
     (lvl(a) - lvl(b)) || (pools.get(b).size - pools.get(a).size) || (hash(day + '|rank|' + a) - hash(day + '|rank|' + b)));
 
+  // If all four words also sit inside one subcategory, label the group with that subcategory instead.
+  // When several qualify, the one with the fewest words (the most specific) wins.
+  const labelFor = (key, lws) => {
+    let best = key;
+    fam.get(key).forEach(k => {
+      if (k === key || !lws.every(lw => pools.get(k).has(lw))) return;
+      if (best === key || pools.get(k).size < pools.get(best).size) best = k;
+    });
+    return best;
+  };
+
   const groups = ranked.map((key, i) => {
     const ex = exclusive(key, found)
       .sort((a, b) => hash(day + '|w|' + key + '|' + a) - hash(day + '|w|' + key + '|' + b))
       .slice(0, 4);
-    return { name: byName.get(key).name, color: COLORS[i], words: ex.map(lw => pools.get(key).get(lw)), rule: byName.get(key).rule || null, catKey: byName.get(key).catKey || '' };
+    return { name: byName.get(labelFor(key, ex)).name, color: COLORS[i], words: ex.map(lw => pools.get(key).get(lw)), rule: byName.get(key).rule || null, catKey: byName.get(key).catKey || '' };
   });
   const all = groups.flatMap(g => g.words);
   const startOrder = all.slice().sort((a, b) => hash(day + '|o|' + a) - hash(day + '|o|' + b));

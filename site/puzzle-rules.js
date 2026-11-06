@@ -1,3 +1,23 @@
+// HIDDEN CATEGORY LINKS (these categories are not listed on the Categories page; open them by URL.
+// Add a line here whenever a rule is added to PUZZLE_RULES. The link is wiktionary.html#c= plus 'puzzle:' and the rule name, URL-encoded):
+//  - Contains All Five Vowels: wiktionary.html#c=puzzle%3AContains%20All%20Five%20Vowels
+//  - No Vowels: wiktionary.html#c=puzzle%3ANo%20Vowels
+//  - Q Without a U: wiktionary.html#c=puzzle%3AQ%20Without%20a%20U
+//  - Three Letters in Alphabetical Order: wiktionary.html#c=puzzle%3AThree%20Letters%20in%20Alphabetical%20Order
+//  - Five or More of the Same Letter: wiktionary.html#c=puzzle%3AFive%20or%20More%20of%20the%20Same%20Letter
+//  - No Repeated Letters: wiktionary.html#c=puzzle%3ANo%20Repeated%20Letters
+//  - Spells Another Entry Backwards: wiktionary.html#c=puzzle%3ASpells%20Another%20Entry%20Backwards
+//  - A Word Said Twice: wiktionary.html#c=puzzle%3AA%20Word%20Said%20Twice
+//  - Letters Alternate Vowel and Consonant: wiktionary.html#c=puzzle%3ALetters%20Alternate%20Vowel%20and%20Consonant
+//  - Anagram of Another Entry: wiktionary.html#c=puzzle%3AAnagram%20of%20Another%20Entry
+//  - Double Z: wiktionary.html#c=puzzle%3ADouble%20Z
+
+// FILE DEPENDENCIES (things in other files that depend on this one):
+//  - connections.html  loads this file, calls puzzleSpans() through makeAutoCats() and reads PUZZLE_RULES (name, level, desc, find).
+//  - wiktionary.html   loads this file too, to list these under "Automatic categories" and to underline the matching letters (puzzleMarkHtml).
+//  - stats.json        the dictionary word list that has() and has.all() are built from (see connections.html start()).
+//  - Rule names are used as ids ('puzzle:' + name), so renaming a rule resets how old puzzles are matched.
+
 // Automatic puzzle categories. Each rule looks at a word's letters and says whether it fits.
 // find(word, has) returns null (no match) or a list of [start, end] spots to underline.
 // An empty list [] means "it matches, but there is nothing to underline".

@@ -155,6 +155,17 @@
 </div>
 
 <script>
+// HIDDEN LINKS (things in other files that depend on this page):
+//  - locked-token.js        sets window.LOCKED_TOKEN (the encrypted GitHub token used to sign in and edit).
+//  - puzzle-rules.js        letter-pattern categories shown under "Automatic categories".
+//  - categories.json        site/categories.json in the repo. connections.html reads it for the daily puzzle; this page edits it.
+//  - picks.json             site/picks.json in the repo. Editor's Picks; holds dictionary words, so renames and deletes must reach it too.
+//  - stats.json             made by generate_stats.py. Used for the word list here and the valid words in connections.html.
+//  - UNICYCLIST DICTIONARY v1.2.N.txt   the real dictionary. The bot, generate_stats.py, this page and .github/workflows/sync-categories.yml all read or write it.
+//  - localStorage 'ghToken' the sign-in is shared by every edit on this page (words, categories, picks).
+//  - localStorage 'theme'   shared with connections.html and the other pages.
+//  - connections.html       linked from the menu; sends people back here with wiktionary.html#c= to add categories.
+//  - scripts/sync_categories.py  does the same word-renaming as syncCatsForWord below when someone edits the .txt straight on GitHub.
 let entries = [];
 let byTerm = new Map();
 let stats = null;
@@ -589,13 +600,18 @@ async function catAction(mutate, message) {
   route();
 }
 
-// keep category lists right when a word is renamed (newTerm) or deleted (newTerm = null)
+// keep category lists and Editor's Picks right when a word is renamed (newTerm) or deleted (newTerm = null)
 async function syncCatsForWord(oldTerm, newTerm) {
-  if (!customCats.some(c => hasWord(c, oldTerm))) return;
-  await saveCategories(cats => cats.forEach(c => {
-    const i = c.words.findIndex(w => w.toLowerCase() === oldTerm.toLowerCase());
-    if (i >= 0) { if (newTerm) c.words[i] = newTerm; else c.words.splice(i, 1); }
-  }), newTerm ? `Edit categories: rename '${oldTerm}' to '${newTerm}'` : `Edit categories: remove '${oldTerm}'`);
+  const isOld = w => w.toLowerCase() === oldTerm.toLowerCase();
+  const fix = list => {
+    const i = list.findIndex(isOld);
+    if (i < 0) return;
+    const dupe = newTerm && list.some(w => !isOld(w) && w.toLowerCase() === newTerm.toLowerCase());
+    if (newTerm && !dupe) list[i] = newTerm; else list.splice(i, 1);
+  };
+  const msg = newTerm ? `rename '${oldTerm}' to '${newTerm}'` : `remove '${oldTerm}'`;
+  if (customCats.some(c => c.words.some(isOld))) await saveCategories(cats => cats.forEach(c => fix(c.words)), 'Edit categories: ' + msg);
+  if (Object.values(picks).some(list => list.some(isOld))) await savePicks(next => PICK_EDITORS.forEach(n => fix(next[n])), 'Edit picks: ' + msg);
 }
 
 function newCategoryPrompt(thenAddTerm, parent) {

@@ -11,6 +11,10 @@
 //  - Letters Alternate Vowel and Consonant: wiktionary.html#c=puzzle%3ALetters%20Alternate%20Vowel%20and%20Consonant
 //  - Anagram of Another Entry: wiktionary.html#c=puzzle%3AAnagram%20of%20Another%20Entry
 //  - Double Z: wiktionary.html#c=puzzle%3ADouble%20Z
+//  - Three or More Double Letters: wiktionary.html#c=puzzle%3AThree%20or%20More%20Double%20Letters
+//  - Starts With a Greek Letter: wiktionary.html#c=puzzle%3AStarts%20With%20a%20Greek%20Letter
+//  - Hides a Planet: wiktionary.html#c=puzzle%3AHides%20a%20Planet
+//  - Starts With a Month: wiktionary.html#c=puzzle%3AStarts%20With%20a%20Month
 
 // FILE DEPENDENCIES (things in other files that depend on this one):
 //  - connections.html  loads this file, calls puzzleSpans() through makeAutoCats() and reads PUZZLE_RULES (name, level, desc, find).
@@ -48,6 +52,27 @@ function pzAnagrams(has) {
     }
   }
   return has.ana;
+}
+
+// Builds a rule for a closed list of things (Greek letters, planets, months...).
+// where = 'start' (the word begins with one of them) or 'inside' (one of them appears anywhere in the word).
+// The word has to be longer than the item, and a bare plural (item + s or es) does not count. The item is underlined.
+// To make a new "fixed list" category, add an entry to PUZZLE_RULES that uses pzFixedSet(['item', ...], 'start' or 'inside').
+function pzFixedSet(items, where) {
+  return function (t) {
+    const n = pzNorm(t), spans = [];
+    for (const item of items) {
+      if (n.length <= item.length) continue;
+      for (let i = 0; i + item.length <= n.length; i++) {
+        if (where === 'start' && i > 0) break;
+        if (!n.startsWith(item, i)) continue;
+        const rest = n.slice(i + item.length);
+        if (where === 'start' && (rest === 's' || rest === 'es')) continue;
+        spans.push([i, i + item.length]);
+      }
+    }
+    return spans.length ? spans : null;
+  };
 }
 
 const PUZZLE_RULES = [
@@ -168,6 +193,38 @@ const PUZZLE_RULES = [
       for (let i = 0; i + 1 < n.length; i++) if (n[i] === 'z' && n[i + 1] === 'z') spans.push([i, i + 2]);
       return spans.length ? spans : null;
     },
+  },
+  {
+    name: 'Three or More Double Letters',
+    level: 3,
+    desc: 'Words with three or more pairs of doubled letters, like BOOKKEEPER. Each pair is underlined.',
+    find(t) {
+      const n = pzNorm(t), spans = [];
+      for (let i = 0; i + 1 < n.length; i++) {
+        if (/[a-z]/.test(n[i]) && n[i] === n[i + 1]) { spans.push([i, i + 2]); i++; }
+      }
+      return spans.length >= 3 ? spans : null;
+    },
+  },
+  {
+    name: 'Starts With a Greek Letter',
+    level: 3,
+    desc: 'Words that begin with the name of a Greek letter, like ALPHABET or DELTOID. Mu, nu, xi and pi are left out because they are too short. The letter name is underlined.',
+    find: pzFixedSet(['alpha', 'beta', 'gamma', 'delta', 'epsilon', 'zeta', 'eta', 'theta', 'iota', 'kappa', 'lambda',
+      'rho', 'sigma', 'tau', 'upsilon', 'phi', 'chi', 'psi', 'omega', 'omicron'], 'start'),
+  },
+  {
+    name: 'Hides a Planet',
+    level: 3,
+    desc: 'Words with the name of one of the eight planets tucked inside, like UNEARTH. The planet is underlined.',
+    find: pzFixedSet(['mercury', 'venus', 'earth', 'mars', 'jupiter', 'saturn', 'uranus', 'neptune'], 'inside'),
+  },
+  {
+    name: 'Starts With a Month',
+    level: 3,
+    desc: 'Words that begin with the name of a month, like MARCHING or MAYOR. The month is underlined.',
+    find: pzFixedSet(['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october',
+      'november', 'december'], 'start'),
   },
 ];
 

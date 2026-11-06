@@ -71,7 +71,13 @@
         "chee-ender",
         "turchee",
         "chchingles",
-        "gerbacceggcheecrois",
+        "gerbacceggcheecrois"
+      ]
+    },
+    {
+      "name": "Cheese & Dairy",
+      "parent": "Food & Dining",
+      "words": [
         "caseine / caseose",
         "acaseine",
         "KKPseine",
@@ -79,11 +85,14 @@
         "anagalactic",
         "Mozartrella",
         "'san",
-        "pargarmesan"
+        "pargarmesan",
+        "Skyrkegaard",
+        "skyr skier",
+        "One-percenter"
       ]
     },
     {
-      "name": "Cuisine",
+      "name": "Food & Dining",
       "words": [
         "tuna of the land",
         "baguetti",
@@ -100,7 +109,6 @@
         "cachew",
         "caic",
         "Cake-Pop Demon Hunters",
-        "caseine / caseose",
         "casseroke",
         "carzone",
         "challobon / gigachoodel / cinnabeast / mastabon",
@@ -125,7 +133,6 @@
         "cryotizer",
         "culvstard",
         "cymaffle",
-        "acaseine",
         "appeppered",
         "Apples to Candypumpkincorn",
         "assalted",
@@ -145,13 +152,11 @@
         "hungerswärme",
         "Kit Katter",
         "kitchenista",
-        "KKPseine",
         "kreeb",
         "lasagnary",
         "lunching / lunchin'",
         "meatloflaf",
         "minimun",
-        "Mozartrella",
         "nausce",
         "Noopton",
         "oneion",
@@ -165,7 +170,6 @@
         "pringling",
         "quesadillo",
         "Renaissance pizza",
-        "'san",
         "shlyrk",
         "shma",
         "shmapcorn",
@@ -251,7 +255,7 @@
     },
     {
       "name": "Beverages & Drinking",
-      "parent": "Cuisine",
+      "parent": "Food & Dining",
       "words": [
         "Bep!",
         "churoffee",
@@ -286,7 +290,7 @@
     },
     {
       "name": "Restaurants",
-      "parent": "Cuisine",
+      "parent": "Food & Dining",
       "words": [
         "burgequere",
         "Culvert's",
@@ -317,7 +321,7 @@
     },
     {
       "name": "Sandwich-Related",
-      "parent": "Cuisine",
+      "parent": "Food & Dining",
       "words": [
         "nostunalgia",
         "uncrustor",
@@ -527,7 +531,6 @@
         "AIwitness",
         "Boomba",
         "orgborg",
-        "fleshie",
         "cyberg",
         "skullborg"
       ]
@@ -582,7 +585,8 @@
         "yihk",
         "chyeah!",
         "zone",
-        "bunch'din"
+        "bunch'din",
+        "fleshie"
       ]
     },
     {
@@ -593,16 +597,25 @@
       ]
     },
     {
+      "name": "Sports-Related",
+      "words": [
+        "cracked on the lanes",
+        "foosdogger",
+        "table tennis elbow",
+        "legsterity",
+        "arche",
+        "rainbow dash",
+        "skyr skier"
+      ]
+    },
+    {
       "name": "Sports",
+      "parent": "Sports-Related",
       "words": [
         "luleton",
         "skege",
         "Sticky Wicket",
-        "cracked on the lanes",
-        "foosdogger",
-        "mega-golf",
-        "table tennis elbow",
-        "legsterity"
+        "mega-golf"
       ]
     },
     {

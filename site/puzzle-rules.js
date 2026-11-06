@@ -1,24 +1,11 @@
-// HIDDEN CATEGORY LINKS (these categories are not listed on the Categories page; open them by URL.
-// Add a line here whenever a rule is added to PUZZLE_RULES. The link is wiktionary.html#c= plus 'puzzle:' and the rule name, URL-encoded):
-//  - Contains All Five Vowels: wiktionary.html#c=puzzle%3AContains%20All%20Five%20Vowels
-//  - No Vowels: wiktionary.html#c=puzzle%3ANo%20Vowels
-//  - Q Without a U: wiktionary.html#c=puzzle%3AQ%20Without%20a%20U
-//  - Three Letters in Alphabetical Order: wiktionary.html#c=puzzle%3AThree%20Letters%20in%20Alphabetical%20Order
-//  - Five or More of the Same Letter: wiktionary.html#c=puzzle%3AFive%20or%20More%20of%20the%20Same%20Letter
-//  - No Repeated Letters: wiktionary.html#c=puzzle%3ANo%20Repeated%20Letters
-//  - Spells Another Entry Backwards: wiktionary.html#c=puzzle%3ASpells%20Another%20Entry%20Backwards
-//  - A Word Said Twice: wiktionary.html#c=puzzle%3AA%20Word%20Said%20Twice
-//  - Letters Alternate Vowel and Consonant: wiktionary.html#c=puzzle%3ALetters%20Alternate%20Vowel%20and%20Consonant
-//  - Anagram of Another Entry: wiktionary.html#c=puzzle%3AAnagram%20of%20Another%20Entry
-//  - Double Z: wiktionary.html#c=puzzle%3ADouble%20Z
-//  - Three or More Double Letters: wiktionary.html#c=puzzle%3AThree%20or%20More%20Double%20Letters
-//  - Starts With a Greek Letter: wiktionary.html#c=puzzle%3AStarts%20With%20a%20Greek%20Letter
-//  - Hides a Planet: wiktionary.html#c=puzzle%3AHides%20a%20Planet
-//  - Starts With a Month: wiktionary.html#c=puzzle%3AStarts%20With%20a%20Month
+// HIDDEN CATEGORY LINKS (these categories are not listed on the Categories page):
+//  - All of them, with the ones that have at least 4 entries in bold: wiktionary.html#hidden
+//  - One of them: wiktionary.html#c=puzzle%3A plus the rule name, URL-encoded (example: wiktionary.html#c=puzzle%3ADouble%20Z).
+//    The hidden page above lists every rule automatically, so no list is kept here.
 
 // FILE DEPENDENCIES (things in other files that depend on this one):
 //  - connections.html  loads this file, calls puzzleSpans() through makeAutoCats() and reads PUZZLE_RULES (name, level, desc, find).
-//  - wiktionary.html   loads this file too, to list these under "Automatic categories" and to underline the matching letters (puzzleMarkHtml).
+//  - wiktionary.html   loads this file too, to build the hidden category pages (wiktionary.html#hidden) and to underline the matching letters (puzzleMarkHtml).
 //  - stats.json        the dictionary word list that has() and has.all() are built from (see connections.html start()).
 //  - Rule names are used as ids ('puzzle:' + name), so renaming a rule resets how old puzzles are matched.
 
@@ -54,28 +41,7 @@ function pzAnagrams(has) {
   return has.ana;
 }
 
-// Builds a rule for a closed list of things (Greek letters, planets, months...).
-// where = 'start' (the word begins with one of them) or 'inside' (one of them appears anywhere in the word).
-// The word has to be longer than the item, and a bare plural (item + s or es) does not count. The item is underlined.
-// To make a new "fixed list" category, add an entry to PUZZLE_RULES that uses pzFixedSet(['item', ...], 'start' or 'inside').
-function pzFixedSet(items, where) {
-  return function (t) {
-    const n = pzNorm(t), spans = [];
-    for (const item of items) {
-      if (n.length <= item.length) continue;
-      for (let i = 0; i + item.length <= n.length; i++) {
-        if (where === 'start' && i > 0) break;
-        if (!n.startsWith(item, i)) continue;
-        const rest = n.slice(i + item.length);
-        if (where === 'start' && (rest === 's' || rest === 'es')) continue;
-        spans.push([i, i + item.length]);
-      }
-    }
-    return spans.length ? spans : null;
-  };
-}
-
-const PUZZLE_RULES = [
+const PZ_HAND_RULES = [
   {
     name: 'Contains All Five Vowels',
     level: 3,
@@ -206,27 +172,71 @@ const PUZZLE_RULES = [
       return spans.length >= 3 ? spans : null;
     },
   },
-  {
-    name: 'Starts With a Greek Letter',
-    level: 3,
-    desc: 'Words that begin with the name of a Greek letter, like ALPHABET or DELTOID. Mu, nu, xi and pi are left out because they are too short. The letter name is underlined.',
-    find: pzFixedSet(['alpha', 'beta', 'gamma', 'delta', 'epsilon', 'zeta', 'eta', 'theta', 'iota', 'kappa', 'lambda',
-      'rho', 'sigma', 'tau', 'upsilon', 'phi', 'chi', 'psi', 'omega', 'omicron'], 'start'),
-  },
-  {
-    name: 'Hides a Planet',
-    level: 3,
-    desc: 'Words with the name of one of the eight planets tucked inside, like UNEARTH. The planet is underlined.',
-    find: pzFixedSet(['mercury', 'venus', 'earth', 'mars', 'jupiter', 'saturn', 'uranus', 'neptune'], 'inside'),
-  },
-  {
-    name: 'Starts With a Month',
-    level: 3,
-    desc: 'Words that begin with the name of a month, like MARCHING or MAYOR. The month is underlined.',
-    find: pzFixedSet(['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october',
-      'november', 'december'], 'start'),
-  },
 ];
+
+// ---------- fixed lists ----------
+// Each closed list below makes three categories: Starts With, Ends With, and Hides (the item sits inside, touching neither end).
+// The word has to be longer than the item, so "one" itself never counts. For "starts with", a bare plural (item + s or es) does not count either.
+// Accidental matches are fine (ZONE ends in ONE): that is what makes these hard. Items under three letters are left out because they match almost everything.
+// To add a list, add one line here. noun = how the category name reads; plain = how the description reads.
+const PZ_LISTS = [
+  { noun: 'a Greek Letter', plain: 'a Greek letter', items: 'alpha beta gamma delta epsilon zeta eta theta iota kappa lambda rho sigma tau upsilon phi chi psi omega omicron' },
+  { noun: 'a NATO Alphabet Word', plain: 'a NATO alphabet word', items: 'alfa bravo charlie delta echo foxtrot golf hotel india juliet kilo lima mike november oscar papa quebec romeo sierra tango uniform victor whiskey xray yankee zulu' },
+  { noun: 'a Weekday', plain: 'a day of the week', items: 'sunday monday tuesday wednesday thursday friday saturday' },
+  { noun: 'a Weekday Abbreviation', plain: 'a three-letter weekday abbreviation', items: 'sun mon tue wed thu fri sat' },
+  { noun: 'a Month', plain: 'a month', items: 'january february march april may june july august september october november december' },
+  { noun: 'a Planet', plain: 'a planet', items: 'mercury venus earth mars jupiter saturn uranus neptune' },
+  { noun: 'a Chess Piece', plain: 'a chess piece', items: 'king queen rook bishop knight pawn' },
+  { noun: 'a Card Suit', plain: 'a card suit', items: 'heart spade club diamond' },
+  { noun: 'an Ace or Court Card', plain: 'an ace or court card', items: 'ace king queen jack' },
+  { noun: 'a Number Word', plain: 'a number from one to twelve', items: 'one two three four five six seven eight nine ten eleven twelve' },
+  { noun: 'a Large Number Word', plain: 'a tens or big number word', items: 'twenty thirty forty fifty sixty seventy eighty ninety hundred thousand million billion' },
+  { noun: 'an Ordinal Number', plain: 'an ordinal number from first to tenth', items: 'first second third fourth fifth sixth seventh eighth ninth tenth' },
+  { noun: 'a Rainbow Color', plain: 'a rainbow color', items: 'red orange yellow green blue indigo violet' },
+  { noun: 'a Classical Element', plain: 'a classical element', items: 'earth air fire water' },
+  { noun: 'a Compass Direction', plain: 'a compass direction', items: 'north south east west' },
+  { noun: 'a Season', plain: 'a season', items: 'spring summer autumn winter fall' },
+  { noun: 'a Sense', plain: 'one of the five senses', items: 'sight hearing taste smell touch' },
+  { noun: 'a Continent', plain: 'a continent', items: 'africa asia europe antarctica australia america' },
+  { noun: 'an Ocean', plain: 'an ocean', items: 'atlantic pacific indian arctic southern' },
+  { noun: 'a Great Lake', plain: 'a Great Lake', items: 'huron ontario michigan erie superior' },
+  { noun: 'a Noble Gas', plain: 'a noble gas', items: 'helium neon argon krypton xenon radon' },
+  { noun: 'a US Coin', plain: 'a US coin', items: 'penny nickel dime quarter' },
+  { noun: 'a Greek God', plain: 'a Greek god', items: 'zeus hera poseidon demeter athena apollo artemis ares hermes hephaestus aphrodite dionysus' },
+  { noun: 'a Roman God', plain: 'a Roman god', items: 'jupiter juno neptune ceres minerva mars diana vulcan mercury venus bacchus vesta cupid janus' },
+  { noun: 'a Metal', plain: 'a metal', items: 'gold silver copper iron tin lead zinc nickel' },
+  { noun: 'a Gemstone', plain: 'a gemstone', items: 'ruby emerald sapphire diamond opal pearl topaz garnet amber jade amethyst quartz onyx' },
+  { noun: 'a Time of Day', plain: 'a time of day', items: 'dawn noon dusk midnight' },
+];
+
+function pzListRules(list) {
+  const items = [...new Set(list.items.split(' '))];
+  const make = (where, name, desc) => ({
+    name, level: 3, desc,
+    find(t) {
+      const n = pzNorm(t), spans = [];
+      for (const item of items) {
+        if (n.length <= item.length) continue;
+        for (let i = 0; i + item.length <= n.length; i++) {
+          if (!n.startsWith(item, i)) continue;
+          const end = i + item.length, rest = n.slice(end);
+          if (where === 'start' && (i > 0 || rest === 's' || rest === 'es')) continue;
+          if (where === 'end' && end !== n.length) continue;
+          if (where === 'inside' && (i === 0 || end === n.length)) continue;
+          spans.push([i, end]);
+        }
+      }
+      return spans.length ? spans : null;
+    },
+  });
+  return [
+    make('start', 'Starts With ' + list.noun, `Words that begin with the name of ${list.plain}. The name is underlined.`),
+    make('end', 'Ends With ' + list.noun, `Words that end with the name of ${list.plain}. The name is underlined.`),
+    make('inside', 'Hides ' + list.noun, `Words with the name of ${list.plain} hidden inside, not at the start or the end. The name is underlined.`),
+  ];
+}
+
+const PUZZLE_RULES = PZ_HAND_RULES.concat(PZ_LISTS.flatMap(pzListRules));
 
 // Returns null (no match) or the list of spots to underline.
 function puzzleSpans(rule, term, has) {

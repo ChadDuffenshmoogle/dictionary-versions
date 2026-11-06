@@ -96,6 +96,8 @@
   .solved .cat-words { text-transform: uppercase; font-size: 0.85rem; margin-top: 2px; }
   .solved a { color: inherit; text-decoration: underline; }
   .solved a:hover { text-decoration-thickness: 2px; }
+  .solved .marked a { text-decoration: none; }
+  .solved .marked u { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 3px; }
   .c-yellow { background: var(--yellow); }
   .c-green { background: var(--green); }
   .c-blue { background: var(--blue); }
@@ -287,6 +289,7 @@
     .tile.bounce, .tile.shake, .solved.flip { animation: none; }
   }
 </style>
+<script src="puzzle-rules.js"></script>
 </head>
 <body>
 
@@ -473,12 +476,22 @@ function buildPuzzle(cats, validTerms, day) {
     const ex = exclusive(key, found)
       .sort((a, b) => hash(day + '|w|' + key + '|' + a) - hash(day + '|w|' + key + '|' + b))
       .slice(0, 4);
-    return { name: byName.get(key).name, color: COLORS[i], words: ex.map(lw => pools.get(key).get(lw)) };
+    return { name: byName.get(key).name, color: COLORS[i], words: ex.map(lw => pools.get(key).get(lw)), rule: byName.get(key).rule || null };
   });
   const all = groups.flatMap(g => g.words);
   const startOrder = all.slice().sort((a, b) => hash(day + '|o|' + a) - hash(day + '|o|' + b));
   const sig = groups.map(g => g.name + ':' + g.words.slice().sort().join(',')).join('|');
   return { groups, startOrder, sig };
+}
+
+// Letter-pattern categories (from puzzle-rules.js) fill themselves from the dictionary.
+function makeAutoCats(validTerms) {
+  hasTerm = (lw) => validTerms.has(lw);
+  return PUZZLE_RULES.map(r => {
+    const words = [];
+    validTerms.forEach((shown) => { if (puzzleSpans(r, shown, hasTerm) !== null) words.push(shown); });
+    return { name: r.name, parent: '', words, rule: r };
+  });
 }
 
 // ---------- saved state and stats ----------
@@ -502,6 +515,7 @@ let justSolved = -1;
 let busy = false;
 let loadedDay = todayKey();
 let termInfo = new Map(); // lowercase word -> its dictionary entry (for hover previews)
+let hasTerm = () => false; // is this lowercase word in the dictionary? (set once the dictionary loads)
 
 // ---------- small helpers ----------
 function groupOfGuess(g) {
@@ -547,15 +561,15 @@ function render() {
     row.className = 'solved c-' + g.color + (gi === justSolved ? ' flip' : '');
     const name = document.createElement('div'); name.className = 'cat-name';
     const nameLink = document.createElement('a');
-    nameLink.href = 'wiktionary.html#c=' + encodeURIComponent('custom:' + g.name);
+    nameLink.href = 'wiktionary.html#c=' + encodeURIComponent((g.rule ? 'puzzle:' : 'custom:') + g.name);
     nameLink.textContent = g.name;
     name.appendChild(nameLink);
-    const words = document.createElement('div'); words.className = 'cat-words';
+    const words = document.createElement('div'); words.className = 'cat-words' + (g.rule ? ' marked' : '');
     g.words.forEach((w, i) => {
       if (i) words.appendChild(document.createTextNode(', '));
       const a = document.createElement('a');
       a.href = 'wiktionary.html#w=' + encodeURIComponent(w);
-      a.textContent = w;
+      if (g.rule) a.innerHTML = puzzleMarkHtml(w, puzzleSpans(g.rule, w, hasTerm)); else a.textContent = w;
       words.appendChild(a);
     });
     row.append(name, words);
@@ -909,6 +923,8 @@ async function start() {
   const cats = (catsData.categories || [])
     .filter(c => c && c.name)
     .map(c => ({ name: String(c.name), parent: c.parent ? String(c.parent) : '', words: Array.isArray(c.words) ? c.words : [] }));
+
+  if (validTerms) cats.push(...makeAutoCats(validTerms));
 
   P = buildPuzzle(cats, validTerms, loadedDay);
   $('loading').style.display = 'none';

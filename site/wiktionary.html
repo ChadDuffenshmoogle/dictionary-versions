@@ -3,6 +3,7 @@
 <head>
 <script>try { var t = localStorage.getItem('theme') || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'); document.documentElement.dataset.theme = t; } catch (e) {}</script>
 <script src="locked-token.js"></script>
+<script src="puzzle-rules.js"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Unicyclist Wiktionary</title>
@@ -127,6 +128,7 @@
   .pv-pos { font-style:italic; color:var(--muted); margin-top:4px; }
   .pv ol { margin:0; padding-left:22px; }
   .pv-more { color:var(--muted); }
+  .word-list u { text-decoration-thickness:2px; text-underline-offset:3px; }
 </style>
 </head>
 <body>
@@ -485,18 +487,25 @@ function pluralize(w) {
   return w + 's';
 }
 
+function hasLower(lw) { return byTerm.has(lw); }
+
+function markedWordLink(term, rule) {
+  return `<a href="#w=${encodeURIComponent(term)}">${puzzleMarkHtml(term, puzzleSpans(rule, term, hasLower))}</a>`;
+}
+
 function allCategories() {
   const tagSet = [...new Set(entries.flatMap(e => e.tags || []))].sort();
   const posSet = [...new Set(entries.flatMap(e => e.pos_list || []))].filter(p => p && p !== '(no pos)').sort();
   return CATEGORIES
     .concat(posSet.map(p => ({ key: 'pos:' + p, label: pluralize(p), test: e => (e.pos_list || []).includes(p) })))
     .concat(tagSet.map(t => ({ key: 'tag:' + t, label: t, test: e => (e.tags || []).includes(t) })))
-    .concat(customCats.map(c => ({ key: 'custom:' + c.name, label: c.name, custom: true, test: e => hasWord(c, e.term) })));
+    .concat(customCats.map(c => ({ key: 'custom:' + c.name, label: c.name, custom: true, test: e => hasWord(c, e.term) })))
+    .concat(PUZZLE_RULES.map(r => ({ key: 'puzzle:' + r.name, label: r.name, hidden: true, rule: r, desc: r.desc, test: e => puzzleSpans(r, e.term, hasLower) !== null })));
 }
 
 function categoriesOf(e) {
   const all = allCategories();
-  const out = all.filter(c => c.test(e));
+  const out = all.filter(c => !c.hidden && c.test(e));
   const have = new Set(out.map(c => c.key));
   // a word in "Sandwiches" is also listed under "Cuisine" (the category Sandwiches sits inside)
   out.filter(c => c.custom).forEach(c => {
@@ -799,7 +808,7 @@ function showPick(name) {
 }
 
 function showCategoryIndex() {
-  const auto = sortByLabel(allCategories().filter(c => !c.custom));
+  const auto = sortByLabel(allCategories().filter(c => !c.custom && !c.hidden));
   const li = c => `<li><a href="#c=${encodeURIComponent(c.key)}">${esc(c.label)}</a> <span class="muted">(${entries.filter(c.test).length})</span></li>`;
   const tree = (parent, depth) => {
     const kids = parent === null ? customCats.filter(k => !k.parent || !findCat(customCats, k.parent)) : catKids(customCats, parent);
@@ -831,10 +840,11 @@ function showCategory(key) {
   const blocked = cat ? [cat.name, ...catDescendants(customCats, cat.name)].map(n => n.toLowerCase()) : [];
   view.innerHTML = `
     <h1>${esc(c.label)}</h1>
+    ${c.desc ? `<p>${esc(c.desc)}</p>` : ''}
     <p class="muted">${list.length} entries · <a href="#c=">All categories</a>${crumbs.map(p => ` › <a href="#c=${encodeURIComponent('custom:' + p.name)}">${esc(p.name)}</a>`).join('')}</p>
     ${kids.length ? `<h2>Subcategories</h2><ul class="cat-index">${kids.map(k => `<li><a href="#c=${encodeURIComponent('custom:' + k.name)}">${esc(k.name)}</a> <span class="muted">(${entries.filter(e => hasWord(k, e.term)).length})</span></li>`).join('')}</ul>` : ''}
     ${kids.length ? '<h2>Words</h2>' : ''}
-    <ul class="word-list">${list.map(e => `<li>${wordLink(e.term)}${editing ? ` <a href="#" class="rm-word" data-t="${esc(e.term)}" title="Remove from this category">✕</a>` : ''}</li>`).join('')}</ul>
+    <ul class="word-list">${list.map(e => `<li>${c.rule ? markedWordLink(e.term, c.rule) : wordLink(e.term)}${editing ? ` <a href="#" class="rm-word" data-t="${esc(e.term)}" title="Remove from this category">✕</a>` : ''}</li>`).join('')}</ul>
     ${editing ? `
       <div class="cat-edit">
         <input id="catAddWord" list="allTerms" placeholder="Add a word…">

@@ -155,17 +155,16 @@
 </div>
 
 <script>
-// HIDDEN LINKS (things in other files that depend on this page):
+// FILE DEPENDENCIES (things in other files that depend on this page):
 //  - locked-token.js        sets window.LOCKED_TOKEN (the encrypted GitHub token used to sign in and edit).
 //  - puzzle-rules.js        letter-pattern categories shown under "Automatic categories".
 //  - categories.json        site/categories.json in the repo. connections.html reads it for the daily puzzle; this page edits it.
 //  - picks.json             site/picks.json in the repo. Editor's Picks; holds dictionary words, so renames and deletes must reach it too.
 //  - stats.json             made by generate_stats.py. Used for the word list here and the valid words in connections.html.
-//  - UNICYCLIST DICTIONARY v1.2.N.txt   the real dictionary. The bot, generate_stats.py, this page and .github/workflows/sync-categories.yml all read or write it.
+//  - UNICYCLIST DICTIONARY v1.2.N.txt   the real dictionary. The bot, generate_stats.py and this page all read or write it. Edits made straight on GitHub do NOT update categories.json or picks.json.
 //  - localStorage 'ghToken' the sign-in is shared by every edit on this page (words, categories, picks).
 //  - localStorage 'theme'   shared with connections.html and the other pages.
 //  - connections.html       linked from the menu; sends people back here with wiktionary.html#c= to add categories.
-//  - scripts/sync_categories.py  does the same word-renaming as syncCatsForWord below when someone edits the .txt straight on GitHub.
 let entries = [];
 let byTerm = new Map();
 let stats = null;

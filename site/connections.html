@@ -273,6 +273,15 @@
     cursor: pointer;
   }
 
+  .pv { box-sizing: border-box; overflow-wrap: anywhere; position: absolute; z-index: 1000; display: none; width: 360px; max-width: calc(100vw - 16px); background: var(--modal-bg); color: var(--text); border: 1px solid var(--line); border-radius: 2px; padding: 12px 16px; font-size: 0.9rem; line-height: 1.55; text-align: left; text-transform: none; font-weight: 400; box-shadow: 0 30px 90px -20px rgba(0,0,0,0.3), 0 0 1px 1px rgba(0,0,0,0.05); }
+  .pv::before { content: ""; position: absolute; left: var(--arrow, 20px); width: 10px; height: 10px; background: var(--modal-bg); transform: rotate(45deg); }
+  .pv.below::before { top: -6px; border-left: 1px solid var(--line); border-top: 1px solid var(--line); }
+  .pv.above::before { bottom: -6px; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+  .pv-word { font-weight: 700; }
+  .pv-pron, .pv-pos { color: var(--muted); }
+  .pv-pos { font-style: italic; margin-top: 4px; }
+  .pv ol { margin: 0; padding-left: 22px; }
+  .pv-more { color: var(--muted); }
   #confetti { position: fixed; inset: 0; pointer-events: none; z-index: 250; }
   @media (prefers-reduced-motion: reduce) {
     .tile.bounce, .tile.shake, .solved.flip { animation: none; }
@@ -492,6 +501,7 @@ let shown = [];          // group indexes currently revealed
 let justSolved = -1;
 let busy = false;
 let loadedDay = todayKey();
+let termInfo = new Map(); // lowercase word -> its dictionary entry (for hover previews)
 
 // ---------- small helpers ----------
 function groupOfGuess(g) {
@@ -795,6 +805,69 @@ function launchConfetti() {
   })(start);
 }
 
+// ---------- hover previews (desktop only) ----------
+let pvEl = null, pvShowTimer = null, pvHideTimer = null, pvLink = null;
+function escHtml(t) { return String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+function previewHtml(e) {
+  const secs = e.senses && e.senses.length ? e.senses : [{ pos: e.pos, defs: [{ text: e.definition }] }];
+  let html = '<div><span class="pv-word">' + escHtml(e.term) + '</span>' + (e.pronunciation ? ' <span class="pv-pron">' + escHtml(e.pronunciation) + '</span>' : '') + '</div>';
+  let shownCount = 0;
+  const total = secs.reduce((n, sec) => n + sec.defs.length, 0);
+  for (const sec of secs) {
+    if (shownCount >= 3) break;
+    const defs = sec.defs.slice(0, 3 - shownCount);
+    if (sec.pos && sec.pos !== '(no pos)') html += '<div class="pv-pos">' + escHtml(sec.pos) + '</div>';
+    html += '<ol>' + defs.map(d => '<li>' + escHtml(d.text) + '</li>').join('') + '</ol>';
+    shownCount += defs.length;
+  }
+  if (total > shownCount) html += '<div class="pv-more">…</div>';
+  return html;
+}
+function hidePreview() {
+  clearTimeout(pvShowTimer); clearTimeout(pvHideTimer);
+  if (pvEl) pvEl.style.display = 'none';
+  pvLink = null;
+}
+function showPreview(a) {
+  const e = termInfo.get(a.textContent.toLowerCase());
+  if (!e) return;
+  if (!pvEl) {
+    pvEl = document.createElement('div');
+    pvEl.className = 'pv';
+    pvEl.addEventListener('mouseenter', () => clearTimeout(pvHideTimer));
+    pvEl.addEventListener('mouseleave', () => { pvHideTimer = setTimeout(hidePreview, 250); });
+    document.body.appendChild(pvEl);
+  }
+  pvLink = a;
+  pvEl.innerHTML = previewHtml(e);
+  pvEl.style.display = 'block';
+  const r = a.getBoundingClientRect();
+  const w = pvEl.offsetWidth, h = pvEl.offsetHeight;
+  const left = Math.max(8, Math.min(r.left, window.innerWidth - w - 8));
+  const below = (window.innerHeight - r.bottom >= h + 16) || r.top < h + 16;
+  pvEl.className = 'pv ' + (below ? 'below' : 'above');
+  pvEl.style.left = (window.scrollX + left) + 'px';
+  pvEl.style.top = (window.scrollY + (below ? r.bottom + 10 : r.top - h - 10)) + 'px';
+  pvEl.style.setProperty('--arrow', Math.max(12, Math.min(r.left + r.width / 2 - left - 5, w - 24)) + 'px');
+}
+if (matchMedia('(hover: hover)').matches) {
+  document.addEventListener('mouseover', (ev) => {
+    const a = ev.target.closest && ev.target.closest('.solved .cat-words a');
+    if (!a) return;
+    clearTimeout(pvHideTimer);
+    if (a === pvLink) return;
+    clearTimeout(pvShowTimer);
+    pvShowTimer = setTimeout(() => showPreview(a), 350);
+  });
+  document.addEventListener('mouseout', (ev) => {
+    const a = ev.target.closest && ev.target.closest('.solved .cat-words a');
+    if (!a) return;
+    clearTimeout(pvShowTimer);
+    pvHideTimer = setTimeout(hidePreview, 250);
+  });
+  document.addEventListener('click', hidePreview);
+}
+
 // ---------- modals, theme, midnight ----------
 document.querySelectorAll('[data-close]').forEach(b => b.addEventListener('click', () => $(b.dataset.close).classList.remove('show')));
 document.querySelectorAll('.overlay').forEach(o => o.addEventListener('click', (e) => { if (e.target === o) o.classList.remove('show'); }));
@@ -829,7 +902,7 @@ async function start() {
   if (statsData) {
     validTerms = new Map();
     (statsData.words_by_length_asc || []).forEach(t => validTerms.set(String(t).toLowerCase(), String(t)));
-    (statsData.definitions_by_length_asc || []).forEach(d => validTerms.set(String(d.term).toLowerCase(), String(d.term)));
+    (statsData.definitions_by_length_asc || []).forEach(d => { validTerms.set(String(d.term).toLowerCase(), String(d.term)); termInfo.set(String(d.term).toLowerCase(), d); });
     if (!validTerms.size) validTerms = null;
   }
 

@@ -451,7 +451,9 @@ function buildPuzzle(cats, validTerms, day) {
     return out;
   };
 
-  let nodes = 0, found = null;
+  // How hard each category is: 0 easy, 1 normal, 2 and 3 hard. Puzzles get at most two easy and two hard ones.
+  const lvl = k => { const l = byName.get(k).level; return l === undefined ? 1 : l; };
+  let nodes = 0, found = null, strict = true;
   function search(start, chosen) {
     if (found || nodes > SEARCH_LIMIT) return;
     if (chosen.length === 4) { found = chosen.slice(); return; }
@@ -459,6 +461,8 @@ function buildPuzzle(cats, validTerms, day) {
       if (++nodes > SEARCH_LIMIT) return;
       const k = cands[i];
       if (chosen.some(o => related(o, k))) continue;
+      if (strict && lvl(k) === 0 && chosen.filter(o => lvl(o) === 0).length >= 2) continue;
+      if (strict && lvl(k) >= 2 && chosen.filter(o => lvl(o) >= 2).length >= 2) continue;
       chosen.push(k);
       if (chosen.every(c => exclusive(c, chosen).length >= 4)) search(i + 1, chosen);
       chosen.pop();
@@ -466,17 +470,18 @@ function buildPuzzle(cats, validTerms, day) {
     }
   }
   search(0, []);
+  if (!found) { strict = false; nodes = 0; search(0, []); }
   if (!found) return null;
 
-  // Smaller categories count as harder: the biggest becomes yellow, the smallest purple.
+  // Easier categories get the lighter colors; among equals, the bigger one is easier.
   const ranked = found.slice().sort((a, b) =>
-    (pools.get(b).size - pools.get(a).size) || (hash(day + '|rank|' + a) - hash(day + '|rank|' + b)));
+    (lvl(a) - lvl(b)) || (pools.get(b).size - pools.get(a).size) || (hash(day + '|rank|' + a) - hash(day + '|rank|' + b)));
 
   const groups = ranked.map((key, i) => {
     const ex = exclusive(key, found)
       .sort((a, b) => hash(day + '|w|' + key + '|' + a) - hash(day + '|w|' + key + '|' + b))
       .slice(0, 4);
-    return { name: byName.get(key).name, color: COLORS[i], words: ex.map(lw => pools.get(key).get(lw)), rule: byName.get(key).rule || null };
+    return { name: byName.get(key).name, color: COLORS[i], words: ex.map(lw => pools.get(key).get(lw)), rule: byName.get(key).rule || null, catKey: byName.get(key).catKey || '' };
   });
   const all = groups.flatMap(g => g.words);
   const startOrder = all.slice().sort((a, b) => hash(day + '|o|' + a) - hash(day + '|o|' + b));
@@ -487,11 +492,38 @@ function buildPuzzle(cats, validTerms, day) {
 // Letter-pattern categories (from puzzle-rules.js) fill themselves from the dictionary.
 function makeAutoCats(validTerms) {
   hasTerm = (lw) => validTerms.has(lw);
+  hasTerm.all = () => validTerms.keys();
   return PUZZLE_RULES.map(r => {
     const words = [];
     validTerms.forEach((shown) => { if (puzzleSpans(r, shown, hasTerm) !== null) words.push(shown); });
-    return { name: r.name, parent: '', words, rule: r };
+    return { name: r.name, parent: '', words, rule: r, level: r.level, catKey: 'puzzle:' + r.name };
   });
+}
+
+// Categories the dictionary already works out by itself (acronyms, sounds, proper nouns, Cyrilisms, Scrabble).
+// level 0 = always an easy color, 2 and 3 = the harder colors.
+function makeStatCats(validTerms) {
+  const defs = [
+    { name: 'Acronyms', level: 0, re: /acronym|initialism/i },
+    { name: 'Onomatopoeia', level: 0, re: /onomatop/i },
+    { name: 'Proper Nouns', level: 0, re: /proper/i },
+    { name: 'Cyrilisms', level: 2, re: /cyril/i },
+  ];
+  const out = [];
+  defs.forEach(d => {
+    let catKey = '';
+    const words = new Set();
+    termInfo.forEach((e, lw) => {
+      if (!validTerms.has(lw)) return;
+      (e.pos_list || []).forEach(p => { if (d.re.test(p)) { if (!catKey) catKey = 'pos:' + p; words.add(validTerms.get(lw)); } });
+      (e.tags || []).forEach(t => { if (d.re.test(t)) { if (!catKey) catKey = 'tag:' + t; words.add(validTerms.get(lw)); } });
+    });
+    if (words.size) out.push({ name: d.name, level: d.level, catKey, parent: '', words: [...words] });
+  });
+  const legal = [];
+  termInfo.forEach((e, lw) => { if (validTerms.has(lw) && e.scrabble === 'legal') legal.push(validTerms.get(lw)); });
+  if (legal.length) out.push({ name: 'Scrabble-Legal Words', level: 3, catKey: 'scrabble-legal', parent: '', words: legal });
+  return out;
 }
 
 // ---------- saved state and stats ----------
@@ -561,7 +593,7 @@ function render() {
     row.className = 'solved c-' + g.color + (gi === justSolved ? ' flip' : '');
     const name = document.createElement('div'); name.className = 'cat-name';
     const nameLink = document.createElement('a');
-    nameLink.href = 'wiktionary.html#c=' + encodeURIComponent((g.rule ? 'puzzle:' : 'custom:') + g.name);
+    nameLink.href = 'wiktionary.html#c=' + encodeURIComponent(g.catKey || ('custom:' + g.name));
     nameLink.textContent = g.name;
     name.appendChild(nameLink);
     const words = document.createElement('div'); words.className = 'cat-words' + (g.rule ? ' marked' : '');
@@ -924,7 +956,7 @@ async function start() {
     .filter(c => c && c.name)
     .map(c => ({ name: String(c.name), parent: c.parent ? String(c.parent) : '', words: Array.isArray(c.words) ? c.words : [] }));
 
-  if (validTerms) cats.push(...makeAutoCats(validTerms));
+  if (validTerms) cats.push(...makeAutoCats(validTerms), ...makeStatCats(validTerms));
 
   P = buildPuzzle(cats, validTerms, loadedDay);
   $('loading').style.display = 'none';

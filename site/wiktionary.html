@@ -157,7 +157,7 @@
 <script>
 // FILE DEPENDENCIES (things in other files that depend on this page):
 //  - locked-token.js        sets window.LOCKED_TOKEN (the encrypted GitHub token used to sign in and edit).
-//  - puzzle-rules.js        letter-pattern categories shown under "Automatic categories".
+//  - puzzle-rules.js        letter-pattern categories. They are hidden from the Categories page; wiktionary.html#hidden (showHiddenCategories) lists them all.
 //  - categories.json        site/categories.json in the repo. connections.html reads it for the daily puzzle; this page edits it.
 //  - picks.json             site/picks.json in the repo. Editor's Picks; holds dictionary words, so renames and deletes must reach it too.
 //  - stats.json             made by generate_stats.py. Used for the word list here and the valid words in connections.html.
@@ -841,6 +841,19 @@ function showCategoryIndex() {
     <ul class="cat-index">${auto.map(li).join('')}</ul>`;
   const nb = document.getElementById('newCat');
   if (nb) nb.onclick = () => newCategoryPrompt(null, null);
+}
+
+function showHiddenCategories() {
+  const hid = sortByLabel(allCategories().filter(c => c.hidden)).map(c => ({ c, n: entries.filter(c.test).length }));
+  const ready = hid.filter(h => h.n >= 4).length;
+  const li = ({ c, n }) => {
+    const a = `<a href="#c=${encodeURIComponent(c.key)}">${esc(c.label)}</a>`;
+    return `<li>${n >= 4 ? `<b>${a}</b>` : a} <span class="muted">(${n})</span></li>`;
+  };
+  view.innerHTML = `
+    <h1>Hidden categories</h1>
+    <p class="muted">${hid.length} categories · ${ready} with at least 4 entries (bold) · <a href="#c=">All categories</a></p>
+    <ul class="cat-index">${hid.map(li).join('')}</ul>`;
 }
 
 function showCategory(key) {
@@ -1695,6 +1708,7 @@ async function openEditor(entry) {
 
 function route() {
   const hash = location.hash.replace(/^#/, '');
+  if (hash === 'hidden') return showHiddenCategories();
   if (hash.startsWith('w=')) return showEntry(decodeURIComponent(hash.slice(2)));
   if (hash.startsWith('c=')) { const k = decodeURIComponent(hash.slice(2)); return k ? showCategory(k) : showCategoryIndex(); }
   if (hash.startsWith('p=')) return showPick(decodeURIComponent(hash.slice(2)));

@@ -488,6 +488,7 @@ function pluralize(w) {
 }
 
 function hasLower(lw) { return byTerm.has(lw); }
+hasLower.all = () => byTerm.keys();
 
 function markedWordLink(term, rule) {
   return `<a href="#w=${encodeURIComponent(term)}">${puzzleMarkHtml(term, puzzleSpans(rule, term, hasLower))}</a>`;

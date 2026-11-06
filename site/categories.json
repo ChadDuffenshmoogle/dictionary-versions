@@ -21,7 +21,7 @@
       "words": []
     },
     {
-      "name": "Shrimp",
+      "name": "Shrimp-Related",
       "parent": "Aquatic Animals",
       "words": [
         "shrim",
@@ -31,7 +31,7 @@
       ]
     },
     {
-      "name": "Fish",
+      "name": "Fish-Related",
       "parent": "Aquatic Animals",
       "words": [
         "sneech",
@@ -55,7 +55,16 @@
       ]
     },
     {
-      "name": "Geese",
+      "name": "Birds",
+      "parent": "Bird-Related",
+      "words": [
+        "holgunx / holgunck",
+        "Turkules",
+        "aerkey"
+      ]
+    },
+    {
+      "name": "Goose-Related",
       "parent": "Bird-Related",
       "words": [
         "göse",
@@ -229,7 +238,7 @@
       ]
     },
     {
-      "name": "Figurative Kin",
+      "name": "Honorary Kin",
       "parent": "Kin-Related",
       "words": [
         "chibling",
@@ -450,7 +459,7 @@
       ]
     },
     {
-      "name": "Qdoba",
+      "name": "Qdoba-Related",
       "parent": "Restaurants",
       "words": [
         "Q'dobn't",
@@ -1295,7 +1304,8 @@
         "bacturqchikchecrois",
         "turchee",
         "Touygee bouygee"
-      ]
+      ],
+      "parent": "Bird-Related"
     },
     {
       "name": "Unicyclist Dictionary",

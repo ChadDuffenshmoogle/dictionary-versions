@@ -21,6 +21,28 @@
       "words": []
     },
     {
+      "name": "Shrimp-Related",
+      "parent": "Aquatic Animals",
+      "words": [
+        "shrim",
+        "krillswitch",
+        "brain beats prawn",
+        "LASP"
+      ]
+    },
+    {
+      "name": "Fish-Related",
+      "parent": "Aquatic Animals",
+      "words": [
+        "sneech",
+        "empossin",
+        "gada",
+        "gada2",
+        "carper",
+        "carpe carpe"
+      ]
+    },
+    {
       "name": "Bird-Related",
       "words": [
         "birbed wire",
@@ -42,13 +64,13 @@
       ]
     },
     {
-      "name": "Burial-Related",
-      "parent": "Death-Related",
+      "name": "Goose-Related",
+      "parent": "Bird-Related",
       "words": [
-        "tombplace",
-        "catacombé(e)",
-        "skulldugger",
-        "cemeter"
+        "göse",
+        "gooze",
+        "flabbergoosted",
+        "the gansö center"
       ]
     },
     {
@@ -120,12 +142,10 @@
       ]
     },
     {
-      "name": "Crime",
+      "name": "Rabbits",
       "words": [
-        "brobe",
-        "brogler",
-        "breaking and delivering",
-        "cut the pound"
+        "cunicule",
+        "cuniculous"
       ]
     },
     {
@@ -166,43 +186,16 @@
       ]
     },
     {
-      "name": "Dairy-Related",
-      "parent": "Food-Related",
+      "name": "Pershlaps-Related",
+      "parent": "Cyrilisms",
       "words": [
-        "caseine / caseose",
-        "acaseine",
-        "KKPseine",
-        "analactic",
-        "anagalactic",
-        "Mozartrella",
-        "'san",
-        "pargarmesan",
-        "Skyrkegaard",
-        "skyr skier",
-        "One-percenter"
-      ]
-    },
-    {
-      "name": "Dead Horse Idioms",
-      "parent": "Horse-Related",
-      "words": [
-        "Don't look a dead horse in the mouth",
-        "beat around the dead horse bush",
-        "better a bird in the hand than a dead horse in the bush",
-        "to put the cart before the dead horse",
-        "you can lead a dead horse to water, but you can't make it drink, or live",
-        "a dead horse always lands on it back",
-        "a watched dead horse never lives",
-        "an apple a day keeps the dead horse away",
-        "an eye for a dead horse",
-        "death by 1000 dead horses",
-        "over my dead horse",
-        "straight from the dead horse's mouth",
-        "the dead horse in the room",
-        "the dead horse is in your court",
-        "the pot calling the horse dead",
-        "to kill two birds with one dead horse",
-        "wild dead horse chase"
+        "pershlaps",
+        "perschbeased",
+        "perschlostumous",
+        "pershlaponymous",
+        "pershleased",
+        "pertangle",
+        "post-perschlortem"
       ]
     },
     {
@@ -220,59 +213,39 @@
       ]
     },
     {
-      "name": "Definition Types",
-      "parent": "Language-Related",
+      "name": "Burial-Related",
+      "parent": "Death-Related",
       "words": [
-        "autodefinicial",
-        "froz",
-        "zorf"
+        "tombplace",
+        "catacombé(e)",
+        "skulldugger",
+        "cemeter"
       ]
     },
     {
-      "name": "Drink-Related",
-      "parent": "Food-Related",
+      "name": "Kin-Related",
       "words": [
-        "Bep!",
-        "churoffee",
-        "hot cilk",
-        "-ilk",
-        "juicebox",
-        "spilk / sapilk",
-        "spleering",
-        "shlurp",
-        "secondary alcoholism",
-        "rancharade",
-        "pep-pong",
-        "celse",
-        "EUui / eui",
-        "froop juice",
-        "Paroosan Caroost of Noop juice",
-        "Schrute juice",
-        "caprish",
-        "limon",
-        "Starkitch",
-        "alcolade",
-        "ag",
-        "catcher",
-        "Capri Moon",
-        "Capri-Jug",
-        "colade",
-        "COreo / k-or-E-O",
-        "sodasium",
-        "skibi",
-        "debroggery"
+        "brothe",
+        "daughte",
+        "fathe",
+        "mothe",
+        "siste",
+        "sonne",
+        "sonner",
+        "xon",
+        "cousousin",
+        "cousousousin"
       ]
     },
     {
-      "name": "Fish-Related",
-      "parent": "Aquatic Animals",
+      "name": "Honorary Kin",
+      "parent": "Kin-Related",
       "words": [
-        "sneech",
-        "empossin",
-        "gada",
-        "gada2",
-        "carper",
-        "carpe carpe"
+        "chibling",
+        "goofy goobrother",
+        "subcycle",
+        "supercycle",
+        "grandcycle"
       ]
     },
     {
@@ -421,404 +394,68 @@
       ]
     },
     {
-      "name": "Fraction-Related",
-      "parent": "Number-Related",
-      "words": [
-        "thirge",
-        "thrish",
-        "duximate",
-        "quadricate"
-      ]
-    },
-    {
-      "name": "Gambling",
-      "words": [
-        "choperating",
-        "lotter",
-        "Swamblwing"
-      ]
-    },
-    {
-      "name": "Game-Related",
-      "words": [
-        "Yahtzeeconomy",
-        "appict",
-        "racontuer",
-        "chairaoke"
-      ]
-    },
-    {
-      "name": "Geometric People",
-      "words": [
-        "Spherical Cylindario",
-        "Rorctangle Coneball",
-        "Norahmbus Qualldrilateral",
-        "Cyrilindrical",
-        "cpyryil",
-        "hemisphyril"
-      ]
-    },
-    {
-      "name": "Gilbert",
-      "parent": "Residence Hall-Related",
-      "words": [
-        "Gilbert caféte",
-        "Gilbertian",
-        "Scaracus gilbertia",
-        "chillbert",
-        "egnuol renroc / scorner scrounge",
-        "Gabisa",
-        "glizzbert",
-        "goodoc",
-        "trounge",
-        "nostunalgia",
-        "S n C",
-        "gilburger",
-        "Gabizsa",
-        "clavior",
-        "forlorner lounge",
-        "bonch"
-      ]
-    },
-    {
-      "name": "Given Names",
-      "parent": "Names",
-      "words": [
-        "Chereesh",
-        "Chilipius",
-        "Chrizardo",
-        "Genievivieve",
-        "Goosq",
-        "Jostin / Josten",
-        "Ronzalo",
-        "Yalangelo",
-        "Zonja / Zonia / Зонйа"
-      ]
-    },
-    {
-      "name": "Goose-Related",
-      "parent": "Bird-Related",
-      "words": [
-        "göse",
-        "gooze",
-        "flabbergoosted",
-        "the gansö center"
-      ]
-    },
-    {
-      "name": "Holidays",
-      "parent": "Time-Related",
-      "words": [
-        "Christmas Beve",
-        "FahThursday",
-        "MuhThursday",
-        "Pikmeve",
-        "Hallowonion"
-      ]
-    },
-    {
-      "name": "Honorary Kin",
-      "parent": "Kin-Related",
-      "words": [
-        "chibling",
-        "goofy goobrother",
-        "subcycle",
-        "supercycle",
-        "grandcycle"
-      ]
-    },
-    {
-      "name": "Horse-Related",
-      "words": [
-        "amputorse",
-        "equestrigram",
-        "ttshoke",
-        "aerquine",
-        "aquine",
-        "necquine",
-        "mortequidiom"
-      ]
-    },
-    {
-      "name": "Household Lighting",
-      "words": [
-        "debig",
-        "desmall",
-        "embig",
-        "ensmall"
-      ]
-    },
-    {
-      "name": "Insults",
-      "words": [
-        "five-eyes",
-        "three-eyes",
-        "two-eyes",
-        "smegot",
-        "spag",
-        "fleshie",
-        "inkspill",
-        "wordmonger"
-      ]
-    },
-    {
-      "name": "Job-Related",
-      "words": [
-        "doct",
-        "lawye",
-        "butle",
-        "carpent",
-        "surger",
-        "practition",
-        "cutler",
-        "cemeter",
-        "aeologist",
-        "OneCardier"
-      ]
-    },
-    {
-      "name": "Kin-Related",
-      "words": [
-        "brothe",
-        "daughte",
-        "fathe",
-        "mothe",
-        "siste",
-        "sonne",
-        "sonner",
-        "xon",
-        "cousousin",
-        "cousousousin"
-      ]
-    },
-    {
-      "name": "Kitchen Appliances",
+      "name": "Dairy-Related",
       "parent": "Food-Related",
       "words": [
-        "meh-crowave",
-        "mid-crowave",
-        "cryotizer",
-        "autodwasher",
-        "rotisser"
+        "caseine / caseose",
+        "acaseine",
+        "KKPseine",
+        "analactic",
+        "anagalactic",
+        "Mozartrella",
+        "'san",
+        "pargarmesan",
+        "Skyrkegaard",
+        "skyr skier",
+        "One-percenter"
       ]
     },
     {
-      "name": "Language-Related",
-      "words": [
-        "aphorist",
-        "malenmajusclism",
-        "hashbox",
-        "quotription",
-        "copypasta",
-        "tonque-trainer"
-      ]
-    },
-    {
-      "name": "Law-Related",
-      "words": [
-        "triple jeopardy",
-        "subsequent restraint",
-        "lawye",
-        "polief occifer",
-        "yee-hawfficer",
-        "party car"
-      ]
-    },
-    {
-      "name": "Mediocrity",
-      "words": [
-        "mediacre",
-        "medianchor",
-        "medieuchre",
-        "medioke"
-      ]
-    },
-    {
-      "name": "N-Times Words",
-      "parent": "Number-Related",
-      "words": [
-        "deice",
-        "eice",
-        "neice",
-        "saise",
-        "stice",
-        "trice",
-        "quice",
-        "d'deice"
-      ]
-    },
-    {
-      "name": "Named Numbers",
-      "parent": "Number-Related",
-      "words": [
-        "doob",
-        "shoob",
-        "shoobie doobie",
-        "pogol",
-        "pogoplex",
-        "pikpikcorpik",
-        "French billion",
-        "faker's dozen"
-      ]
-    },
-    {
-      "name": "Names",
-      "words": [
-        "Sis",
-        "-dog / -dogg"
-      ]
-    },
-    {
-      "name": "Neptune",
-      "parent": "Residence Hall-Related",
-      "words": [
-        "Noopton",
-        "Naptune",
-        "Nooptoner",
-        "nepping away",
-        "Pauline",
-        "Paroosan Caroost of Noop juice"
-      ]
-    },
-    {
-      "name": "NIU-Related",
-      "words": [
-        "conward",
-        "twarr",
-        "twell",
-        "polief occifer",
-        "DeKalbitated",
-        "'Dobagate",
-        "the gansö center",
-        "the DuS'"
-      ]
-    },
-    {
-      "name": "Number Phrases",
-      "parent": "Number-Related",
-      "words": [
-        "ones of ones",
-        "ones of ones of ones",
-        "nones of nones",
-        "nones of ones",
-        "tens of ones",
-        "tens of tens",
-        "tens of tens of tens",
-        "tens of tens of tens of tens",
-        "tens of hundreds"
-      ]
-    },
-    {
-      "name": "Number-Related",
-      "words": [
-        "millexicon",
-        "millexeme",
-        "tricontapontasesquipedontaverbonta",
-        "tricontapontasesquipedontaverbontic"
-      ]
-    },
-    {
-      "name": "Onion-Related",
+      "name": "Drink-Related",
       "parent": "Food-Related",
       "words": [
-        "onionic / Onionic",
-        "Oniuary",
-        "Hallowonion",
-        "Onionoic cycle",
-        "sault years",
-        "compault year",
-        "shellarckish"
+        "Bep!",
+        "churoffee",
+        "hot cilk",
+        "-ilk",
+        "juicebox",
+        "spilk / sapilk",
+        "spleering",
+        "shlurp",
+        "secondary alcoholism",
+        "rancharade",
+        "pep-pong",
+        "celse",
+        "EUui / eui",
+        "froop juice",
+        "Paroosan Caroost of Noop juice",
+        "Schrute juice",
+        "caprish",
+        "limon",
+        "Starkitch",
+        "alcolade",
+        "ag",
+        "catcher",
+        "Capri Moon",
+        "Capri-Jug",
+        "colade",
+        "COreo / k-or-E-O",
+        "sodasium",
+        "skibi",
+        "debroggery"
       ]
     },
     {
-      "name": "Onionic Calendar",
-      "parent": "Time-Related",
+      "name": "Restaurants",
+      "parent": "Food-Related",
       "words": [
-        "Oniuary",
-        "Onionoic cycle",
-        "sault years",
-        "compault year",
-        "Hallowonion",
-        "Flarmsday"
-      ]
-    },
-    {
-      "name": "Onions",
-      "parent": "Onion-Related",
-      "words": [
-        "oneion",
-        "blunions",
-        "grunions",
-        "swellnions"
-      ]
-    },
-    {
-      "name": "Ordinals",
-      "parent": "Number-Related",
-      "words": [
-        "penimary",
-        "pentultimate",
-        "trenultimate",
-        "quanultimate",
-        "quinultimate",
-        "heptultimate"
-      ]
-    },
-    {
-      "name": "Pershlaps-Related",
-      "parent": "Cyrilisms",
-      "words": [
-        "pershlaps",
-        "perschbeased",
-        "perschlostumous",
-        "pershlaponymous",
-        "pershleased",
-        "pertangle",
-        "post-perschlortem"
-      ]
-    },
-    {
-      "name": "Pikmin-Related",
-      "parent": "Video Game-Related",
-      "words": [
-        "Pikmeve",
-        "pikuota",
-        "pikpikcorpik",
-        "olimario"
-      ]
-    },
-    {
-      "name": "Pogo",
-      "words": [
-        "pogocycle",
-        "pogokleptic",
-        "pogol",
-        "pogolex",
-        "pogoplex",
-        "pogozog",
-        "sproing"
-      ]
-    },
-    {
-      "name": "Political Slogans",
-      "parent": "Politics",
-      "words": [
-        "Great America Make America Again / GAMAA",
-        "Make America Great America / MAGA",
-        "Make America Great America Great Again / MAGAGA",
-        "Make Great America Again / MGAA",
-        "Make Great America Make Great America America / MGAMGAA",
-        "MAKEAMERICAKILLEVERYONEAGAINMAKINGEVERYBODYREGRETINSCRIBINGCOPIUSACRONYMSGENERATEDRATHEREASILY AFTERTHINKINGABOUTGREATAMERICASIMPLICATIONSNATIONALLY",
-        "freemen from freeman",
-        "e uribus plunum"
-      ]
-    },
-    {
-      "name": "Politics",
-      "words": [
-        "politic",
-        "mander",
-        "JCmandering"
+        "burgequere",
+        "Culvert's",
+        "D. P'Doughba",
+        "Qdoura",
+        "Raising Grave's",
+        "El Humidor",
+        "CFA"
       ]
     },
     {
@@ -837,94 +474,6 @@
         "stack-doba / 'doba stack",
         "Ldoba",
         "Wdoba"
-      ]
-    },
-    {
-      "name": "Quora-Related",
-      "words": [
-        "one-sided quorrel",
-        "quor",
-        "quorrel",
-        "Raquonteur",
-        "Qdoura"
-      ]
-    },
-    {
-      "name": "Rabbits",
-      "words": [
-        "cunicule",
-        "cuniculous"
-      ]
-    },
-    {
-      "name": "Refrigerators",
-      "parent": "Kitchen Appliances",
-      "words": [
-        "centrifugerator",
-        "mid-gerator",
-        "Frodge",
-        "pridge"
-      ]
-    },
-    {
-      "name": "Residence Hall-Related",
-      "parent": "NIU-Related",
-      "words": [
-        "Nahll",
-        "forch",
-        "Patterzone",
-        "Patter'zza"
-      ]
-    },
-    {
-      "name": "Restaurants",
-      "parent": "Food-Related",
-      "words": [
-        "burgequere",
-        "Culvert's",
-        "D. P'Doughba",
-        "Qdoura",
-        "Raising Grave's",
-        "El Humidor",
-        "CFA"
-      ]
-    },
-    {
-      "name": "Robot Unicyclists",
-      "parent": "Robots",
-      "words": [
-        "Connor Lamborg",
-        "Crystian Borgabeheres / CrysBorgo",
-        "Cyborge",
-        "Cybril",
-        "Cyrborg",
-        "Cyrorg",
-        "J. C. La Borgbera",
-        "Kleiborg",
-        "Louis Banorg",
-        "Norg",
-        "Owen Bots",
-        "Siborg",
-        "Trevorg Botlina"
-      ]
-    },
-    {
-      "name": "Robots",
-      "words": [
-        "AIwitness",
-        "Boomba",
-        "orgborg",
-        "cyberg",
-        "skullborg"
-      ]
-    },
-    {
-      "name": "Rory",
-      "words": [
-        "Rorus Campbellus",
-        "Rorctangle Coneball",
-        "Icebrorg",
-        "Cyrorg"
       ]
     },
     {
@@ -994,6 +543,183 @@
       ]
     },
     {
+      "name": "Onion-Related",
+      "parent": "Food-Related",
+      "words": [
+        "onionic / Onionic",
+        "Oniuary",
+        "Hallowonion",
+        "Onionoic cycle",
+        "sault years",
+        "compault year",
+        "shellarckish"
+      ]
+    },
+    {
+      "name": "Onions",
+      "parent": "Onion-Related",
+      "words": [
+        "oneion",
+        "blunions",
+        "grunions",
+        "swellnions"
+      ]
+    },
+    {
+      "name": "Kitchen Appliances",
+      "parent": "Food-Related",
+      "words": [
+        "meh-crowave",
+        "mid-crowave",
+        "cryotizer",
+        "autodwasher",
+        "rotisser"
+      ]
+    },
+    {
+      "name": "Refrigerators",
+      "parent": "Kitchen Appliances",
+      "words": [
+        "centrifugerator",
+        "mid-gerator",
+        "Frodge",
+        "pridge"
+      ]
+    },
+    {
+      "name": "Gambling",
+      "words": [
+        "choperating",
+        "lotter",
+        "Swamblwing"
+      ]
+    },
+    {
+      "name": "Game-Related",
+      "words": [
+        "Yahtzeeconomy",
+        "appict",
+        "racontuer",
+        "chairaoke"
+      ]
+    },
+    {
+      "name": "Tabletop Games",
+      "parent": "Game-Related",
+      "words": [
+        "Bille Bornes",
+        "Parqisi",
+        "Monopoly-opoly",
+        "Apples to Candypumpkincorn",
+        "Sorrcheesi"
+      ]
+    },
+    {
+      "name": "Word Games",
+      "parent": "Game-Related",
+      "words": [
+        "Clabble",
+        "Cloggle",
+        "Clordle",
+        "Clossword Cluzzle",
+        "Indecorous",
+        "werthle",
+        "Raquonteur"
+      ]
+    },
+    {
+      "name": "Video Game-Related",
+      "parent": "Game-Related",
+      "words": [
+        "Kirby and the Forgotten World",
+        "Keep Talking and Listening and Seeing and Nobody Explodes",
+        "Thudley's Law",
+        "frame-advancer",
+        "Fort Nites at Freddy's",
+        "wiisure",
+        "nindarpal cunnel",
+        "Wiirtzing",
+        "zeldopoly"
+      ]
+    },
+    {
+      "name": "Video Game Characters",
+      "parent": "Video Game-Related",
+      "words": [
+        "gorf",
+        "olimario",
+        "K. K. Psider",
+        "Worple",
+        "bufoof",
+        "foonfub"
+      ]
+    },
+    {
+      "name": "Pikmin-Related",
+      "parent": "Video Game-Related",
+      "words": [
+        "Pikmeve",
+        "pikuota",
+        "pikpikcorpik",
+        "olimario"
+      ]
+    },
+    {
+      "name": "Geometric People",
+      "words": [
+        "Spherical Cylindario",
+        "Rorctangle Coneball",
+        "Norahmbus Qualldrilateral",
+        "Cyrilindrical",
+        "cpyryil",
+        "hemisphyril"
+      ]
+    },
+    {
+      "name": "Horse-Related",
+      "words": [
+        "amputorse",
+        "equestrigram",
+        "ttshoke",
+        "aerquine",
+        "aquine",
+        "necquine",
+        "mortequidiom"
+      ]
+    },
+    {
+      "name": "Dead Horse Idioms",
+      "parent": "Horse-Related",
+      "words": [
+        "Don't look a dead horse in the mouth",
+        "beat around the dead horse bush",
+        "better a bird in the hand than a dead horse in the bush",
+        "to put the cart before the dead horse",
+        "you can lead a dead horse to water, but you can't make it drink, or live",
+        "a dead horse always lands on it back",
+        "a watched dead horse never lives",
+        "an apple a day keeps the dead horse away",
+        "an eye for a dead horse",
+        "death by 1000 dead horses",
+        "over my dead horse",
+        "straight from the dead horse's mouth",
+        "the dead horse in the room",
+        "the dead horse is in your court",
+        "the pot calling the horse dead",
+        "to kill two birds with one dead horse",
+        "wild dead horse chase"
+      ]
+    },
+    {
+      "name": "Household Lighting",
+      "words": [
+        "debig",
+        "desmall",
+        "embig",
+        "ensmall"
+      ]
+    },
+    {
       "name": "Sayings",
       "words": [
         "Achilles heels",
@@ -1047,13 +773,359 @@
       ]
     },
     {
-      "name": "Shrimp-Related",
-      "parent": "Aquatic Animals",
+      "name": "Insults",
       "words": [
-        "shrim",
-        "krillswitch",
-        "brain beats prawn",
-        "LASP"
+        "five-eyes",
+        "three-eyes",
+        "two-eyes",
+        "smegot",
+        "spag",
+        "fleshie",
+        "inkspill",
+        "wordmonger"
+      ]
+    },
+    {
+      "name": "Law-Related",
+      "words": [
+        "triple jeopardy",
+        "subsequent restraint",
+        "lawye",
+        "polief occifer",
+        "yee-hawfficer",
+        "party car"
+      ]
+    },
+    {
+      "name": "Crime",
+      "words": [
+        "brobe",
+        "brogler",
+        "breaking and delivering",
+        "cut the pound"
+      ]
+    },
+    {
+      "name": "Undercover",
+      "words": [
+        "overcover undercover civcopcivcop",
+        "undercop civilicover",
+        "undercover civilian",
+        "undercover civilicop",
+        "undercover criminal",
+        "undercover employee"
+      ]
+    },
+    {
+      "name": "Language-Related",
+      "words": [
+        "aphorist",
+        "malenmajusclism",
+        "hashbox",
+        "quotription",
+        "copypasta",
+        "tonque-trainer"
+      ]
+    },
+    {
+      "name": "Wordplay",
+      "parent": "Language-Related",
+      "words": [
+        "nontendre / null entendre",
+        "single entendre",
+        "ouphemism",
+        "bwirdplay"
+      ]
+    },
+    {
+      "name": "Verbosity",
+      "parent": "Language-Related",
+      "words": [
+        "sesquip",
+        "sesquipedale",
+        "sesquipedantic",
+        "thesaurus-monger",
+        "wordery"
+      ]
+    },
+    {
+      "name": "Word Types",
+      "parent": "Language-Related",
+      "words": [
+        "pourtnoilale",
+        "hyperpourtnoilale",
+        "fictionalism",
+        "twice-proper noun / doubly proper noun",
+        "tricontapontasesquipedontaverbonta",
+        "tricontapontasesquipedontaverbontic"
+      ]
+    },
+    {
+      "name": "Definition Types",
+      "parent": "Language-Related",
+      "words": [
+        "autodefinicial",
+        "froz",
+        "zorf"
+      ]
+    },
+    {
+      "name": "Mediocrity",
+      "words": [
+        "mediacre",
+        "medianchor",
+        "medieuchre",
+        "medioke"
+      ]
+    },
+    {
+      "name": "Names",
+      "words": [
+        "Sis",
+        "-dog / -dogg"
+      ]
+    },
+    {
+      "name": "Given Names",
+      "parent": "Names",
+      "words": [
+        "Chereesh",
+        "Chilipius",
+        "Chrizardo",
+        "Genievivieve",
+        "Goosq",
+        "Jostin / Josten",
+        "Ronzalo",
+        "Yalangelo",
+        "Zonja / Zonia / Зонйа"
+      ]
+    },
+    {
+      "name": "NIU-Related",
+      "words": [
+        "conward",
+        "twarr",
+        "twell",
+        "polief occifer",
+        "DeKalbitated",
+        "'Dobagate",
+        "the gansö center",
+        "the DuS'"
+      ]
+    },
+    {
+      "name": "Residence Hall-Related",
+      "parent": "NIU-Related",
+      "words": [
+        "Nahll",
+        "forch",
+        "Patterzone",
+        "Patter'zza"
+      ]
+    },
+    {
+      "name": "Gilbert",
+      "parent": "Residence Hall-Related",
+      "words": [
+        "Gilbert caféte",
+        "Gilbertian",
+        "Scaracus gilbertia",
+        "chillbert",
+        "egnuol renroc / scorner scrounge",
+        "Gabisa",
+        "glizzbert",
+        "goodoc",
+        "trounge",
+        "nostunalgia",
+        "S n C",
+        "gilburger",
+        "Gabizsa",
+        "clavior",
+        "forlorner lounge",
+        "bonch"
+      ]
+    },
+    {
+      "name": "Neptune",
+      "parent": "Residence Hall-Related",
+      "words": [
+        "Noopton",
+        "Naptune",
+        "Nooptoner",
+        "nepping away",
+        "Pauline",
+        "Paroosan Caroost of Noop juice"
+      ]
+    },
+    {
+      "name": "Number-Related",
+      "words": [
+        "millexicon",
+        "millexeme",
+        "tricontapontasesquipedontaverbonta",
+        "tricontapontasesquipedontaverbontic"
+      ]
+    },
+    {
+      "name": "Named Numbers",
+      "parent": "Number-Related",
+      "words": [
+        "doob",
+        "shoob",
+        "shoobie doobie",
+        "pogol",
+        "pogoplex",
+        "pikpikcorpik",
+        "French billion",
+        "faker's dozen"
+      ]
+    },
+    {
+      "name": "N-Times Words",
+      "parent": "Number-Related",
+      "words": [
+        "deice",
+        "eice",
+        "neice",
+        "saise",
+        "stice",
+        "trice",
+        "quice",
+        "d'deice"
+      ]
+    },
+    {
+      "name": "Ordinals",
+      "parent": "Number-Related",
+      "words": [
+        "penimary",
+        "pentultimate",
+        "trenultimate",
+        "quanultimate",
+        "quinultimate",
+        "heptultimate"
+      ]
+    },
+    {
+      "name": "Fraction-Related",
+      "parent": "Number-Related",
+      "words": [
+        "thirge",
+        "thrish",
+        "duximate",
+        "quadricate"
+      ]
+    },
+    {
+      "name": "Number Phrases",
+      "parent": "Number-Related",
+      "words": [
+        "ones of ones",
+        "ones of ones of ones",
+        "nones of nones",
+        "nones of ones",
+        "tens of ones",
+        "tens of tens",
+        "tens of tens of tens",
+        "tens of tens of tens of tens",
+        "tens of hundreds"
+      ]
+    },
+    {
+      "name": "Job-Related",
+      "words": [
+        "doct",
+        "lawye",
+        "butle",
+        "carpent",
+        "surger",
+        "practition",
+        "cutler",
+        "cemeter",
+        "aeologist",
+        "OneCardier"
+      ]
+    },
+    {
+      "name": "Pogo",
+      "words": [
+        "pogocycle",
+        "pogokleptic",
+        "pogol",
+        "pogolex",
+        "pogoplex",
+        "pogozog",
+        "sproing"
+      ]
+    },
+    {
+      "name": "Politics",
+      "words": [
+        "politic",
+        "mander",
+        "JCmandering"
+      ]
+    },
+    {
+      "name": "Political Slogans",
+      "parent": "Politics",
+      "words": [
+        "Great America Make America Again / GAMAA",
+        "Make America Great America / MAGA",
+        "Make America Great America Great Again / MAGAGA",
+        "Make Great America Again / MGAA",
+        "Make Great America Make Great America America / MGAMGAA",
+        "MAKEAMERICAKILLEVERYONEAGAINMAKINGEVERYBODYREGRETINSCRIBINGCOPIUSACRONYMSGENERATEDRATHEREASILY AFTERTHINKINGABOUTGREATAMERICASIMPLICATIONSNATIONALLY",
+        "freemen from freeman",
+        "e uribus plunum"
+      ]
+    },
+    {
+      "name": "Quora-Related",
+      "words": [
+        "one-sided quorrel",
+        "quor",
+        "quorrel",
+        "Raquonteur",
+        "Qdoura"
+      ]
+    },
+    {
+      "name": "Robots",
+      "words": [
+        "AIwitness",
+        "Boomba",
+        "orgborg",
+        "cyberg",
+        "skullborg"
+      ]
+    },
+    {
+      "name": "Robot Unicyclists",
+      "parent": "Robots",
+      "words": [
+        "Connor Lamborg",
+        "Crystian Borgabeheres / CrysBorgo",
+        "Cyborge",
+        "Cybril",
+        "Cyrborg",
+        "Cyrorg",
+        "J. C. La Borgbera",
+        "Kleiborg",
+        "Louis Banorg",
+        "Norg",
+        "Owen Bots",
+        "Siborg",
+        "Trevorg Botlina"
+      ]
+    },
+    {
+      "name": "Rory",
+      "words": [
+        "Rorus Campbellus",
+        "Rorctangle Coneball",
+        "Icebrorg",
+        "Cyrorg"
       ]
     },
     {
@@ -1106,16 +1178,6 @@
       ]
     },
     {
-      "name": "Sports",
-      "parent": "Sports-Related",
-      "words": [
-        "luleton",
-        "skege",
-        "Sticky Wicket",
-        "mega-golf"
-      ]
-    },
-    {
       "name": "Sports-Related",
       "words": [
         "cracked on the lanes",
@@ -1128,20 +1190,20 @@
       ]
     },
     {
-      "name": "Spweemy",
-      "parent": "Streaming-Related",
+      "name": "Sports",
+      "parent": "Sports-Related",
       "words": [
-        "Spweemy",
-        "Spweeming service",
-        "Spweem Machine",
-        "Spweem Sheckles",
-        "Spweemonopoly",
-        "Spweemster",
-        "The Spweemys",
-        "Spwend Spewser Spwicense Aspweement",
-        "Spwignature",
-        "Spewa Lipa",
-        "the Threego Threego bundle"
+        "luleton",
+        "skege",
+        "Sticky Wicket",
+        "mega-golf"
+      ]
+    },
+    {
+      "name": "Streaming-Related",
+      "words": [
+        "netflick",
+        "Swamblwing"
       ]
     },
     {
@@ -1156,7 +1218,7 @@
         "Fooboo",
         "Gepardee",
         "Haistea",
-        "Heehee",
+        "heehee",
         "Maizee",
         "Mesie",
         "Moursse",
@@ -1180,21 +1242,20 @@
       ]
     },
     {
-      "name": "Streaming-Related",
+      "name": "Spweemy",
+      "parent": "Streaming-Related",
       "words": [
-        "netflick",
-        "Swamblwing"
-      ]
-    },
-    {
-      "name": "Tabletop Games",
-      "parent": "Game-Related",
-      "words": [
-        "Bille Bornes",
-        "Parqisi",
-        "Monopoly-opoly",
-        "Apples to Candypumpkincorn",
-        "Sorrcheesi"
+        "Spweemy",
+        "Spweeming service",
+        "Spweem Machine",
+        "Spweem Sheckles",
+        "Spweemonopoly",
+        "Spweemster",
+        "The Spweemys",
+        "Spwend Spewser Spwicense Aspweement",
+        "Spwignature",
+        "Spewa Lipa",
+        "the Threego Threego bundle"
       ]
     },
     {
@@ -1209,8 +1270,30 @@
       ]
     },
     {
+      "name": "Holidays",
+      "parent": "Time-Related",
+      "words": [
+        "Christmas Beve",
+        "FahThursday",
+        "MuhThursday",
+        "Pikmeve",
+        "Hallowonion"
+      ]
+    },
+    {
+      "name": "Onionic Calendar",
+      "parent": "Time-Related",
+      "words": [
+        "Oniuary",
+        "Onionoic cycle",
+        "sault years",
+        "compault year",
+        "Hallowonion",
+        "Flarmsday"
+      ]
+    },
+    {
       "name": "Turkey-Related",
-      "parent": "Bird-Related",
       "words": [
         "aerkey",
         "butterkey",
@@ -1220,18 +1303,8 @@
         "bacturqchikchecrois",
         "turchee",
         "Touygee bouygee"
-      ]
-    },
-    {
-      "name": "Undercover",
-      "words": [
-        "overcover undercover civcopcivcop",
-        "undercop civilicover",
-        "undercover civilian",
-        "undercover civilicop",
-        "undercover criminal",
-        "undercover employee"
-      ]
+      ],
+      "parent": "Bird-Related"
     },
     {
       "name": "Unicyclist Dictionary",
@@ -1244,79 +1317,6 @@
         "lexplosion",
         "lexshot",
         "word-blindness"
-      ]
-    },
-    {
-      "name": "Verbosity",
-      "parent": "Language-Related",
-      "words": [
-        "sesquip",
-        "sesquipedale",
-        "sesquipedantic",
-        "thesaurus-monger",
-        "wordery"
-      ]
-    },
-    {
-      "name": "Video Game Characters",
-      "parent": "Video Game-Related",
-      "words": [
-        "gorf",
-        "olimario",
-        "K. K. Psider",
-        "Worple",
-        "bufoof",
-        "foonfub"
-      ]
-    },
-    {
-      "name": "Video Game-Related",
-      "parent": "Game-Related",
-      "words": [
-        "Kirby and the Forgotten World",
-        "Keep Talking and Listening and Seeing and Nobody Explodes",
-        "Thudley's Law",
-        "frame-advancer",
-        "Fort Nites at Freddy's",
-        "wiisure",
-        "nindarpal cunnel",
-        "Wiirtzing",
-        "zeldopoly"
-      ]
-    },
-    {
-      "name": "Word Games",
-      "parent": "Game-Related",
-      "words": [
-        "Clabble",
-        "Cloggle",
-        "Clordle",
-        "Clossword Cluzzle",
-        "Indecorous",
-        "werthle",
-        "Raquonteur"
-      ]
-    },
-    {
-      "name": "Word Types",
-      "parent": "Language-Related",
-      "words": [
-        "pourtnoilale",
-        "hyperpourtnoilale",
-        "fictionalism",
-        "twice-proper noun / doubly proper noun",
-        "tricontapontasesquipedontaverbonta",
-        "tricontapontasesquipedontaverbontic"
-      ]
-    },
-    {
-      "name": "Wordplay",
-      "parent": "Language-Related",
-      "words": [
-        "nontendre / null entendre",
-        "single entendre",
-        "ouphemism",
-        "bwirdplay"
       ]
     },
     {
@@ -1350,6 +1350,70 @@
         "xoog",
         "zoin",
         "zoogliography"
+      ]
+    },
+    {
+      "name": "Pork",
+      "parent": "Food-Related",
+      "words": [
+        "Ayn Ham",
+        "grork",
+        "swineshredder",
+        "b. b. quipposan"
+      ]
+    },
+    {
+      "name": "Pasta-Related",
+      "parent": "Food-Related",
+      "words": [
+        "spag",
+        "spaghettiquette",
+        "apastalypse",
+        "garf",
+        "lasagnary"
+      ]
+    },
+    {
+      "name": "Pasta",
+      "parent": "Pasta-Related",
+      "words": [
+        "baguetti",
+        "spaghecheeni",
+        "spagini",
+        "tsscfila"
+      ]
+    },
+    {
+      "name": "Chicken",
+      "parent": "Food-Related",
+      "words": [
+        "chender",
+        "chicken twinkie",
+        "chimkin buoygee",
+        "buoyg",
+        "tuna of the land"
+      ]
+    },
+    {
+      "name": "Anger-Related",
+      "words": [
+        "angeroo",
+        "bilitude",
+        "dumbgry",
+        "McKnuckleSandwich",
+        "throwing bangs"
+      ]
+    },
+    {
+      "name": "Brands",
+      "words": [
+        "Bep!",
+        "Fruit by the Mile",
+        "I Can't Believe It's Not Chee!",
+        "snix",
+        "Starkitch",
+        "Unlunchables",
+        "the La Barbar"
       ]
     }
   ]

@@ -137,7 +137,6 @@
         "sauseggchevator",
         "chee-ender",
         "turchee",
-        "chchingles",
         "gerbacceggcheecrois"
       ]
     },
@@ -363,7 +362,7 @@
         "croinks",
         "dumbgry",
         "filiupper",
-        "flooud",
+        "flooud / flood",
         "frumbalicious",
         "gerb",
         "grork",
@@ -390,7 +389,8 @@
         "toikful",
         "Turkules",
         "rotisse",
-        "starkitch"
+        "starkitch",
+        "chchingles"
       ]
     },
     {
@@ -1307,6 +1307,13 @@
       "parent": "Bird-Related"
     },
     {
+      "name": "Dictionary-Related",
+      "parent": "Language-Related",
+      "words": [
+        "lexshot"
+      ]
+    },
+    {
       "name": "Unicyclist Dictionary",
       "words": [
         "Cyclexicon",
@@ -1315,9 +1322,9 @@
         "cycsmith / unicyclinguist",
         "Unicychronicler",
         "lexplosion",
-        "lexshot",
         "word-blindness"
-      ]
+      ],
+      "parent": "Dictionary-Related"
     },
     {
       "name": "Zoog-Related",
@@ -1349,7 +1356,7 @@
         "pogozog",
         "xoog",
         "zoin",
-        "zoogliography"
+        "The Zoogliography"
       ]
     },
     {

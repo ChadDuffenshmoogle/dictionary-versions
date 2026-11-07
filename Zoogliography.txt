@@ -171,6 +171,7 @@ elevellum
 Elphaphiliptic
 empossitude
 ex-expatriangus burg
+eyeangle Coneball
 fiction Joe
 food-look a dead horse
 forbontaverage bus
@@ -343,6 +344,7 @@ aing
 all maxxis
 an Peradia
 ang annee
+Ange
 apherse
 ark ted
 as Qual
@@ -562,4 +564,4 @@ zee-chente
 zeematerys pron
 
 --- Rejected Predictions (too similar to an existing word) ---
-*OOSYNC, aerostated, aerquine, amiacablesquip, blaskeawnce, chemuff, chyeah!, crasty, cretid, Cyreal, delirigibility, Dye n Dasher, exaxely, froz, holgunx, lotter, luncharade, mid-crowave, nauschecroismore, orgbera, Quis, rasty, Ronzalo, S n C, sauseggchemuff, shambre, shoobatidoobie doubt, Shourtfolm, sleighball, the room, thum, Wiirtzing
+*OOSYNC, aerkeley, aerostated, aerquine, amiacablesquip, blaskeawnce, chemuff, chyeah!, crasty, cretid, Cyreal, delirigibility, dull cheeburber, Dye n Dasher, Elpharice, exaxely, froz, holgunx, longworm, lotter, luncharade, mid-crowave, nauschecroismore, orgbera, parcheeburg, patic, Quis, rasty, Ronzalo, S n C, sauseggchemuff, shambre, shoobatidoobie doubt, Shourtfolm, sleighball, the room, thiever cake, thum, Thup, Wiirtzing

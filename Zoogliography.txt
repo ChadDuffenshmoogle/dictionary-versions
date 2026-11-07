@@ -432,6 +432,7 @@ H. byoe
 Hihites
 hion
 hird hoom for
+hoobort's
 hundes
 I casst
 I whom to chog
@@ -551,4 +552,4 @@ zee-chente
 zeematerys pron
 
 --- Rejected Predictions (too similar to an existing word) ---
-shoobatidoobie doubt
+*OOSYNC, aerquine, chyeah!, exaxely, rasty, sauseggchemuff, shoobatidoobie doubt, Shourtfolm, sleighball

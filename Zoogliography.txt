@@ -174,6 +174,7 @@ food-look a dead horse
 forbontaverage bus
 freasonably penappage
 French billiteral
+Frencheecrois
 garignature
 Gilbert care Washington
 gilburgmate
@@ -474,6 +475,7 @@ p'pmpt
 Pary Wyons elire
 pery Fah
 picanie
+pinlimnachette
 pionash
 pogia
 polguygerlarld tatert
@@ -556,4 +558,4 @@ zee-chente
 zeematerys pron
 
 --- Rejected Predictions (too similar to an existing word) ---
-*OOSYNC, aerquine, amiacablesquip, chemuff, chyeah!, crasty, exaxely, froz, orgbera, rasty, sauseggchemuff, shoobatidoobie doubt, Shourtfolm, sleighball
+*OOSYNC, aerquine, amiacablesquip, blaskeawnce, chemuff, chyeah!, crasty, cretid, Cyreal, delirigibility, Dye n Dasher, exaxely, froz, lotter, orgbera, Quis, rasty, Ronzalo, sauseggchemuff, shoobatidoobie doubt, Shourtfolm, sleighball, Wiirtzing

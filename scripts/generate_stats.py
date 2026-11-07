@@ -74,6 +74,7 @@ if TOKEN:
 ZOOG_FILE = "Zoogliography.txt"
 ZOOG_MARKER = "--- Predicted Next Word ---"
 ZOOG_NONSENSE_MARKER = "--- Predicted Nonsense Word ---"
+ZOOG_REJECTED_MARKER = "--- Rejected Predictions (too similar to an existing word) ---"
 # A separate token that is allowed to write to the dictionary repo. It comes
 # from a GitHub Actions secret, so it never appears in this file.
 ZOOG_TOKEN = os.environ.get("ZOOG_WRITE_TOKEN")
@@ -148,7 +149,7 @@ def fetch_zoog_words():
         return []
 
 
-def predict_next_word(terms, seed_text, order=4, avoid=()):
+def predict_next_word(terms, seed_text, order=4, avoid=(), rejected=None):
     """Guess a new word letter by letter from the spelling of every entry
     (a Markov chain; order = how many letters back it looks, 4 for the normal
     guess and 2 for the looser nonsense guess). The same seed gives the same
@@ -181,12 +182,15 @@ def predict_next_word(terms, seed_text, order=4, avoid=()):
                 break
             word += ch
         word = word.strip()
-        if 4 <= len(word) < 24 and " / " not in word and not too_similar(word, existing_norm):
-            return word
+        if 4 <= len(word) < 24 and " / " not in word:
+            if not too_similar(word, existing_norm):
+                return word
+            if rejected is not None:
+                rejected.append(word)  # remembered for the Zoogliography
     return ""
 
 
-def update_zoogliography(word, nonsense_word=""):
+def update_zoogliography(word, nonsense_word="", rejected=()):
     """Add the new words to the two lists at the bottom of Zoogliography.txt
     (each kept A to Z): 'Predicted Next Word', then 'Predicted Nonsense Word'.
     Everything above the first marker is left untouched."""
@@ -213,11 +217,19 @@ def update_zoogliography(word, nonsense_word=""):
         text = base64.b64decode(info["content"]).decode("utf-8")
         base, _, old_section = text.partition(ZOOG_MARKER)
         base = base.rstrip("\n")
-        old_normal, _, old_nonsense = old_section.partition(ZOOG_NONSENSE_MARKER)
+        old_normal, _, rest = old_section.partition(ZOOG_NONSENSE_MARKER)
+        old_nonsense, _, old_rejected = rest.partition(ZOOG_REJECTED_MARKER)
         new_text = (
             f"{base}\n\n{ZOOG_MARKER}\n{merged(old_normal, word)}"
             f"\n\n{ZOOG_NONSENSE_MARKER}\n{merged(old_nonsense, nonsense_word)}"
         )
+        # Rejected guesses: every earlier one plus new ones, A to Z, on one comma-separated line.
+        rejected_all = {w.strip() for w in old_rejected.replace("\n", ",").split(",") if w.strip()}
+        for w in rejected:
+            if w.lower() not in {r.lower() for r in rejected_all}:
+                rejected_all.add(w)
+        if rejected_all:
+            new_text += f"\n\n{ZOOG_REJECTED_MARKER}\n" + ", ".join(sorted(rejected_all, key=str.lower))
         if new_text == text.rstrip("\n"):
             return  # already up to date
         put = requests.put(
@@ -833,15 +845,16 @@ def main():
     # Each alternate spelling ("a / b") is its own word for the guess.
     spellings = split_spellings(all_terms)
     zoog_words = fetch_zoog_words()  # existing zoogs the new guesses must avoid
+    rejected_words = []  # guesses thrown out for being too similar, saved to the Zoogliography
     predicted_word = predict_next_word(
-        spellings, f"all|{total_entries}|{latest_word_term}", avoid=zoog_words
+        spellings, f"all|{total_entries}|{latest_word_term}", avoid=zoog_words, rejected=rejected_words
     )
     # Nonsense: same idea, but only 2 letters of memory, so it is looser.
     predicted_nonsense_word = predict_next_word(
-        spellings, f"nonsense|{total_entries}|{latest_word_term}", order=2, avoid=zoog_words
+        spellings, f"nonsense|{total_entries}|{latest_word_term}", order=2, avoid=zoog_words, rejected=rejected_words
     )
     try:
-        update_zoogliography(predicted_word, predicted_nonsense_word)
+        update_zoogliography(predicted_word, predicted_nonsense_word, rejected_words)
     except Exception as e:
         print(f"Zoogliography update failed: {e}", file=sys.stderr)
 

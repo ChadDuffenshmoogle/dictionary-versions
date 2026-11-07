@@ -486,8 +486,9 @@ const CATEGORIES = [
   { key: 'multi-def', label: 'Words with several definitions', test: e => senseCount(e) > 1 },
   { key: 'xref', label: 'Cross-references other words', test: e => crossRefs(e).length > 0 },
   { key: 'scrabble-legal', label: 'Scrabble-legal words', test: e => e.scrabble === 'legal' },
-  { key: 'scrabble-normalized', label: 'Legal without spacing/punctuation/accents', test: e => e.scrabble === 'normalized' },
-  { key: 'scrabble-phrase', label: 'Phrases made of Scrabble-legal words', test: e => e.scrabble === 'phrase' },
+  { key: 'scrabble-phrase', label: 'Legal as separate words', test: e => e.scrabble === 'phrase' },
+  { key: 'scrabble-normalized', label: 'Legal when joined into one word', test: e => e.scrabble === 'normalized' },
+  { key: 'scrabble-both', label: 'Legal both ways (separate words and joined)', test: e => e.scrabble === 'both' },
   { key: 'scrabble-illegal', label: 'Not Scrabble legal', test: e => e.scrabble === 'illegal' },
 ];
 

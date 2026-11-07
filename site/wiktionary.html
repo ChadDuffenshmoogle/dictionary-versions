@@ -492,6 +492,51 @@ const CATEGORIES = [
   { key: 'scrabble-illegal', label: 'Not Scrabble legal', test: e => e.scrabble === 'illegal' },
 ];
 
+// ---- fun-fact categories (the same letter-pattern tests as the Fun Facts on index.html) ----
+// A word counts if any of its spellings ("a / b" is two spellings) passes the test.
+const spellingCache = new Map();
+function spellingsOf(term) {
+  if (spellingCache.has(term)) return spellingCache.get(term);
+  const seen = new Set();
+  let parts = term.split(/\s+\/\s+/).map(v => v.trim()).filter(v => v && !seen.has(v.toLowerCase()) && seen.add(v.toLowerCase()));
+  if (!parts.length) parts = [term];
+  const out = parts.map(t => {
+    const l = [...t.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase()].filter(b => /\p{L}/u.test(b));
+    return { t, l, s: l.join('') };
+  });
+  spellingCache.set(term, out);
+  return out;
+}
+const isVowel = ch => 'aeiou'.includes(ch);
+const onlyRow = (letters, min) => x => x.l.length >= min && x.l.every(c => letters.includes(c));
+const FUN_CATEGORIES = [
+  ['Palindromes', 'Read the same backwards (3+ letters)', x => x.l.length >= 3 && x.s === [...x.s].reverse().join('')],
+  ['All five vowels', 'Contain a, e, i, o and u', x => [...'aeiou'].every(v => x.l.includes(v))],
+  ['No repeated letters', '7+ letters, every one different', x => x.l.length >= 7 && new Set(x.l).size === x.l.length],
+  ['No vowels', 'No a, e, i, o or u', x => x.l.length >= 2 && !x.l.some(isVowel)],
+  ['Only one kind of vowel', '7+ letters, a single vowel used', x => x.l.length >= 7 && new Set(x.l.filter(isVowel)).size === 1],
+  ['Consonant, vowel, consonant, vowel…', '6+ letters, strictly alternating', x => x.l.length >= 6 && x.l.every((c, i) => i === 0 || isVowel(c) !== isVowel(x.l[i - 1]))],
+  ['Starts and ends with the same letter', '', x => x.l.length >= 3 && x.l[0] === x.l[x.l.length - 1]],
+  ['Letters in alphabetical order', '4+ letters, A to Z', x => x.l.length >= 4 && x.l.every((c, i) => i === 0 || x.l[i - 1] <= c)],
+  ['Letters in reverse alphabetical order', '4+ letters, Z to A', x => x.l.length >= 4 && x.l.every((c, i) => i === 0 || x.l[i - 1] >= c)],
+  ['Two different double letters', 'Like “bookkeeper”', x => new Set(x.l.filter((c, i) => i > 0 && c === x.l[i - 1])).size >= 2],
+  ['Top keyboard row only', 'Typed using only Q to P', onlyRow('qwertyuiop', 3)],
+  ['Home row only', 'Typed using only A to L', onlyRow('asdfghjkl', 3)],
+  ['Bottom keyboard row only', 'Typed using only Z to M', onlyRow('zxcvbnm', 3)],
+  ['Left hand only', 'Typed with just your left hand (5+ letters)', onlyRow('qwertasdfgzxcvb', 5)],
+  ['Right hand only', 'Typed with just your right hand (5+ letters)', onlyRow('yuiophjklnm', 5)],
+  ['Contains “uni”', '', x => x.s.includes('uni')],
+  ['Contains “cycl”', '', x => x.s.includes('cycl')],
+  ['Phrases (with spaces)', '', x => /\s/.test(x.t)],
+  ['Hyphenated', '', x => x.t.includes('-')],
+  ['With apostrophes', '', x => /['’]/.test(x.t)],
+].map(([title, desc, pass]) => ({
+  key: 'fun:' + title.toLowerCase(),
+  label: title,
+  desc,
+  test: e => spellingsOf(e.term).some(x => pass(x)),
+}));
+
 function pluralize(w) {
   if (/(s|x|z|ch|sh)$/i.test(w)) return w + 'es';
   if (/[^aeiou]y$/i.test(w)) return w.slice(0, -1) + 'ies';
@@ -509,6 +554,7 @@ function allCategories() {
   const tagSet = [...new Set(entries.flatMap(e => e.tags || []))].sort();
   const posSet = [...new Set(entries.flatMap(e => e.pos_list || []))].filter(p => p && p !== '(no pos)').sort();
   return CATEGORIES
+    .concat(FUN_CATEGORIES)
     .concat(posSet.map(p => ({ key: 'pos:' + p, label: pluralize(p), test: e => (e.pos_list || []).includes(p) })))
     .concat(tagSet.map(t => ({ key: 'tag:' + t, label: t, test: e => (e.tags || []).includes(t) })))
     .concat(customCats.map(c => ({ key: 'custom:' + c.name, label: c.name, custom: true, test: e => hasWord(c, e.term) })))

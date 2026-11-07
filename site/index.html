@@ -2701,6 +2701,14 @@ async function main() {
       if (f.entries) funSets.set(f.title.toLowerCase(), new Set(f.entries.flat().map(it => it.term.toLowerCase())));
     });
 
+    // Fun facts that have a matching automatic category in wiktionary.html (same names, lowercase).
+    const FUN_CATEGORY_TITLES = new Set([
+      'palindromes', 'all five vowels', 'no repeated letters', 'no vowels', 'only one kind of vowel',
+      'consonant, vowel, consonant, vowel…', 'starts and ends with the same letter',
+      'letters in alphabetical order', 'letters in reverse alphabetical order', 'two different double letters',
+      'top keyboard row only', 'home row only', 'bottom keyboard row only', 'left hand only', 'right hand only',
+      'contains “uni”', 'contains “cycl”', 'phrases (with spaces)', 'hyphenated', 'with apostrophes',
+    ]);
     const MAX = 6;
     const attr = (t) => escapeHtml(t).replace(/"/g, '&quot;');
     // One spelling: long ones are cut short, and the letters of interest are coloured.
@@ -2746,7 +2754,12 @@ async function main() {
       const term = e.target.closest('[data-term]');
       if (term) { openSearchModal(term.dataset.term); return; }
       const titleLink = e.target.closest('[data-fun]');
-      if (titleLink) { openSearchModal('fun:' + titleLink.dataset.fun); return; }
+      if (titleLink) {
+        // Fun facts that also exist as an automatic category open that category in the Wiktionary view.
+        if (FUN_CATEGORY_TITLES.has(titleLink.dataset.fun)) { window.location.href = 'wiktionary.html#c=' + encodeURIComponent('fun:' + titleLink.dataset.fun); return; }
+        openSearchModal('fun:' + titleLink.dataset.fun);
+        return;
+      }
       if (e.target.closest('.fun-more')) {
         const item = e.target.closest('.fun-item');
         const f = facts[Number(item.dataset.f)];

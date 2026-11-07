@@ -275,17 +275,17 @@
     cursor: pointer;
   }
 
-  .pv { box-sizing: border-box; overflow-wrap: anywhere; position: absolute; z-index: 1000; display: none; width: 340px; max-width: calc(100vw - 16px); background: var(--tile); color: var(--solved-text); border-radius: 6px; padding: 12px 14px; font-size: 0.85rem; line-height: 1.4; text-align: left; text-transform: none; font-weight: 400; box-shadow: 0 6px 18px rgba(0,0,0,0.28); }
-  .pv.c-yellow { background: var(--yellow); }
-  .pv.c-green { background: var(--green); }
-  .pv.c-blue { background: var(--blue); }
-  .pv.c-purple { background: var(--purple); }
-  .pv::before { content: ""; position: absolute; left: var(--arrow, 20px); width: 10px; height: 10px; background: inherit; transform: rotate(45deg); }
-  .pv.below::before { top: -5px; }
-  .pv.above::before { bottom: -5px; }
+  .pv { box-sizing: border-box; overflow-wrap: anywhere; position: absolute; z-index: 1000; display: none; width: 340px; max-width: calc(100vw - 16px); background: var(--modal-bg); color: var(--text); border: 2px solid var(--acc, var(--line)); border-radius: 6px; padding: 12px 14px; font-size: 0.85rem; line-height: 1.4; text-align: left; text-transform: none; font-weight: 400; box-shadow: 0 6px 18px rgba(0,0,0,0.28); }
+  .pv.c-yellow { --acc: var(--yellow); }
+  .pv.c-green { --acc: var(--green); }
+  .pv.c-blue { --acc: var(--blue); }
+  .pv.c-purple { --acc: var(--purple); }
+  .pv::before { content: ""; position: absolute; left: var(--arrow, 20px); width: 10px; height: 10px; background: var(--modal-bg); transform: rotate(45deg); }
+  .pv.below::before { top: -7px; border-left: 2px solid var(--acc, var(--line)); border-top: 2px solid var(--acc, var(--line)); }
+  .pv.above::before { bottom: -7px; border-right: 2px solid var(--acc, var(--line)); border-bottom: 2px solid var(--acc, var(--line)); }
   .pv-word { font-weight: 700; text-transform: uppercase; font-size: 1rem; }
-  .pv-pron, .pv-pos, .pv-more { color: rgba(18,18,18,0.65); }
-  .pv-pos { font-weight: 700; text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.04em; margin-top: 6px; }
+  .pv-pron, .pv-more { color: var(--muted); }
+  .pv-pos { display: inline-block; background: var(--acc, var(--line)); color: var(--solved-text); border-radius: 4px; padding: 1px 6px; margin-top: 6px; font-weight: 700; text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.04em; }
   .pv ol { margin: 2px 0 0; padding-left: 20px; }
   #confetti { position: fixed; inset: 0; pointer-events: none; z-index: 250; }
   @media (prefers-reduced-motion: reduce) {

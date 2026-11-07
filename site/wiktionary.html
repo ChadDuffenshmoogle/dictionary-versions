@@ -569,14 +569,16 @@ function topCategoryCategory(base) {
   const sig = entries.length + '|' + customCats.map(c => c.name + ':' + c.parent + ':' + c.words.length).join(',');
   if (!topCatCache || topCatCache.sig !== sig) {
     const counts = new Map(entries.map(e => [e.term, categoriesFrom(base, e).length]));
-    const top = [...entries].sort((a, b) => counts.get(b.term) - counts.get(a.term) || a.term.localeCompare(b.term)).slice(0, 10);
-    topCatCache = { sig, counts, terms: new Set(top.map(e => e.term)) };
+    // Entries tied with the 10th place share that slot, so more than 10 can be included.
+    const ranked = [...entries].sort((a, b) => counts.get(b.term) - counts.get(a.term) || a.term.localeCompare(b.term));
+    const cutoff = ranked.length ? counts.get(ranked[Math.min(10, ranked.length) - 1].term) : 0;
+    topCatCache = { sig, counts, terms: new Set(ranked.filter(e => counts.get(e.term) >= cutoff).map(e => e.term)) };
   }
   const cache = topCatCache;
   return {
     key: 'top-categories',
-    label: 'Entries in the most categories',
-    desc: 'The 10 entries that belong to the most categories. The number in parentheses is how many each one is in.',
+    label: 'Top 10 entries in the most categories',
+    desc: 'The 10 entries that belong to the most categories (ties share a spot, so there can be more than 10). The number in parentheses is how many each one is in.',
     counts: cache.counts,
     test: e => cache.terms.has(e.term),
   };

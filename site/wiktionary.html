@@ -564,6 +564,7 @@ function allCategories() {
 
 // Automatic "Top 10" categories. Each ranks every entry by a score; entries tied with 10th place
 // share that slot, so more than 10 can be included. Saved until the data changes.
+const SCRABBLE_TILE_VALUES = { a:1,e:1,i:1,o:1,u:1,l:1,n:1,s:1,t:1,r:1,d:2,g:2,b:3,c:3,m:3,p:3,f:4,h:4,v:4,w:4,y:4,k:5,j:8,x:8,q:10,z:10 };
 const topCache = new Map();
 function makeTopCategory(key, label, desc, score, unit) {
   const sig = entries.length + '|' + customCats.map(c => c.name + ':' + c.parent + ':' + c.words.length).join(',');
@@ -591,6 +592,24 @@ function topCategories(base) {
     makeTopCategory('top-definitions', 'Top 10 entries with the most definitions',
       'The 10 entries with the most separate definitions (ties share a spot). The number in parentheses is how many each has.',
       e => senseCount(e)),
+    makeTopCategory('top-definition-length', 'Top 10 entries with the longest definitions',
+      'The 10 entries whose definitions add up to the most characters (ties share a spot). The number in parentheses is the character count.',
+      e => (e.senses && e.senses.length ? e.senses.reduce((n, s) => n + s.defs.reduce((m, d) => m + (d.text || '').length, 0), 0) : (e.definition || '').length), ' characters'),
+    makeTopCategory('top-pos', 'Top 10 entries with the most parts of speech',
+      'The 10 entries used as the most different parts of speech (ties share a spot). The number in parentheses is how many each has.',
+      e => (e.pos_list || []).length),
+    makeTopCategory('top-xref', 'Top 10 entries that mention the most other entries',
+      'The 10 entries whose text links to the most other dictionary words (ties share a spot). The number in parentheses is how many each links to.',
+      e => crossRefs(e).length),
+    makeTopCategory('top-different-letters', 'Top 10 entries with the most different letters',
+      'The 10 entries using the most distinct letters (ties share a spot). The number in parentheses is how many different letters each has.',
+      e => Math.max(...spellingsOf(e.term).map(x => new Set(x.l).size)), ' different'),
+    makeTopCategory('top-vowels', 'Top 10 entries with the most vowels',
+      'The 10 entries with the most a, e, i, o and u letters (ties share a spot). The number in parentheses is the vowel count.',
+      e => Math.max(...spellingsOf(e.term).map(x => x.l.filter(isVowel).length)), ' vowels'),
+    makeTopCategory('top-scrabble-score', 'Top 10 highest Scrabble scores',
+      'The 10 entries worth the most points in Scrabble tiles, 15 letters or fewer (ties share a spot). The number in parentheses is the score.',
+      e => Math.max(0, ...spellingsOf(e.term).filter(x => x.l.length <= 15).map(x => x.l.reduce((n, c) => n + (SCRABBLE_TILE_VALUES[c] || 0), 0))), ' points'),
   ];
 }
 

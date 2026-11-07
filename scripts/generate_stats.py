@@ -724,16 +724,15 @@ def strip_accents(s):
 
 
 def scrabble_status(term, scrabble_set):
-    """Returns 'legal', 'phrase', 'normalized', or 'illegal'.
+    """Returns 'legal', 'phrase', 'normalized', 'both', or 'illegal'.
 
     'legal'      -- the term, letters-only, is a single unbroken word in
-                     the list exactly as typed (no spaces/hyphens/accents
-                     to begin with, or they just happen not to matter).
-    'phrase'     -- two or more words (split on spaces, hyphens, slashes)
-                     and every one of those words is in the list.
-    'normalized' -- only legal after stripping spaces, hyphens,
-                     apostrophes, and accents -- i.e. it needed help to
-                     qualify.
+                     the list exactly as typed.
+    'phrase'     -- legal as SEPARATE words: two or more words (split on
+                     spaces, hyphens, slashes) and every one is in the list.
+    'normalized' -- legal JOINED into one word: only legal after removing
+                     spaces, hyphens, apostrophes, and accents.
+    'both'       -- passes both the separate-words and the joined test.
     'illegal'    -- not in the list either way.
     """
     stripped_raw = term.strip()
@@ -742,15 +741,19 @@ def scrabble_status(term, scrabble_set):
 
     pieces = re.split(r"[\s\-\u2013\u2014/]+", strip_accents(stripped_raw))
     words = [re.sub(r"[^A-Za-z]", "", p) for p in pieces if p]
-    if len(words) >= 2 and all(w and w.upper() in scrabble_set for w in words):
+    is_phrase = len(words) >= 2 and all(w and w.upper() in scrabble_set for w in words)
+
+    joined = re.sub(r"[^A-Za-z]", "", strip_accents(stripped_raw))
+    is_joined = bool(joined) and joined.upper() in scrabble_set
+
+    if is_phrase and is_joined:
+        return "both"
+    if is_phrase:
         return "phrase"
-
-    normalized = strip_accents(stripped_raw)
-    normalized = re.sub(r"[^A-Za-z]", "", normalized)
-    if normalized and normalized.upper() in scrabble_set:
+    if is_joined:
         return "normalized"
-
     return "illegal"
+
 
 def main():
     commits = get_all_commits()
@@ -945,6 +948,7 @@ def main():
         "scrabble_normalized_count": scrabble_counts.get("normalized", 0),
         "scrabble_illegal_count": scrabble_counts.get("illegal", 0),
         "scrabble_phrase_count": scrabble_counts.get("phrase", 0),
+        "scrabble_both_count": scrabble_counts.get("both", 0),
         "scrabble_source_url": SCRABBLE_SOURCE_URL,
         "scrabble_source_label": SCRABBLE_SOURCE_LABEL,
     }

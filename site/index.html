@@ -620,14 +620,14 @@
       <div class="card">
         <h2>Parts of Speech</h2>
         <canvas id="posChart"></canvas>
-        <div style="color:var(--muted); font-size:0.8rem; margin-top:6px;">Click a slice to see all words of that type.</div>
+        <div style="color:var(--muted); font-size:0.8rem; margin-top:6px;">Click a slice to search words of that type, or a name in the key to open its Wiktionary category.</div>
       </div>
 
       <div class="card">
         <h2>Scrabble Legality</h2>
         <canvas id="scrabbleChart"></canvas>
         <div style="color:var(--muted); font-size:0.8rem; margin-top:6px;">
-          Click a slice to see those words.
+          Click a slice to search those words, or a name in the key to open its Wiktionary category.
         </div>
         <div id="scrabbleCredit" style="color:var(--muted); font-size:0.75rem; margin-top:4px;"></div>
       </div>
@@ -1815,6 +1815,7 @@ async function main() {
   const scrabbleBoth = stats.scrabble_both_count || 0;
   const scrabbleTotal = scrabbleLegal + scrabbleNormalized + scrabbleIllegal + scrabblePhrase + scrabbleBoth;
   const scrabbleLabels = ['Scrabble legal', 'Legal as separate words', 'Legal when joined into one word', 'Legal both ways', 'Not Scrabble legal'];
+  const scrabbleCategoryKeys = ['scrabble-legal', 'scrabble-phrase', 'scrabble-normalized', 'scrabble-both', 'scrabble-illegal'];
   const scrabblePrefixes = ['scrabblelegal:', 'scrabblephrase:', 'scrabblenormalized:', 'scrabbleboth:', 'scrabbleillegal:'];
 
   new Chart(document.getElementById('scrabbleChart'), {
@@ -1838,7 +1839,16 @@ async function main() {
         openSearchModal(scrabblePrefixes[elements[0].index]);
       },
       plugins: {
-        legend: { position: 'bottom', labels: { color: C.text, boxWidth: 12, font: { size: 11 } } },
+        legend: {
+          position: 'bottom',
+          labels: { color: C.text, boxWidth: 12, font: { size: 11 } },
+          // Clicking a legend name opens that Scrabble category in the Wiktionary view.
+          onClick: (event, item) => {
+            window.location.href = 'wiktionary.html#c=' + encodeURIComponent(scrabbleCategoryKeys[item.index]);
+          },
+          onHover: (event) => { event.native.target.style.cursor = 'pointer'; },
+          onLeave: (event) => { event.native.target.style.cursor = 'default'; },
+        },
         tooltip: {
           callbacks: {
             label: (item) => {
@@ -2238,7 +2248,18 @@ async function main() {
         openSearchModal(`pos:${value}`);
       },
       plugins: {
-        legend: { position: 'bottom', labels: { color: C.text, boxWidth: 12, font: { size: 11 } } },
+        legend: {
+          position: 'bottom',
+          labels: { color: C.text, boxWidth: 12, font: { size: 11 } },
+          // Clicking a legend name opens that part of speech's category in the Wiktionary view.
+          onClick: (event, item) => {
+            const label = posLabels[item.index];
+            if (label === '(no pos)') openSearchModal('pos:(no pos)');
+            else window.location.href = 'wiktionary.html#c=' + encodeURIComponent('pos:' + label);
+          },
+          onHover: (event) => { event.native.target.style.cursor = 'pointer'; },
+          onLeave: (event) => { event.native.target.style.cursor = 'default'; },
+        },
       },
     },
   });

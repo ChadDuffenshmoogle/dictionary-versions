@@ -298,6 +298,7 @@ tens
 the care more
 the chase
 the land a dead horse
+the lanea
 the pot cart before the
 the pound-sound
 the pounding
@@ -370,6 +371,7 @@ cawacradueld time
 che ealb
 che Iowl
 chebefuntudist
+chenolirginify
 chign
 chipshm
 choo-Spwirdep!
@@ -554,4 +556,4 @@ zee-chente
 zeematerys pron
 
 --- Rejected Predictions (too similar to an existing word) ---
-*OOSYNC, aerquine, chyeah!, exaxely, rasty, sauseggchemuff, shoobatidoobie doubt, Shourtfolm, sleighball
+*OOSYNC, aerquine, amiacablesquip, chemuff, chyeah!, crasty, exaxely, froz, orgbera, rasty, sauseggchemuff, shoobatidoobie doubt, Shourtfolm, sleighball

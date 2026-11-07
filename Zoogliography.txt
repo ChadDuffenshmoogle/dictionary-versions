@@ -124,6 +124,7 @@ Chiliac
 chillexiamate
 choccheburber
 choper noun
+Chronome
 cinnabeat Again
 cinnamunchable
 cinnamunchin'
@@ -388,6 +389,7 @@ cunx
 curer
 D. bicalquantre
 deebur
+deniand wing
 dishmicantude
 dobia
 driniogismand
@@ -558,4 +560,4 @@ zee-chente
 zeematerys pron
 
 --- Rejected Predictions (too similar to an existing word) ---
-*OOSYNC, aerquine, amiacablesquip, blaskeawnce, chemuff, chyeah!, crasty, cretid, Cyreal, delirigibility, Dye n Dasher, exaxely, froz, lotter, orgbera, Quis, rasty, Ronzalo, sauseggchemuff, shoobatidoobie doubt, Shourtfolm, sleighball, Wiirtzing
+*OOSYNC, aerostated, aerquine, amiacablesquip, blaskeawnce, chemuff, chyeah!, crasty, cretid, Cyreal, delirigibility, Dye n Dasher, exaxely, froz, holgunx, lotter, luncharade, mid-crowave, nauschecroismore, orgbera, Quis, rasty, Ronzalo, S n C, sauseggchemuff, shambre, shoobatidoobie doubt, Shourtfolm, sleighball, the room, thum, Wiirtzing

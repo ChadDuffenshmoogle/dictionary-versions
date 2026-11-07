@@ -844,7 +844,7 @@ async function main() {
     // "hame tizer" and "hametizer" count as the same word.
     const norm = (t) => t.toLowerCase().replace(/[^\p{L}\p{N}]/gu, '');
     // Words already listed in the Zoogliography also count as existing.
-    const zoogTerms = (zoogContent || '').split('--- Predicted')[0].split('\n').map(l => l.trim()).filter(l => l && !l.startsWith('---'));
+    const zoogTerms = (zoogContent || '').split(/^---/m)[0].split('\n').map(l => l.trim()).filter(l => l && !l.startsWith('---'));
     const existingNorm = [...new Set([...allTerms, ...zoogTerms].map(norm).filter(Boolean))];
     function editDistance(a, b) {
       let prev = Array.from({ length: b.length + 1 }, (_, j) => j);

@@ -559,29 +559,39 @@ function allCategories() {
     .concat(tagSet.map(t => ({ key: 'tag:' + t, label: t, test: e => (e.tags || []).includes(t) })))
     .concat(customCats.map(c => ({ key: 'custom:' + c.name, label: c.name, custom: true, test: e => hasWord(c, e.term) })))
     .concat(PUZZLE_RULES.map(r => ({ key: 'puzzle:' + r.name, label: r.name, hidden: true, rule: r, desc: r.desc, test: e => puzzleSpans(r, e.term, hasLower) !== null })));
-  return base.concat(topCategoryCategory(base));
+  return base.concat(topCategories(base));
 }
 
-// Automatic category: the 10 entries that belong to the most categories (counted from every
-// other category, parents of custom subcategories included). Saved until the data changes.
-let topCatCache = null;
-function topCategoryCategory(base) {
+// Automatic "Top 10" categories. Each ranks every entry by a score; entries tied with 10th place
+// share that slot, so more than 10 can be included. Saved until the data changes.
+const topCache = new Map();
+function makeTopCategory(key, label, desc, score, unit) {
   const sig = entries.length + '|' + customCats.map(c => c.name + ':' + c.parent + ':' + c.words.length).join(',');
-  if (!topCatCache || topCatCache.sig !== sig) {
-    const counts = new Map(entries.map(e => [e.term, categoriesFrom(base, e).length]));
-    // Entries tied with the 10th place share that slot, so more than 10 can be included.
+  let cache = topCache.get(key);
+  if (!cache || cache.sig !== sig) {
+    const counts = new Map(entries.map(e => [e.term, score(e)]));
     const ranked = [...entries].sort((a, b) => counts.get(b.term) - counts.get(a.term) || a.term.localeCompare(b.term));
     const cutoff = ranked.length ? counts.get(ranked[Math.min(10, ranked.length) - 1].term) : 0;
-    topCatCache = { sig, counts, terms: new Set(ranked.filter(e => counts.get(e.term) >= cutoff).map(e => e.term)) };
+    cache = { sig, counts, terms: new Set(ranked.filter(e => counts.get(e.term) >= Math.max(cutoff, 1)).map(e => e.term)) };
+    topCache.set(key, cache);
   }
-  const cache = topCatCache;
-  return {
-    key: 'top-categories',
-    label: 'Top 10 entries in the most categories',
-    desc: 'The 10 entries that belong to the most categories (ties share a spot, so there can be more than 10). The number in parentheses is how many each one is in.',
-    counts: cache.counts,
-    test: e => cache.terms.has(e.term),
-  };
+  return { key, label, desc, unit: unit || '', counts: cache.counts, test: e => cache.terms.has(e.term) };
+}
+function topCategories(base) {
+  return [
+    makeTopCategory('top-categories', 'Top 10 entries in the most categories',
+      'The 10 entries that belong to the most categories (ties share a spot, so there can be more than 10). The number in parentheses is how many each one is in.',
+      e => categoriesFrom(base, e).length),
+    makeTopCategory('top-longest', 'Top 10 longest entries',
+      'The 10 entries with the most letters (ties share a spot). The number in parentheses is the letter count.',
+      e => Math.max(...spellingsOf(e.term).map(x => x.l.length)), ' letters'),
+    makeTopCategory('top-examples', 'Top 10 entries with the most example sentences',
+      'The 10 entries with the most example sentences (ties share a spot). The number in parentheses is how many each has.',
+      e => exampleCount(e)),
+    makeTopCategory('top-definitions', 'Top 10 entries with the most definitions',
+      'The 10 entries with the most separate definitions (ties share a spot). The number in parentheses is how many each has.',
+      e => senseCount(e)),
+  ];
 }
 
 function categoriesOf(e) { return categoriesFrom(allCategories(), e); }
@@ -895,6 +905,11 @@ function showPick(name) {
 
 function showCategoryIndex() {
   const auto = sortByLabel(allCategories().filter(c => !c.custom && !c.hidden));
+  const groupOf = c => c.key.startsWith('scrabble-') ? 'Scrabble' : c.key.startsWith('fun:') ? 'Letter patterns'
+    : c.key.startsWith('pos:') ? 'Parts of speech' : c.key.startsWith('tag:') ? 'Tags'
+    : c.key.startsWith('top-') ? 'Top 10 lists' : 'Entry details';
+  const groups = ['Entry details', 'Parts of speech', 'Tags', 'Letter patterns', 'Scrabble', 'Top 10 lists']
+    .map(name => ({ name, items: auto.filter(c => groupOf(c) === name) })).filter(g => g.items.length);
   const li = c => `<li><a href="#c=${encodeURIComponent(c.key)}">${esc(c.label)}</a> <span class="muted">(${entries.filter(c.test).length})</span></li>`;
   const tree = (parent, depth) => {
     const kids = parent === null ? customCats.filter(k => !k.parent || !findCat(customCats, k.parent)) : catKids(customCats, parent);
@@ -908,7 +923,7 @@ function showCategoryIndex() {
     ${customCats.length ? tree(null, 0) : '<p class="muted">None yet.</p>'}
     ${isSignedIn() ? '<button id="newCat" type="button">+ New category</button>' : ''}
     <h2>Automatic categories</h2>
-    <ul class="cat-index">${auto.map(li).join('')}</ul>`;
+    ${groups.map(g => `<h3>${esc(g.name)}</h3><ul class="cat-index">${g.items.map(li).join('')}</ul>`).join('')}`;
   const nb = document.getElementById('newCat');
   if (nb) nb.onclick = () => newCategoryPrompt(null, null);
 }
@@ -944,7 +959,7 @@ function showCategory(key) {
     <p class="muted">${list.length} entries · <a href="#c=">All categories</a>${crumbs.map(p => ` › <a href="#c=${encodeURIComponent('custom:' + p.name)}">${esc(p.name)}</a>`).join('')}</p>
     ${kids.length ? `<h2>Subcategories</h2><ul class="cat-index">${kids.map(k => `<li><a href="#c=${encodeURIComponent('custom:' + k.name)}">${esc(k.name)}</a> <span class="muted">(${entries.filter(e => hasWord(k, e.term)).length})</span></li>`).join('')}</ul>` : ''}
     ${kids.length ? '<h2>Words</h2>' : ''}
-    <ul class="word-list">${list.map(e => `<li>${c.rule ? markedWordLink(e.term, c.rule) : wordLink(e.term)}${c.counts ? ` <span class="muted">(${c.counts.get(e.term)})</span>` : ''}${editing ? ` <a href="#" class="rm-word" data-t="${esc(e.term)}" title="Remove from this category">✕</a>` : ''}</li>`).join('')}</ul>
+    <ul class="word-list">${list.map(e => `<li>${c.rule ? markedWordLink(e.term, c.rule) : wordLink(e.term)}${c.counts ? ` <span class="muted">(${c.counts.get(e.term)}${c.unit || ''})</span>` : ''}${editing ? ` <a href="#" class="rm-word" data-t="${esc(e.term)}" title="Remove from this category">✕</a>` : ''}</li>`).join('')}</ul>
     ${editing ? `
       <div class="cat-edit">
         <input id="catAddWord" list="allTerms" placeholder="Add a word…">

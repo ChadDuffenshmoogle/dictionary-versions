@@ -446,6 +446,7 @@ linuenimer cirti
 liong
 logreh-wrowderslesity
 Lounulvet
+Maite
 mardoop
 Maspiticousculang
 megoost
@@ -548,3 +549,6 @@ Yaphil
 ying
 zee-chente
 zeematerys pron
+
+--- Rejected Predictions (too similar to an existing word) ---
+shoobatidoobie doubt

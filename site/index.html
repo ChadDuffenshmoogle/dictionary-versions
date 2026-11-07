@@ -1492,7 +1492,7 @@ async function main() {
     const funMatch = raw.match(/^fun:\s*(.*)$/);
     const lengthMatch = raw.match(/^length:\s*(.*)$/);
     const usedMatch = raw.match(/^used:(characters|words):(entries|definitions|both):(.*)$/);
-    const scrabbleMatch = raw.match(/^scrabble(legal|normalized|illegal|phrase):?\s*(.*)$/);
+    const scrabbleMatch = raw.match(/^scrabble(legal|normalized|illegal|phrase|both):?\s*(.*)$/);
     const q = startsWithMatch ? startsWithMatch[1]
             : posMatch ? posMatch[1]
             : dateMatch ? dateMatch[1]
@@ -1812,17 +1812,18 @@ async function main() {
   const scrabbleNormalized = stats.scrabble_normalized_count || 0;
   const scrabbleIllegal = stats.scrabble_illegal_count || 0;
   const scrabblePhrase = stats.scrabble_phrase_count || 0;
-  const scrabbleTotal = scrabbleLegal + scrabbleNormalized + scrabbleIllegal + scrabblePhrase;
-  const scrabbleLabels = ['Scrabble legal', 'Legal without spacing/punctuation/accents', 'Phrase made of Scrabble-legal words', 'Not Scrabble legal'];
-  const scrabblePrefixes = ['scrabblelegal:', 'scrabblenormalized:', 'scrabblephrase:', 'scrabbleillegal:'];
+  const scrabbleBoth = stats.scrabble_both_count || 0;
+  const scrabbleTotal = scrabbleLegal + scrabbleNormalized + scrabbleIllegal + scrabblePhrase + scrabbleBoth;
+  const scrabbleLabels = ['Scrabble legal', 'Legal as separate words', 'Legal when joined into one word', 'Legal both ways', 'Not Scrabble legal'];
+  const scrabblePrefixes = ['scrabblelegal:', 'scrabblephrase:', 'scrabblenormalized:', 'scrabbleboth:', 'scrabbleillegal:'];
 
   new Chart(document.getElementById('scrabbleChart'), {
     type: 'pie',
     data: {
       labels: scrabbleLabels,
       datasets: [{
-        data: [scrabbleLegal, scrabbleNormalized, scrabblePhrase, scrabbleIllegal],
-        backgroundColor: ['#6ee7b7', '#fbbf24', '#a78bfa', '#f87171'].map(T),
+        data: [scrabbleLegal, scrabblePhrase, scrabbleNormalized, scrabbleBoth, scrabbleIllegal],
+        backgroundColor: ['#6ee7b7', '#a78bfa', '#fbbf24', '#38bdf8', '#f87171'].map(T),
         borderColor: T('#171a21'),
         borderWidth: 2,
       }],

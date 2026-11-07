@@ -553,16 +553,37 @@ function markedWordLink(term, rule) {
 function allCategories() {
   const tagSet = [...new Set(entries.flatMap(e => e.tags || []))].sort();
   const posSet = [...new Set(entries.flatMap(e => e.pos_list || []))].filter(p => p && p !== '(no pos)').sort();
-  return CATEGORIES
+  const base = CATEGORIES
     .concat(FUN_CATEGORIES)
     .concat(posSet.map(p => ({ key: 'pos:' + p, label: pluralize(p), test: e => (e.pos_list || []).includes(p) })))
     .concat(tagSet.map(t => ({ key: 'tag:' + t, label: t, test: e => (e.tags || []).includes(t) })))
     .concat(customCats.map(c => ({ key: 'custom:' + c.name, label: c.name, custom: true, test: e => hasWord(c, e.term) })))
     .concat(PUZZLE_RULES.map(r => ({ key: 'puzzle:' + r.name, label: r.name, hidden: true, rule: r, desc: r.desc, test: e => puzzleSpans(r, e.term, hasLower) !== null })));
+  return base.concat(topCategoryCategory(base));
 }
 
-function categoriesOf(e) {
-  const all = allCategories();
+// Automatic category: the 10 entries that belong to the most categories (counted from every
+// other category, parents of custom subcategories included). Saved until the data changes.
+let topCatCache = null;
+function topCategoryCategory(base) {
+  const sig = entries.length + '|' + customCats.map(c => c.name + ':' + c.parent + ':' + c.words.length).join(',');
+  if (!topCatCache || topCatCache.sig !== sig) {
+    const counts = new Map(entries.map(e => [e.term, categoriesFrom(base, e).length]));
+    const top = [...entries].sort((a, b) => counts.get(b.term) - counts.get(a.term) || a.term.localeCompare(b.term)).slice(0, 10);
+    topCatCache = { sig, counts, terms: new Set(top.map(e => e.term)) };
+  }
+  const cache = topCatCache;
+  return {
+    key: 'top-categories',
+    label: 'Entries in the most categories',
+    desc: 'The 10 entries that belong to the most categories. The number in parentheses is how many each one is in.',
+    counts: cache.counts,
+    test: e => cache.terms.has(e.term),
+  };
+}
+
+function categoriesOf(e) { return categoriesFrom(allCategories(), e); }
+function categoriesFrom(all, e) {
   const out = all.filter(c => !c.hidden && c.test(e));
   const have = new Set(out.map(c => c.key));
   // a word in "Sandwiches" is also listed under "Cuisine" (the category Sandwiches sits inside)
@@ -907,6 +928,7 @@ function showCategory(key) {
   const c = allCategories().find(x => x.key === key);
   if (!c) { view.innerHTML = '<h1>Category</h1><p>No category with this name.</p>'; return; }
   const list = entries.filter(c.test);
+  if (c.counts) list.sort((a, b) => c.counts.get(b.term) - c.counts.get(a.term) || a.term.localeCompare(b.term));
   const editing = c.custom && isSignedIn();
   const name = c.label;
   const cat = c.custom ? findCat(customCats, name) : null;
@@ -920,7 +942,7 @@ function showCategory(key) {
     <p class="muted">${list.length} entries · <a href="#c=">All categories</a>${crumbs.map(p => ` › <a href="#c=${encodeURIComponent('custom:' + p.name)}">${esc(p.name)}</a>`).join('')}</p>
     ${kids.length ? `<h2>Subcategories</h2><ul class="cat-index">${kids.map(k => `<li><a href="#c=${encodeURIComponent('custom:' + k.name)}">${esc(k.name)}</a> <span class="muted">(${entries.filter(e => hasWord(k, e.term)).length})</span></li>`).join('')}</ul>` : ''}
     ${kids.length ? '<h2>Words</h2>' : ''}
-    <ul class="word-list">${list.map(e => `<li>${c.rule ? markedWordLink(e.term, c.rule) : wordLink(e.term)}${editing ? ` <a href="#" class="rm-word" data-t="${esc(e.term)}" title="Remove from this category">✕</a>` : ''}</li>`).join('')}</ul>
+    <ul class="word-list">${list.map(e => `<li>${c.rule ? markedWordLink(e.term, c.rule) : wordLink(e.term)}${c.counts ? ` <span class="muted">(${c.counts.get(e.term)})</span>` : ''}${editing ? ` <a href="#" class="rm-word" data-t="${esc(e.term)}" title="Remove from this category">✕</a>` : ''}</li>`).join('')}</ul>
     ${editing ? `
       <div class="cat-edit">
         <input id="catAddWord" list="allTerms" placeholder="Add a word…">

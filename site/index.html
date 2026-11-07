@@ -843,7 +843,9 @@ async function main() {
     // dictionary. Compare with spaces, hyphens and punctuation removed, so
     // "hame tizer" and "hametizer" count as the same word.
     const norm = (t) => t.toLowerCase().replace(/[^\p{L}\p{N}]/gu, '');
-    const existingNorm = [...new Set(allTerms.map(norm).filter(Boolean))];
+    // Words already listed in the Zoogliography also count as existing.
+    const zoogTerms = (zoogContent || '').split('\n').map(l => l.trim()).filter(l => l && !l.startsWith('---'));
+    const existingNorm = [...new Set([...allTerms, ...zoogTerms].map(norm).filter(Boolean))];
     function editDistance(a, b) {
       let prev = Array.from({ length: b.length + 1 }, (_, j) => j);
       for (let i = 1; i <= a.length; i++) {
@@ -1278,13 +1280,16 @@ async function main() {
     document.getElementById('predictedWordSrc').innerHTML = '';
     document.getElementById('predictedDefinitionSrc').innerHTML = '';
     requestAnimationFrame(() => setTimeout(() => {
-      predictNextWord(PREDICT_MODES[predictMode]);
-      if (predictedAllWord === null) {
-        // the Zoogliography always uses Normal
-        predictedAllWord = predictNextWord(PREDICT_MODES.normal, true) || '';
-        predictedNonsenseWord = predictNextWord(PREDICT_MODES.nonsense, true) || '';
-        refreshZoogModal();
-      }
+      // Load the Zoogliography first so predictions can avoid its words.
+      fetchZoogliography().then(() => {
+        predictNextWord(PREDICT_MODES[predictMode]);
+        if (predictedAllWord === null) {
+          // the Zoogliography always uses Normal
+          predictedAllWord = predictNextWord(PREDICT_MODES.normal, true) || '';
+          predictedNonsenseWord = predictNextWord(PREDICT_MODES.nonsense, true) || '';
+          refreshZoogModal();
+        }
+      });
     }, 0));
   }
   predictLater();

@@ -130,14 +130,32 @@ def too_similar(word, existing_norm):
     return False
 
 
-def predict_next_word(terms, seed_text, order=4):
+def fetch_zoog_words():
+    """The words already listed in Zoogliography.txt (above the predicted
+    lists), so new predictions can avoid them. Returns [] if it can't be read."""
+    try:
+        headers = {"Accept": "application/vnd.github+json"}
+        if ZOOG_TOKEN:
+            headers["Authorization"] = f"Bearer {ZOOG_TOKEN}"
+        url = f"{API_ROOT}/contents/{requests.utils.quote(ZOOG_FILE)}"
+        resp = requests.get(url, headers=headers, params={"ref": GITHUB_BRANCH}, timeout=30)
+        resp.raise_for_status()
+        text = base64.b64decode(resp.json()["content"]).decode("utf-8")
+        base = text.partition(ZOOG_MARKER)[0]
+        return [l.strip() for l in base.splitlines() if l.strip() and not l.startswith("---")]
+    except Exception as e:
+        print(f"Could not read Zoogliography for similarity check: {e}", file=sys.stderr)
+        return []
+
+
+def predict_next_word(terms, seed_text, order=4, avoid=()):
     """Guess a new word letter by letter from the spelling of every entry
     (a Markov chain; order = how many letters back it looks, 4 for the normal
     guess and 2 for the looser nonsense guess). The same seed gives the same
     word, so it only changes when the dictionary changes. Pass the terms
     already split into single spellings (see split_spellings)."""
     start, end = "\x02", "\x03"
-    existing_norm = list({_norm_term(t) for t in terms if _norm_term(t)})
+    existing_norm = list({_norm_term(t) for t in [*terms, *avoid] if _norm_term(t)})
     table = {}
     for t in terms:
         padded = start * order + t + end
@@ -811,10 +829,13 @@ def main():
     # txt must never stop the stats from being built.
     # Each alternate spelling ("a / b") is its own word for the guess.
     spellings = split_spellings(all_terms)
-    predicted_word = predict_next_word(spellings, f"all|{total_entries}|{latest_word_term}")
+    zoog_words = fetch_zoog_words()  # existing zoogs the new guesses must avoid
+    predicted_word = predict_next_word(
+        spellings, f"all|{total_entries}|{latest_word_term}", avoid=zoog_words
+    )
     # Nonsense: same idea, but only 2 letters of memory, so it is looser.
     predicted_nonsense_word = predict_next_word(
-        spellings, f"nonsense|{total_entries}|{latest_word_term}", order=2
+        spellings, f"nonsense|{total_entries}|{latest_word_term}", order=2, avoid=zoog_words
     )
     try:
         update_zoogliography(predicted_word, predicted_nonsense_word)

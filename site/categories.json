@@ -851,7 +851,12 @@
         "sesquipedale",
         "sesquipedantic",
         "thesaurus-monger",
-        "wordery"
+        "wordery",
+        "curse of gab",
+        "liquific",
+        "et cetter",
+        "gooble",
+        "filibest"
       ]
     },
     {
@@ -976,7 +981,9 @@
         "millexicon",
         "millexeme",
         "tricontapontasesquipedontaverbonta",
-        "tricontapontasesquipedontaverbontic"
+        "tricontapontasesquipedontaverbontic",
+        "numerity",
+        "UWEUUi"
       ]
     },
     {
@@ -1280,7 +1287,13 @@
         "beevening",
         "good beevening",
         "afternoonly",
-        "kaboompa space"
+        "kaboompa space",
+        "horlage / orloge / orlage",
+        "calander",
+        "Daylight Spending Time",
+        "Chronologish",
+        "posttoled / postwarned",
+        "antevellum"
       ]
     },
     {
@@ -1739,6 +1752,90 @@
         "copralic",
         "fuzzah",
         "antifanity"
+      ]
+    },
+    {
+      "name": "Exclamations",
+      "words": [
+        "babingo",
+        "ayje",
+        "hmork",
+        "ukwudubu",
+        "sven worde!",
+        "seil / seyl",
+        "ybwa",
+        "anienie",
+        "er wer",
+        "ain't know way"
+      ]
+    },
+    {
+      "name": "Movement-Related",
+      "words": [
+        "shambre",
+        "skadover",
+        "worge",
+        "action-figuring",
+        "stick-bouncing",
+        "hoss"
+      ]
+    },
+    {
+      "name": "Water-Related",
+      "words": [
+        "humify / humefy",
+        "madefact",
+        "sog",
+        "waterloose",
+        "shoreside",
+        "p'pmpic",
+        "aquavache"
+      ]
+    },
+    {
+      "name": "Reasoning-Related",
+      "words": [
+        "bani==bingo",
+        "sound-sounding",
+        "verspicious",
+        "impartiality bias"
+      ]
+    },
+    {
+      "name": "Manners-Related",
+      "words": [
+        "hefnion",
+        "dequorum",
+        "gooberism",
+        "many graditudinal appreciations",
+        "antifanity"
+      ]
+    },
+    {
+      "name": "Cleaning-Related",
+      "words": [
+        "dwash",
+        "dwasher",
+        "swiff",
+        "sarm hametizer"
+      ]
+    },
+    {
+      "name": "Energy-Related",
+      "words": [
+        "vigid",
+        "q-d up / q'd up",
+        "overgize",
+        "eucry"
+      ]
+    },
+    {
+      "name": "Argument-Related",
+      "words": [
+        "contraversation",
+        "arentgument",
+        "counterpoint: spoochingo",
+        "filibest"
       ]
     }
   ]

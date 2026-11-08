@@ -141,10 +141,11 @@
       ]
     },
     {
-      "name": "Rabbits",
+      "name": "Rabbit-Related",
       "words": [
         "cunicule",
-        "cuniculous"
+        "cuniculous",
+        "cuniculary"
       ]
     },
     {
@@ -390,7 +391,11 @@
         "Turkules",
         "rotisse",
         "starkitch",
-        "chchingles"
+        "chchingles",
+        "walking taki",
+        "baumkuchen",
+        "https:/gifs/grief-geometry-dash",
+        "chex and balances"
       ]
     },
     {
@@ -782,7 +787,8 @@
         "spag",
         "fleshie",
         "inkspill",
-        "wordmonger"
+        "wordmonger",
+        "ercapote / ecapote"
       ]
     },
     {
@@ -910,7 +916,14 @@
         "DeKalbitated",
         "'Dobagate",
         "the gansö center",
-        "the DuS'"
+        "the DuS'",
+        "Swen Person",
+        "East Skistands",
+        "eau de Farade",
+        "Stevo-Special",
+        "TOTLer",
+        "bartriangular",
+        "barlineus"
       ]
     },
     {
@@ -1218,7 +1231,7 @@
         "Fooboo",
         "Gepardee",
         "Haistea",
-        "heehee",
+        "Heehee",
         "Maizee",
         "Mesie",
         "Moursse",
@@ -1238,7 +1251,8 @@
         "Hihioxygee",
         "Moitey",
         "Schpood",
-        "Skewska"
+        "Skewska",
+        "Sweempo"
       ]
     },
     {
@@ -1420,7 +1434,10 @@
         "snix",
         "Starkitch",
         "Unlunchables",
-        "the La Barbar"
+        "the La Barbar",
+        "Celingmart",
+        "Walmeijarget",
+        "HandsLinkedIndeed"
       ]
     },
     {
@@ -1454,7 +1471,6 @@
         "descendor",
         "despepperizer",
         "polyplug",
-        "allomobile",
         "wachine",
         "temperer / temperater",
         "JCRT",
@@ -1556,9 +1572,7 @@
         "biographe",
         "haikuku",
         "quill issue",
-        "prolificate",
-        "racontue",
-        "pagebait"
+        "prolificate"
       ]
     },
     {
@@ -1579,9 +1593,7 @@
         "hemicircle",
         "quadrad",
         "cyndrilic",
-        "lilypoid",
-        "bartriangular",
-        "barlineus"
+        "lilypoid"
       ]
     },
     {
@@ -1601,11 +1613,9 @@
       "name": "Deception-Related",
       "words": [
         "mizzle",
-        "myster",
-        "befunge",
         "chicaner",
         "verspicious",
-        "cretible"
+        "taradiddle"
       ]
     },
     {
@@ -1615,18 +1625,7 @@
         "eolion",
         "ong",
         "over the weather",
-        "weath",
-        "weatherology"
-      ]
-    },
-    {
-      "name": "Clothing-Related",
-      "words": [
-        "adida",
-        "sjort",
-        "hamp",
-        "cobblerstone",
-        "to remove the socks before the shoes"
+        "weath"
       ]
     },
     {
@@ -1647,6 +1646,99 @@
         "until the light",
         "Xiao Hong Shoo!",
         "Zilo!"
+      ]
+    },
+    {
+      "name": "Vehicles",
+      "words": [
+        "enirambus",
+        "supermarine",
+        "mayhEmVihicle",
+        "truc",
+        "cunicular",
+        "allomobile"
+      ]
+    },
+    {
+      "name": "Internet-Related",
+      "words": [
+        "avcailable",
+        "ultramod / ultra-mod",
+        "loup",
+        "Breaders",
+        "linkedinfluencer",
+        "strifeguy",
+        "forbonkrolling",
+        "netire",
+        "escend",
+        "L + golden ratio"
+      ]
+    },
+    {
+      "name": "Computer-Related",
+      "words": [
+        "computer soup",
+        "laptoff",
+        "ecord / e-cord",
+        "masterize",
+        "Let's pop the stack on that one"
+      ]
+    },
+    {
+      "name": "Mathematics-Related",
+      "words": [
+        "Median Joe",
+        "Standard Deviation Joe",
+        "mathical",
+        "L + golden ratio",
+        "arm-to-bed-microwave-distance ratio"
+      ]
+    },
+    {
+      "name": "Weapon-Related",
+      "words": [
+        "artile",
+        "artille",
+        "artiller",
+        "mondent",
+        "slarf",
+        "clobberstone"
+      ]
+    },
+    {
+      "name": "Rock-Related",
+      "words": [
+        "clobberstone",
+        "cobblerstone",
+        "saxicolant",
+        "gubble"
+      ]
+    },
+    {
+      "name": "Science-Related",
+      "words": [
+        "astronome",
+        "brexology",
+        "chemiclore / chemiclor / kemiklor",
+        "saxicolant"
+      ]
+    },
+    {
+      "name": "Education-Related",
+      "words": [
+        "Sullabus",
+        "honkrs",
+        "duel major",
+        "Swen Person"
+      ]
+    },
+    {
+      "name": "Profanity-Related",
+      "words": [
+        "bang",
+        "copralic",
+        "fuzzah",
+        "antifanity"
       ]
     }
   ]

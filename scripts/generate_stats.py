@@ -185,12 +185,14 @@ def predict_next_word(terms, seed_text, order=4, avoid=(), rejected=None):
         if 4 <= len(word) < 24 and " / " not in word:
             if not too_similar(word, existing_norm):
                 return word
-            if rejected is not None:
+            # Only near-misses are remembered; a word identical to an existing
+            # entry or zoog is just skipped, not listed as rejected.
+            if rejected is not None and _norm_term(word) not in existing_norm:
                 rejected.append(word)  # remembered for the Zoogliography
     return ""
 
 
-def update_zoogliography(word, nonsense_word="", rejected=()):
+def update_zoogliography(word, nonsense_word="", rejected=(), known_norm=()):
     """Add the new words to the two lists at the bottom of Zoogliography.txt
     (each kept A to Z): 'Predicted Next Word', then 'Predicted Nonsense Word'.
     Everything above the first marker is left untouched."""
@@ -228,6 +230,8 @@ def update_zoogliography(word, nonsense_word="", rejected=()):
         for w in rejected:
             if w.lower() not in {r.lower() for r in rejected_all}:
                 rejected_all.add(w)
+        # Drop any that are identical to an existing word or zoog (old ones too).
+        rejected_all = {w for w in rejected_all if _norm_term(w) not in known_norm}
         if rejected_all:
             new_text += f"\n\n{ZOOG_REJECTED_MARKER}\n" + ", ".join(sorted(rejected_all, key=str.lower))
         if new_text == text.rstrip("\n"):
@@ -844,7 +848,8 @@ def main():
     # txt must never stop the stats from being built.
     # Each alternate spelling ("a / b") is its own word for the guess.
     spellings = split_spellings(all_terms)
-    zoog_words = fetch_zoog_words()  # existing zoogs the new guesses must avoid
+    zoog_words = split_spellings(fetch_zoog_words())  # existing zoogs the new guesses must avoid
+    known_norm = {_norm_term(t) for t in [*spellings, *zoog_words] if _norm_term(t)}
     rejected_words = []  # guesses thrown out for being too similar, saved to the Zoogliography
     predicted_word = predict_next_word(
         spellings, f"all|{total_entries}|{latest_word_term}", avoid=zoog_words, rejected=rejected_words
@@ -854,7 +859,7 @@ def main():
         spellings, f"nonsense|{total_entries}|{latest_word_term}", order=2, avoid=zoog_words, rejected=rejected_words
     )
     try:
-        update_zoogliography(predicted_word, predicted_nonsense_word, rejected_words)
+        update_zoogliography(predicted_word, predicted_nonsense_word, rejected_words, known_norm)
     except Exception as e:
         print(f"Zoogliography update failed: {e}", file=sys.stderr)
 

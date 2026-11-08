@@ -245,6 +245,7 @@ onions
 over twyxt
 pent
 pers
+perschlostate
 pertainty
 pistancers
 pistands
@@ -357,6 +358,7 @@ aforrood-les
 aftost
 ainalich
 aing
+aitoo
 all maxxis
 an Peradia
 ang annee
@@ -591,4 +593,4 @@ zeematerys pron
 zonyuni
 
 --- Rejected Predictions (too similar to an existing word) ---
-aerkeley, aerostated, amiacablesquip, anolineus, blaskeawnce, bomba, carpe, chemuff, copious, culvstardnyunbun, cunicycle, dast, ditar, dull cheeburber, Elpharice, foobrepploozonioccior, hardcore, longworm, luncharade, nauschecroismore, orgbera, parcheeburg, patic, q'de, shoobatidoobie doubt, sobrescalient, spaghettiquettiqueer, spleering away, Spweem SheckleSandwich, the room, thiever cake, Thup, Unlunchine
+aerkeley, aerostated, amiacablesquip, anolineus, blaskeawnce, bomba, carpe, chemuff, copious, culvstardnyunbun, cunicycle, dast, ditar, dull cheeburber, Elpharice, foobrepploozonioccior, hardcore, JCmander, longworm, luncharade, nauschecroismore, orgbera, parcheeburg, patic, q'de, shoobatidoobie doubt, sobrescalient, spaghettiquettiqueer, spleering away, Spweem SheckleSandwich, the dead, the room, thiever cake, Thup, Unlunchine

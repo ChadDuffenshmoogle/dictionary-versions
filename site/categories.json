@@ -1422,6 +1422,232 @@
         "Unlunchables",
         "the La Barbar"
       ]
+    },
+    {
+      "name": "Peppers",
+      "parent": "Food-Related",
+      "words": [
+        "borpp",
+        "brepp",
+        "caypp",
+        "chilppe",
+        "grepp",
+        "jalpp",
+        "yelpp"
+      ]
+    },
+    {
+      "name": "Feelings",
+      "words": [
+        "disphoria",
+        "yestalgia",
+        "nostalgaea",
+        "yerm / yearm",
+        "FAMO",
+        "alpharice"
+      ]
+    },
+    {
+      "name": "Devices",
+      "words": [
+        "temportal",
+        "descendor",
+        "despepperizer",
+        "polyplug",
+        "allomobile",
+        "wachine",
+        "temperer / temperater",
+        "JCRT",
+        "iPhone Quarto"
+      ]
+    },
+    {
+      "name": "Philosophies",
+      "words": [
+        "effective annealism",
+        "effective annelism",
+        "longwormism",
+        "unism",
+        "digital parsimony"
+      ]
+    },
+    {
+      "name": "Music-Related",
+      "words": [
+        "acarrangement",
+        "choirchestra",
+        "Flumpinet",
+        "fifespan",
+        "gibbler",
+        "snarody",
+        "shoobarodoob",
+        "shoobatidoob",
+        "intershoob / interdoob",
+        "ultraprano",
+        "sleighball",
+        "*OOSYNC",
+        "dys track",
+        "mebander",
+        "falsettonit",
+        "polyjamorous",
+        "spurello / spurhello",
+        "Bethsque",
+        "Porta-Pianto",
+        "eir guitar",
+        "violable"
+      ]
+    },
+    {
+      "name": "Money-Related",
+      "words": [
+        "tweff",
+        "drachmonger",
+        "Gwad",
+        "povving off",
+        "usur",
+        "rolling in ones",
+        "recursive income",
+        "tapiocampensation",
+        "anti-coupon"
+      ]
+    },
+    {
+      "name": "Health-Related",
+      "words": [
+        "dumbmentia",
+        "didia / diaduo / dudia / diaretes",
+        "Mulanea",
+        "snodem",
+        "demi",
+        "ryxis",
+        "ovor",
+        "bic",
+        "somatosomatic"
+      ]
+    },
+    {
+      "name": "Hand-Related",
+      "words": [
+        "applau",
+        "cubices",
+        "hipshake",
+        "manuflect",
+        "manubriate",
+        "yincers",
+        "seece"
+      ]
+    },
+    {
+      "name": "Hair-Related",
+      "words": [
+        "falacrous",
+        "barbosity",
+        "manely",
+        "wigdo",
+        "Dye n Dasher",
+        "anti beard knife",
+        "gloveband"
+      ]
+    },
+    {
+      "name": "Writing-Related",
+      "words": [
+        "autobiographe",
+        "biographe",
+        "haikuku",
+        "quill issue",
+        "prolificate",
+        "racontue",
+        "pagebait"
+      ]
+    },
+    {
+      "name": "Brainrot-Related",
+      "words": [
+        "67skibidyrizzlersahorermactually",
+        "brainlightenment",
+        "spleen-rot",
+        "rizzito",
+        "sesettaphiliac"
+      ]
+    },
+    {
+      "name": "Geometry-Related",
+      "words": [
+        "anazontal",
+        "depozontal",
+        "hemicircle",
+        "quadrad",
+        "cyndrilic",
+        "lilypoid",
+        "bartriangular",
+        "barlineus"
+      ]
+    },
+    {
+      "name": "Illinois-Related",
+      "words": [
+        "chicagno",
+        "Eddie's Estates",
+        "Elgonqgin",
+        "illinoying",
+        "napervillain",
+        "Initial L",
+        "kalb",
+        "Ukkubius"
+      ]
+    },
+    {
+      "name": "Deception-Related",
+      "words": [
+        "mizzle",
+        "myster",
+        "befunge",
+        "chicaner",
+        "verspicious",
+        "cretible"
+      ]
+    },
+    {
+      "name": "Weather-Related",
+      "words": [
+        "drizzito",
+        "eolion",
+        "ong",
+        "over the weather",
+        "weath",
+        "weatherology"
+      ]
+    },
+    {
+      "name": "Clothing-Related",
+      "words": [
+        "adida",
+        "sjort",
+        "hamp",
+        "cobblerstone",
+        "to remove the socks before the shoes"
+      ]
+    },
+    {
+      "name": "Greetings",
+      "words": [
+        "good beevening",
+        "heedy howdy heimlich manoeuvre!",
+        "manuflect",
+        "Tsauditu!",
+        "yihk"
+      ]
+    },
+    {
+      "name": "Farewells",
+      "words": [
+        "chyeah!",
+        "kicha",
+        "until the light",
+        "Xiao Hong Shoo!",
+        "Zilo!"
+      ]
     }
   ]
 }

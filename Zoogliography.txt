@@ -116,6 +116,7 @@ beignet
 bilitic
 bilitudinal boss
 bordovercovering
+break thingo
 break thington
 burgchemuff
 C. D'Poba'Denuckles
@@ -419,6 +420,7 @@ crost-ple
 cunx
 curer
 D. bicalquantre
+deadidin-tentup
 deebur
 deniand wing
 dettiomplum
@@ -602,4 +604,4 @@ zeematerys pron
 zonyuni
 
 --- Rejected Predictions (too similar to an existing word) ---
-aerkeley, aerostated, amiacablesquip, anolineus, blaskeawnce, bomba, breale, carpe, chemuff, copious, culvstardnyunbun, cunicycle, dast, derpatronomy, ditar, dull cheeburber, Elpharice, foobrepploozonioccior, hardcore, J. C. D. P'Dough, JCmander, longworm, luncharade, nauschecroismore, orgbera, parcheeburg, patic, q'de, shoobatidoobie doubt, sobrescalient, spaghettiquettiqueer, spleering away, Spweem SheckleSandwich, the dead, the room, thiever cake, Thup, Unlunchine
+aerkeley, aerostated, amiacablesquip, anolineus, blaskeawnce, bomba, breale, carpe, chemuff, Chrishting, copious, culvstardnyunbun, cunicycle, dast, derpatronomy, ditar, dull cheeburber, Elpharice, fang, foobrepploozonioccior, hardcore, J. C. D. P'Dough, JCmander, longworm, luncharade, nauschecroismore, orgbera, parcheeburg, patic, q'de, shoobatidoobie doubt, sobrescalient, spaghettiquettiqueer, spleering away, Spweem SheckleSandwich, squares, stic, the dead, the room, thiever cake, Thup, Unlunchine

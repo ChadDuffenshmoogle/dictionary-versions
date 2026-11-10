@@ -1779,8 +1779,25 @@ async function main() {
       growthChartInstance.destroy();
     }
 
+    // Very faint accent-coloured band behind the part of the chart used for the projection fit.
+    const fitWindowShade = {
+      id: 'fitWindowShade',
+      beforeDatasetsDraw(chart) {
+        const { ctx, chartArea, scales } = chart;
+        const left = Math.max(chartArea.left, scales.x.getPixelForValue(fitStartX));
+        const right = Math.min(chartArea.right, scales.x.getPixelForValue(lastPoint.x));
+        if (right <= left) return;
+        ctx.save();
+        ctx.globalAlpha = 0.07;
+        ctx.fillStyle = C.accent;
+        ctx.fillRect(left, chartArea.top, right - left, chartArea.bottom - chartArea.top);
+        ctx.restore();
+      },
+    };
+
     growthChartInstance = new Chart(document.getElementById('growthChart'), {
       type: 'line',
+      plugins: [fitWindowShade],
       data: {
         datasets: [
           {

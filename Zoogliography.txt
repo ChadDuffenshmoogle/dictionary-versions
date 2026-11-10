@@ -186,6 +186,7 @@ fiction Joe
 food-look a dead horse
 forbontaverage bus
 freasonably penappage
+freement
 French billiteral
 Frencheecrois
 garignature
@@ -513,6 +514,7 @@ oreggaillane-che fuble
 oushies
 p'pmpt
 Pary Wyons elire
+penti
 pery Fah
 picanie
 pinlimnachette
@@ -605,4 +607,4 @@ zeematerys pron
 zonyuni
 
 --- Rejected Predictions (too similar to an existing word) ---
-aerkeley, aerostated, amiacablesquip, anolineus, blaskeawnce, bomba, breale, carpe, chemuff, Chrishting, copious, culvstardnyunbun, cunicycle, dast, derpatronomy, ditar, dull cheeburber, Elpharice, fang, foobrepploozonioccior, goosh kaspoocy, hardcore, J. C. D. P'Dough, JCmander, longworm, luncharade, nauschecroismore, orgbera, parcheeburg, patic, q'de, shoobatidoobie doubt, sobrescalient, spaghettiquettiqueer, spleering away, Spweem SheckleSandwich, squares, stic, the dead, the dead horses, the room, thiever cake, Thup, Unlunchine
+aerkeley, aerostated, amiacablesquip, anolineus, blaskeawnce, bomba, breale, carpe, chemuff, Chrishting, copious, culvstardnyunbun, cunicycle, Cyborg, dast, derpatronomy, ditar, dull cheeburber, duximateur, Elpharice, fang, foobrepploozonioccior, goosh kaspoocy, hardcore, J. C. D. P'Dough, JCmander, longworm, luncharade, nauschecroismore, orgbera, parcheeburg, patic, q'de, shoobatidoobie doubt, sobrescalient, spaghettiquettiqueer, spleering away, Spweem SheckleSandwich, squares, stic, stund, the dead, the dead horses, the room, thiever cake, Thup, Unlunchine

@@ -1835,17 +1835,7 @@ mayhEmVihicle (n.) - EmVi's Humvee (which, by the way, is spelled H-U-EmVi-E-E)
 
 McJagger (p.n.) - new McDonald's burger made with rock candy
 
----------------------------------------------
-McKnuckleSandwich (n.) - part of a new line-up of McDonalds "Angry Meals", along with
-- Filet o' Fist 
-- Oreo McFury
-- Chicken KickNuggets
-- McRib(s broken)
-- Big Smac
-- Egg McRoughin'
-- Angry Meal
-- Quarter Pounder with Cheese
----------------------------------------------
+McKnuckleSandwich (p.n.) - part of a new line-up of McDonalds "Angry Meals", along with; Filet o' Fist; Oreo McFury; Chicken KickNuggets; McRib(s broken); Big Smac; Egg McRoughin'; Angry Meal; Quarter Pounder with Cheese
 
 McSlog (p.n.) - new McDonald's burger made of coagulated grill residue
 

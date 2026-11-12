@@ -1157,7 +1157,7 @@ exply (v.) - the opposite of imply, to state explicitly
 
 eyeangles (n.) - alt. of keratoconus
 
-FahThursday (n.) - the special occasion when Father's Day lands on a Thursday
+FahThursday (p.n.) - the special occasion when Father's Day lands on a Thursday
 
 faker's dozen (n.) - 11 of something
 

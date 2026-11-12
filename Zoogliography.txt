@@ -224,6 +224,7 @@ Lake Great Again
 Lake Great Americated
 lexicolantea
 loan of ones
+loan of which of tens
 loan off mode
 lose
 make a gun
@@ -584,6 +585,7 @@ swixt
 tato of torserig
 th Dakirdn't Agacent
 theer
+Thewn
 Thuard deeseng
 tosous
 tosvert
@@ -611,4 +613,4 @@ zeematerys pron
 zonyuni
 
 --- Rejected Predictions (too similar to an existing word) ---
-aerkeley, aerostated, amiacablesquip, anolineus, blaskeawnce, bomba, breale, carpe, chemuff, Chrishting, copious, culvstardnyunbun, cunicycle, Cyborg, dast, derpatronomy, ditar, dull cheeburber, duximateur, Elpharice, fang, foobrepploozonioccior, goosh kaspoocy, hardcore, J. C. D. P'Dough, JCmander, longworm, luncharade, nauschecroismore, orgbera, parcheeburg, patic, q'de, shoobatidoobie doubt, sobrescalient, spaghettiquettiqueer, spleering away, Spweem SheckleSandwich, squares, stic, stund, the dead, the dead horses, the room, thiever cake, Thup, treache, Unlunchine
+aerkeley, aerostated, amiacablesquip, anolineus, blaskeawnce, bomba, breale, carpe, chemuff, Chrishting, copious, culvstardnyunbun, cunicycle, Cyborg, dast, derpatronomy, ditar, dull cheeburber, duximateur, ecorous, Elpharice, fang, foobrepploozonioccior, goosh kaspoocy, hardcore, J. C. D. P'Dough, JCmander, longworm, luncharade, nauschecroismore, orgbera, parcheeburg, patic, q'de, shoobatidoobie doubt, sobrescalient, sounds, spaghettiquettiqueer, spleering away, Spweem SheckleSandwich, squares, stic, stund, the dead, the dead horses, the room, thiever cake, Thup, treache, Unlunchine

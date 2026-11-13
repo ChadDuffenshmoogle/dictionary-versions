@@ -1921,7 +1921,7 @@ Mulanea (n.) - a contagious condition where you do a John Mulaney impression inv
 
 Murkwee (p.n.) - a streaming service in which movies are played with a 90% reduced visuals. Murkwee premium allows for 99.8% reduced visibility. This effect persists through menus and the login screen.
 
-Mutewoo (n.) - a streaming service in which movies are played completely silently, subtitles are an extra upcharge. If the device detects volume coming from the viewer's room, the movie is paused for 30 seconds.
+Mutewoo (p.n.) - a streaming service in which movies are played completely silently, subtitles are an extra upcharge. If the device detects volume coming from the viewer's room, the movie is paused for 30 seconds.
 
 myster (v.) - to obfuscate
 

@@ -2029,7 +2029,10 @@ onionic / Onionic (adj.) - relating to onions
 
 Onionoic cycle (n.) - the cycle corresponding to the life stages of wild onions, including their motile, sessile, reproductive, swarm, and flarm stages.
 
-Oniuary (n.) - /'ənjuweɹ̠i/ the month in which Onions are traditionally hunted, lying between April and May. 
+---------------------------------------------
+Oniuary (p.n.) - the month in which Onions are traditionally hunted, lying between April and May.
+Pronunciation: /'ənjuweɹ̠i/
+---------------------------------------------
 
 oo (n.) - a strange viscous liquid
 

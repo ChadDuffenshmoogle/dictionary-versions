@@ -2718,7 +2718,7 @@ spurello / spurhello (n.) - a song that jolts you awake
 
 Spweem Machine (n.) - a device released by Spweemy specifically to watch spweeming services on. Amazon prime, hulu, and netflix can be installed and ran, however the device will immediately brick itself if this is done.
 
-Spweem Sheckles (n.) - A currency used on Spweemy to purchase various peripherals and fun rewards. 5 USD = 0.33 Spweem Sheckles. 0.99 SS does not round up to 1 SS.
+Spweem Sheckles (p.n.) - A currency used on Spweemy to purchase various peripherals and fun rewards. 5 USD = 0.33 Spweem Sheckles. 0.99 SS does not round up to 1 SS.
 
 Spweeming service (n.) - any streaming service offered through Spweemy, such as Threego
 

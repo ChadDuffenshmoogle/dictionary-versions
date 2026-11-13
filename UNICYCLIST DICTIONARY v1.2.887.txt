@@ -2558,7 +2558,7 @@ shoobie doobie (expr.) - synonym for 67
 
 shoreside (adj.) - alt. of seaside, applicable even to bodies of water which are not seas 
 
-Shourtfolm (n.) - A streaming service in which only 30 seconds of the film can be watched per 24 hours. Multiple movies can be watched back to back this way.
+Shourtfolm (p.n.) - A streaming service in which only 30 seconds of the film can be watched per 24 hours. Multiple movies can be watched back to back this way.
 
 shout-down (n.) - the opposite of a shout-out
 

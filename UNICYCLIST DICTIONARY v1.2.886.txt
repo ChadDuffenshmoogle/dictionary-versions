@@ -655,7 +655,7 @@ clobberstone (n.) - 1. stone used to make a stone club or blunt stone mace
 
 Cloggle (p.n.) - Unicyclist Dictionary Boggle
 
-Clordle (n.) - Unicyclist Dictionary Wordle
+Clordle (p.n.) - Unicyclist Dictionary Wordle
 
 closetest (n.) - a method for determining whether something is a closet.
 

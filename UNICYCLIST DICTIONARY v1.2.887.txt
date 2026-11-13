@@ -3065,7 +3065,7 @@ unforch (adv.) - unfortunately
 
 Unicychronicler (n.) - the primary person who maintains, archives, and studies the Unicyclist Dictionary corpus. Formerly J. C., currently Louis.
 
-The Unicyclopedia (n.) - (or more formally, Encyclopædia Unicycla) the compilation of all ⁠unicyclist-lore information as one database for reference and casual reading
+The Unicyclopedia (p.n.) - (or more formally, Encyclopædia Unicycla) the compilation of all ⁠unicyclist-lore information as one database for reference and casual reading
 
 unism (n.) - a philosophy focused on combining discrete domains into unified wholes, whether political, intellectual, or physical/mechanical.
 

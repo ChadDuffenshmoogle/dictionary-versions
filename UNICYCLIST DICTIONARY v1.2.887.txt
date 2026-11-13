@@ -2627,7 +2627,7 @@ snodem (n.) - /'snoʊdəm/ breathlessness (the state of being out of breath)
 
 snork (v.) - snicker + snort + chortle
 
-Sobbwa (n.) - a streaming service that plays movies with the sounds of a child crying in the background, the lower the age rating of the movie, the louder the crying.
+Sobbwa (p.n.) - a streaming service that plays movies with the sounds of a child crying in the background, the lower the age rating of the movie, the louder the crying.
 
 sobrescalientes (adj.) - (especially of food) very hot
 

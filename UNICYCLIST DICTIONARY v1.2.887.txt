@@ -2564,7 +2564,7 @@ shout-down (n.) - the opposite of a shout-out
 
 shrim (n.) - a shrimp, often minuscule and goofy
 
-Siborg (n.) - Robo Sisi
+Siborg (p.n.) - Robo Sisi
 
 ---------------------------------------------
 single entendre (n.) - a pun where the two concepts being combined have NOTHING in common except for the wordplay.

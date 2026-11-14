@@ -75,6 +75,10 @@ ZOOG_FILE = "Zoogliography.txt"
 ZOOG_MARKER = "--- Predicted Next Word ---"
 ZOOG_NONSENSE_MARKER = "--- Predicted Nonsense Word ---"
 ZOOG_REJECTED_MARKER = "--- Rejected Predictions (too similar to an existing word) ---"
+# Last line of the file: remembers which dictionary state the saved predictions
+# were made for, so re-running on an unchanged dictionary keeps the same words
+# instead of rejecting its own earlier guesses and drifting.
+ZOOG_SEED_RE = re.compile(r"^--- Seed: (\[.*\]) ---[ \t]*$", re.M)
 # A separate token that is allowed to write to the dictionary repo. It comes
 # from a GitHub Actions secret, so it never appears in this file.
 ZOOG_TOKEN = os.environ.get("ZOOG_WRITE_TOKEN")
@@ -131,9 +135,29 @@ def too_similar(word, existing_norm):
     return False
 
 
-def fetch_zoog_words():
-    """The words already listed in Zoogliography.txt (above the predicted
-    lists), so new predictions can avoid them. Returns [] if it can't be read."""
+def parse_zoog_text(text):
+    """Split Zoogliography.txt into (main-list words, words from every other
+    section: predicted, nonsense and rejected, saved seed info or None)."""
+    seed = None
+    m = ZOOG_SEED_RE.search(text)
+    if m:
+        try:
+            seed = tuple(json.loads(m.group(1)))
+        except Exception:
+            seed = None
+        text = ZOOG_SEED_RE.sub("", text)
+    main_part, _, rest = text.partition(ZOOG_MARKER)
+    main = [l.strip() for l in main_part.splitlines() if l.strip() and not l.startswith("---")]
+    old_normal, _, rest = rest.partition(ZOOG_NONSENSE_MARKER)
+    old_nonsense, _, old_rejected = rest.partition(ZOOG_REJECTED_MARKER)
+    extra = [l.strip() for l in (old_normal + "\n" + old_nonsense).splitlines() if l.strip() and not l.startswith("---")]
+    extra += [w.strip() for w in old_rejected.replace("\n", ",").split(",") if w.strip()]
+    return main, extra, seed
+
+
+def fetch_zoog_state():
+    """Everything already in Zoogliography.txt, so new predictions avoid all of
+    it. Returns ([], [], None) if it can't be read."""
     try:
         headers = {"Accept": "application/vnd.github+json"}
         if ZOOG_TOKEN:
@@ -142,11 +166,10 @@ def fetch_zoog_words():
         resp = requests.get(url, headers=headers, params={"ref": GITHUB_BRANCH}, timeout=30)
         resp.raise_for_status()
         text = base64.b64decode(resp.json()["content"]).decode("utf-8")
-        base = text.partition(ZOOG_MARKER)[0]
-        return [l.strip() for l in base.splitlines() if l.strip() and not l.startswith("---")]
+        return parse_zoog_text(text)
     except Exception as e:
         print(f"Could not read Zoogliography for similarity check: {e}", file=sys.stderr)
-        return []
+        return [], [], None
 
 
 def predict_next_word(terms, seed_text, order=4, avoid=(), rejected=None):
@@ -174,7 +197,8 @@ def predict_next_word(terms, seed_text, order=4, avoid=(), rejected=None):
                 return rng.choices(list(options), weights=list(options.values()))[0]
         return end
 
-    for _ in range(500):
+    tried = set()
+    for _ in range(5000):
         word = ""
         while len(word) < 24:
             ch = pick_next(word)
@@ -183,6 +207,10 @@ def predict_next_word(terms, seed_text, order=4, avoid=(), rejected=None):
             word += ch
         word = word.strip()
         if 4 <= len(word) < 24 and " / " not in word:
+            key = _norm_term(word)
+            if key in tried:
+                continue
+            tried.add(key)
             if not too_similar(word, existing_norm):
                 return word
             # Only near-misses are remembered; a word identical to an existing
@@ -192,7 +220,7 @@ def predict_next_word(terms, seed_text, order=4, avoid=(), rejected=None):
     return ""
 
 
-def update_zoogliography(word, nonsense_word="", rejected=(), known_norm=()):
+def update_zoogliography(word, nonsense_word="", rejected=(), known_norm=(), seed_key=""):
     """Add the new words to the two lists at the bottom of Zoogliography.txt
     (each kept A to Z): 'Predicted Next Word', then 'Predicted Nonsense Word'.
     Everything above the first marker is left untouched."""
@@ -217,7 +245,8 @@ def update_zoogliography(word, nonsense_word="", rejected=(), known_norm=()):
         resp.raise_for_status()
         info = resp.json()
         text = base64.b64decode(info["content"]).decode("utf-8")
-        base, _, old_section = text.partition(ZOOG_MARKER)
+        body = ZOOG_SEED_RE.sub("", text).rstrip("\n")
+        base, _, old_section = body.partition(ZOOG_MARKER)
         base = base.rstrip("\n")
         old_normal, _, rest = old_section.partition(ZOOG_NONSENSE_MARKER)
         old_nonsense, _, old_rejected = rest.partition(ZOOG_REJECTED_MARKER)
@@ -234,6 +263,7 @@ def update_zoogliography(word, nonsense_word="", rejected=(), known_norm=()):
         rejected_all = {w for w in rejected_all if _norm_term(w) not in known_norm}
         if rejected_all:
             new_text += f"\n\n{ZOOG_REJECTED_MARKER}\n" + ", ".join(sorted(rejected_all, key=str.lower))
+        new_text += "\n\n--- Seed: " + json.dumps([seed_key, word, nonsense_word], ensure_ascii=False) + " ---"
         if new_text == text.rstrip("\n"):
             return  # already up to date
         put = requests.put(
@@ -848,18 +878,29 @@ def main():
     # txt must never stop the stats from being built.
     # Each alternate spelling ("a / b") is its own word for the guess.
     spellings = split_spellings(all_terms)
-    zoog_words = split_spellings(fetch_zoog_words())  # existing zoogs the new guesses must avoid
-    known_norm = {_norm_term(t) for t in [*spellings, *zoog_words] if _norm_term(t)}
+    zoog_main, zoog_extra, saved = fetch_zoog_state()
+    zoog_main = split_spellings(zoog_main)
+    # Avoid EVERYTHING in the Zoogliography: main list, predicted, nonsense, rejected.
+    zoog_words = zoog_main + split_spellings(zoog_extra)
+    # Rejected guesses are only dropped if identical to a real word or main-list zoog.
+    known_norm = {_norm_term(t) for t in [*spellings, *zoog_main] if _norm_term(t)}
+    seed_key = f"{total_entries}|{latest_word_term}"
     rejected_words = []  # guesses thrown out for being too similar, saved to the Zoogliography
-    predicted_word = predict_next_word(
-        spellings, f"all|{total_entries}|{latest_word_term}", avoid=zoog_words, rejected=rejected_words
-    )
-    # Nonsense: same idea, but only 2 letters of memory, so it is looser.
-    predicted_nonsense_word = predict_next_word(
-        spellings, f"nonsense|{total_entries}|{latest_word_term}", order=2, avoid=zoog_words, rejected=rejected_words
-    )
+    if saved and len(saved) == 3 and saved[0] == seed_key and (saved[1] or saved[2]):
+        # Same dictionary as the last run: keep the words already made for it.
+        predicted_word, predicted_nonsense_word = saved[1], saved[2]
+    else:
+        predicted_word = predict_next_word(
+            spellings, f"all|{seed_key}", avoid=zoog_words, rejected=rejected_words
+        )
+        # Nonsense: same idea, but only 2 letters of memory, so it is looser.
+        # It also keeps clear of the new normal word.
+        predicted_nonsense_word = predict_next_word(
+            spellings, f"nonsense|{seed_key}", order=2,
+            avoid=[*zoog_words, predicted_word] if predicted_word else zoog_words, rejected=rejected_words
+        )
     try:
-        update_zoogliography(predicted_word, predicted_nonsense_word, rejected_words, known_norm)
+        update_zoogliography(predicted_word, predicted_nonsense_word, rejected_words, known_norm, seed_key)
     except Exception as e:
         print(f"Zoogliography update failed: {e}", file=sys.stderr)
 

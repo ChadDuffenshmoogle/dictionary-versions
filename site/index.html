@@ -461,7 +461,7 @@
 
     <div class="card">
       <h2 style="display:flex; align-items:center;">Next Predicted Word
-        <span class="tip" tabindex="0">?<span class="tip-text">Made-up guess from the spelling patterns in the entries. The tool counts which letter usually follows each group of letters (for example, what often comes after "tio"), then builds a new word one letter at a time by picking likely next letters. It only keeps words that are not already in the dictionary or too close to one, and the guess changes only when a new word is added. The definition is built the same way, one word at a time, from which words usually follow each group of words, and it may not copy an existing definition. Normal looks 4 letters back for the word and 2 words back for the definition. Nonsense looks only 2 letters and 1 word back, so the result is looser and stranger.</span></span>
+        <span class="tip" tabindex="0">?<span class="tip-text">Made-up guess from the spelling patterns in the entries. The tool counts which letter usually follows each group of letters (for example, what often comes after "tio"), then builds a new word one letter at a time by picking likely next letters. It only keeps words that are not already in the dictionary or the Zoogliography (main list, predicted, nonsense and rejected) or too close to one. Anything too close is added to the rejected list and it keeps generating until it finds a new one. And the guess changes only when a new word is added. The definition is built the same way, one word at a time, from which words usually follow each group of words, and it may not copy an existing definition. Normal looks 4 letters back for the word and 2 words back for the definition. Nonsense looks only 2 letters and 1 word back, so the result is looser and stranger.</span></span>
         <button id="predictModeBtn" class="mode-btn" type="button">Normal</button>
       </h2>
       <div class="hover-src">
@@ -849,6 +849,11 @@ async function main() {
   // the same until the dictionary changes.
   let predictedAllWord = null; // the all-words prediction, shown in the Zoogliography
   let predictedNonsenseWord = null; // the nonsense prediction, shown below it
+  // Every candidate thrown out for being too close to an existing zoog this
+  // session, and the latest accepted word per mode (keyed by letter memory).
+  // Later predictions must stay clear of both.
+  const sessionRejected = new Set();
+  const sessionPredicted = {};
   // A slash with spaces on both sides ("aa / ab") separates alternate spellings,
   // so each spelling is its own word. A slash without those spaces ("aa/ab")
   // is part of the word.
@@ -867,8 +872,14 @@ async function main() {
     // "hame tizer" and "hametizer" count as the same word.
     const norm = (t) => t.toLowerCase().replace(/[^\p{L}\p{N}]/gu, '');
     // Words already listed in the Zoogliography also count as existing.
-    const zoogTerms = (zoogContent || '').split(/^---/m)[0].split('\n').map(l => l.trim()).filter(l => l && !l.startsWith('---'));
-    const existingNorm = [...new Set([...allTerms, ...zoogTerms].map(norm).filter(Boolean))];
+    // Every section counts (main list, predicted, nonsense, rejected), not
+    // just the first. This mode's own saved prediction is left out so it
+    // doesn't reject itself.
+    const ownSaved = norm((ORDER === 4 ? stats.predicted_word : ORDER === 2 ? stats.predicted_nonsense_word : '') || '');
+    const zoogTerms = splitSpellings((zoogContent || '').split('\n').map(l => l.trim()).filter(l => l && !l.startsWith('---')))
+      .filter(t => !ownSaved || norm(t) !== ownSaved);
+    const otherPredicted = Object.entries(sessionPredicted).filter(([k, v]) => k !== String(ORDER) && v).map(([, v]) => v);
+    const existingNorm = [...new Set([...allTerms, ...zoogTerms, ...sessionRejected, ...otherPredicted].map(norm).filter(Boolean))];
     function editDistance(a, b) {
       let prev = Array.from({ length: b.length + 1 }, (_, j) => j);
       for (let i = 1; i <= a.length; i++) {
@@ -942,7 +953,8 @@ async function main() {
     }
 
     let result = '';
-    for (let attempt = 0; attempt < 500 && !result; attempt++) {
+    const tried = new Set();
+    for (let attempt = 0; attempt < 5000 && !result; attempt++) {
       let word = '';
       while (word.length < 24) {
         const ch = pickNext(word);
@@ -950,15 +962,22 @@ async function main() {
         word += ch;
       }
       const clean = word.trim();
-      if (clean.length >= 4 && clean.length < 24 && !tooSimilar(clean)) result = clean;
+      if (clean.length < 4 || clean.length >= 24) continue;
+      const key = norm(clean);
+      if (tried.has(key)) continue;
+      tried.add(key);
+      if (!tooSimilar(clean)) result = clean;
+      else sessionRejected.add(clean); // too close to something: rejected, try again
     }
     // For "All words", use the one word made by generate_stats.py so the
     // card and Zoogliography.txt always show the same word.
     // The nonsense card likewise uses the word saved in stats.json.
     if (useAll && ORDER === 4 && stats.predicted_word && !tooSimilar(stats.predicted_word)) result = stats.predicted_word;
     else if (useAll && ORDER === 2 && stats.predicted_nonsense_word && !tooSimilar(stats.predicted_nonsense_word)) result = stats.predicted_nonsense_word;
+    sessionPredicted[ORDER] = result;
     if (silent) return result; // only the word was wanted, no card update
     document.getElementById('predictedWord').textContent = result || '—';
+    refreshZoogModal();
     // Predicted definition: same idea, but one word at a time, using the
     // two previous words as context (falls back to one word).
     const termSet = new Set(terms.map(t => t.toLowerCase()));
@@ -1383,6 +1402,9 @@ async function main() {
     }
     if (predictedNonsenseWord && !text.includes('--- Predicted Nonsense Word ---')) {
       text += `\n\n--- Predicted Nonsense Word ---\n${predictedNonsenseWord}`;
+    }
+    if (sessionRejected.size && !text.includes('--- Rejected (this session) ---')) {
+      text += `\n\n--- Rejected (this session) ---\n${[...sessionRejected].join('\n')}`;
     }
     return text;
   }
@@ -2304,568 +2326,4 @@ async function main() {
     options: {
       responsive: true,
       onHover: (event, elements) => {
-        event.native.target.style.cursor = elements.length ? 'pointer' : 'default';
-      },
-      onClick: (event, elements) => {
-        if (!elements.length) return;
-        const label = posLabels[elements[0].index];
-        const value = label === '(no pos)' ? '(no pos)' : label;
-        openSearchModal(`pos:${value}`);
-      },
-      plugins: {
-        legend: {
-          position: 'bottom',
-          labels: { color: C.text, boxWidth: 12, font: { size: 11 } },
-          // Clicking a legend name opens that part of speech's category in the Wiktionary view.
-          onClick: (event, item) => {
-            const label = posLabels[item.index];
-            if (label === '(no pos)') openSearchModal('pos:(no pos)');
-            else window.location.href = 'wiktionary.html#c=' + encodeURIComponent('pos:' + label);
-          },
-          onHover: (event) => { event.native.target.style.cursor = 'pointer'; },
-          onLeave: (event) => { event.native.target.style.cursor = 'default'; },
-        },
-      },
-    },
-  });
-
-  // Word cloud -- pixel-mask collision (real glyph ink, not bounding
-  // boxes) combined with skyline placement, wrapped in a rebuildable
-  // function so the controls (order, sizing mode, min/max size) can
-  // regenerate it without a page reload.
-  const cloudTermPosMap = new Map();
-  (stats.definitions_by_length_asc || []).forEach(d => {
-    if (!cloudTermPosMap.has(d.term)) cloudTermPosMap.set(d.term, (d.pos_list && d.pos_list[0]) || d.pos || '(no pos)');
-  });
-  function cloudColorForPos(pos) {
-    const idx = posLabels.indexOf(pos || '(no pos)');
-    return T(posColors[(idx === -1 ? posLabels.length : idx) % posColors.length]);
-  }
-
-  const allCloudTerms = stats.words_by_length_asc || [];
-  function cloudVisualLength(term) {
-    return term.replace(/[^a-zA-Z0-9]/g, '').length || 1;
-  }
-  const cloudSortedLens = allCloudTerms.map(cloudVisualLength).slice().sort((a, b) => a - b);
-  function cloudPercentile(p) {
-    if (!cloudSortedLens.length) return 1;
-    const idx = Math.min(cloudSortedLens.length - 1, Math.floor(p * cloudSortedLens.length));
-    return cloudSortedLens[idx];
-  }
-  const cloudLenFloor = cloudPercentile(0.02);
-  const cloudLenCeil = Math.max(cloudLenFloor + 1, cloudPercentile(0.85));
-
-  const cloudCanvas = document.getElementById('wordCloudCanvas');
-  const cloudCtx = cloudCanvas.getContext('2d');
-  const cloudDpr = window.devicePixelRatio || 1;
-  const CLOUD_FONT_STACK = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-
-  const cloudMaskCanvas = document.createElement('canvas');
-  const cloudMaskCtx = cloudMaskCanvas.getContext('2d');
-  const CLOUD_GRID = 2; // px per collision cell
-  const CLOUD_BUFFER_CELLS = 1; // dilate the occupied set by this many cells so words never touch
-
-  function buildCloudMask(term, size) {
-    cloudMaskCtx.font = `bold ${size}px ${CLOUD_FONT_STACK}`;
-    const metrics = cloudMaskCtx.measureText(term);
-    const padding = 2;
-    const w = Math.max(1, Math.ceil(metrics.width) + padding * 2);
-    const h = Math.max(1, Math.ceil(size * 1.3) + padding * 2);
-    cloudMaskCanvas.width = w;
-    cloudMaskCanvas.height = h;
-    cloudMaskCtx.clearRect(0, 0, w, h);
-    cloudMaskCtx.font = `bold ${size}px ${CLOUD_FONT_STACK}`;
-    cloudMaskCtx.fillStyle = '#fff';
-    cloudMaskCtx.textAlign = 'left';
-    cloudMaskCtx.textBaseline = 'top';
-    cloudMaskCtx.fillText(term, padding, padding);
-    const data = cloudMaskCtx.getImageData(0, 0, w, h).data;
-
-    const gridCols = Math.ceil(w / CLOUD_GRID);
-    const gridRows = Math.ceil(h / CLOUD_GRID);
-    const cells = [];
-    const colMaxDepth = new Array(gridCols).fill(-1);
-    for (let gj = 0; gj < gridRows; gj++) {
-      for (let gi = 0; gi < gridCols; gi++) {
-        let hasInk = false;
-        const px0 = gi * CLOUD_GRID, px1 = Math.min(w, px0 + CLOUD_GRID);
-        const py0 = gj * CLOUD_GRID, py1 = Math.min(h, py0 + CLOUD_GRID);
-        for (let py = py0; py < py1 && !hasInk; py++) {
-          for (let px = px0; px < px1 && !hasInk; px++) {
-            if (data[(py * w + px) * 4 + 3] > 40) hasInk = true;
-          }
-        }
-        if (hasInk) {
-          cells.push([gi, gj]);
-          if (gj > colMaxDepth[gi]) colMaxDepth[gi] = gj;
-        }
-      }
-    }
-    // A dilated version of the cell list, used only when marking cells
-    // occupied (not for the incoming word's own placement test) -- this
-    // is what guarantees a real gap between words instead of them
-    // touching edge-to-edge.
-    const dilated = new Set();
-    cells.forEach(([gi, gj]) => {
-      for (let dj = -CLOUD_BUFFER_CELLS; dj <= CLOUD_BUFFER_CELLS; dj++) {
-        for (let di = -CLOUD_BUFFER_CELLS; di <= CLOUD_BUFFER_CELLS; di++) {
-          dilated.add((gi + di) + '_' + (gj + dj));
-        }
-      }
-    });
-    return { w, h, cells, gridCols, colMaxDepth, dilatedKeys: [...dilated] };
-  }
-
-  function buildWordCloud() {
-    const mixedOrder = document.getElementById('cloudMixedOrder').checked;
-    const randomSize = document.getElementById('cloudRandomSize').checked;
-    const minSize = Math.max(3, parseFloat(document.getElementById('cloudMinSize').value) || 9);
-    const maxSize = Math.max(minSize + 1, parseFloat(document.getElementById('cloudMaxSize').value) || 38);
-
-    // A couple px of safety margin against layout-measurement rounding,
-    // so nothing sits flush against (or past) the true right edge.
-    const cssWidth = (cloudCanvas.parentElement.clientWidth || 1200) - 4;
-
-    function baseSizeForLength(len) {
-      const clipped = Math.max(cloudLenFloor, Math.min(cloudLenCeil, len));
-      const t = (clipped - cloudLenFloor) / (cloudLenCeil - cloudLenFloor);
-      return Math.max(minSize, Math.min(maxSize, maxSize - t * (maxSize - minSize)));
-    }
-
-    const sizeCache = new Map();
-    function sizeForTerm(term) {
-      if (sizeCache.has(term)) return sizeCache.get(term);
-      let size = randomSize
-        ? minSize + Math.random() * (maxSize - minSize)
-        : baseSizeForLength(cloudVisualLength(term));
-      cloudMaskCtx.font = `bold ${size}px ${CLOUD_FONT_STACK}`;
-      const w = cloudMaskCtx.measureText(term).width;
-      const maxAllowedWidth = cssWidth * 0.94;
-      if (w > maxAllowedWidth) size = Math.max(6, size * (maxAllowedWidth / w));
-      sizeCache.set(term, size);
-      return size;
-    }
-
-    let cloudOrder;
-    if (mixedOrder) {
-      cloudOrder = allCloudTerms.slice();
-      for (let i = cloudOrder.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [cloudOrder[i], cloudOrder[j]] = [cloudOrder[j], cloudOrder[i]];
-      }
-    } else {
-      cloudOrder = allCloudTerms.slice().sort((a, b) => sizeForTerm(b) - sizeForTerm(a));
-    }
-
-    const occupied = new Set();
-    function cellKey(gi, gj) { return gi + '_' + gj; }
-    function collidesAt(mask, gLeft, gTop) {
-      for (let k = 0; k < mask.cells.length; k++) {
-        if (occupied.has(cellKey(gLeft + mask.cells[k][0], gTop + mask.cells[k][1]))) return true;
-      }
-      return false;
-    }
-
-    const gridColsTotal = Math.max(1, Math.floor(cssWidth / CLOUD_GRID));
-    const skyline = new Array(gridColsTotal).fill(0);
-
-    const placedBoxes = [];
-    let dropped = 0;
-    let maxY = 0;
-
-    cloudOrder.forEach(term => {
-      const pos = cloudTermPosMap.get(term) || '(no pos)';
-      const size = sizeForTerm(term);
-      const mask = buildCloudMask(term, size);
-      if (mask.gridCols > gridColsTotal) { dropped++; return; }
-
-      let bestGLeft = 0;
-      let bestHeight = Infinity;
-      for (let gLeft = 0; gLeft <= gridColsTotal - mask.gridCols; gLeft++) {
-        let maxH = 0;
-        for (let gi = 0; gi < mask.gridCols; gi++) {
-          const h = skyline[gLeft + gi];
-          if (h > maxH) maxH = h;
-        }
-        if (maxH < bestHeight) {
-          bestHeight = maxH;
-          bestGLeft = gLeft;
-        }
-      }
-
-      let gTop = bestHeight;
-      let guard = 4000;
-      while (gTop > 0 && !collidesAt(mask, bestGLeft, gTop - 1) && guard-- > 0) {
-        gTop--;
-      }
-      guard = 4000;
-      while (collidesAt(mask, bestGLeft, gTop) && guard-- > 0) {
-        gTop++;
-      }
-
-      mask.dilatedKeys.forEach(key => {
-        const [gi, gj] = key.split('_').map(Number);
-        occupied.add(cellKey(bestGLeft + gi, gTop + gj));
-      });
-      for (let gi = 0; gi < mask.gridCols; gi++) {
-        if (mask.colMaxDepth[gi] >= 0) {
-          const newHeight = gTop + mask.colMaxDepth[gi] + 1 + CLOUD_BUFFER_CELLS;
-          if (newHeight > skyline[bestGLeft + gi]) skyline[bestGLeft + gi] = newHeight;
-        }
-      }
-
-      const left = bestGLeft * CLOUD_GRID;
-      const top = gTop * CLOUD_GRID;
-      maxY = Math.max(maxY, top + mask.h);
-      placedBoxes.push({
-        term, size, color: cloudColorForPos(pos),
-        x: left + mask.w / 2,
-        y: top + mask.h / 2,
-      });
-    });
-
-    const cssHeight = Math.max(100, maxY + 20);
-
-    cloudCanvas.style.width = cssWidth + 'px';
-    cloudCanvas.style.height = cssHeight + 'px';
-    cloudCanvas.width = Math.round(cssWidth * cloudDpr);
-    cloudCanvas.height = Math.round(cssHeight * cloudDpr);
-    cloudCtx.setTransform(1, 0, 0, 1, 0, 0);
-    cloudCtx.scale(cloudDpr, cloudDpr);
-    cloudCtx.clearRect(0, 0, cssWidth, cssHeight);
-    cloudCtx.textAlign = 'center';
-    cloudCtx.textBaseline = 'middle';
-    placedBoxes.forEach(p => {
-      cloudCtx.font = `bold ${p.size}px ${CLOUD_FONT_STACK}`;
-      cloudCtx.fillStyle = p.color;
-      cloudCtx.fillText(p.term, p.x, p.y);
-    });
-
-    cloudCanvas.onclick = (e) => {
-      const rect = cloudCanvas.getBoundingClientRect();
-      const scaleX = cssWidth / rect.width;
-      const scaleY = cssHeight / rect.height;
-      const clickX = (e.clientX - rect.left) * scaleX;
-      const clickY = (e.clientY - rect.top) * scaleY;
-      for (let i = placedBoxes.length - 1; i >= 0; i--) {
-        const p = placedBoxes[i];
-        cloudCtx.font = `bold ${p.size}px ${CLOUD_FONT_STACK}`;
-        const tw = cloudCtx.measureText(p.term).width;
-        const th = p.size * 1.3;
-        if (Math.abs(clickX - p.x) * 2 < tw + 6 && Math.abs(clickY - p.y) * 2 < th + 4) {
-          openSearchModal(p.term);
-          return;
-        }
-      }
-    };
-
-    const wordCloudCaption = document.getElementById('wordCloudCaption');
-    if (dropped > 0) {
-      wordCloudCaption.innerHTML =
-        `Showing ${placedBoxes.length} of ${allCloudTerms.length} words, colored by part of speech. ` +
-        `Click a word to look it up, or <a href="#" id="wordCloudSeeAll" style="color:var(--accent);">see all ${allCloudTerms.length} in the searchable dictionary</a>.`;
-      const seeAllLink = document.getElementById('wordCloudSeeAll');
-      if (seeAllLink) {
-        seeAllLink.addEventListener('click', (e) => {
-          e.preventDefault();
-          openSearchModal('');
-        });
-      }
-    } else {
-      wordCloudCaption.textContent = 'Every word in the dictionary, colored by part of speech. Click one to look it up.';
-    }
-  }
-
-  buildWordCloud();
-  document.getElementById('cloudRebuild').addEventListener('click', buildWordCloud);
-  document.getElementById('cloudMixedOrder').addEventListener('change', buildWordCloud);
-  document.getElementById('cloudRandomSize').addEventListener('change', buildWordCloud);
-
-  const fillList = (id, items, render) => {
-    const el = document.getElementById(id);
-    el.innerHTML = items.map(i => `<li>${render(i)}</li>`).join('');
-  };
-
-  function clampN(v) {
-    v = parseInt(v, 10);
-    if (isNaN(v)) v = 5;
-    return Math.max(1, v);
-  }
-
-  // " / " (spaces both sides) separates alternate spellings, so every spelling
-  // is its own entry; a slash without those spaces is part of the word.
-  const wordVariants = [];
-  stats.words_by_length_asc.forEach(term => {
-    const seen = new Set();
-    let parts = term.split(/\s+\/\s+/).map(v => v.trim()).filter(v => v && !seen.has(v.toLowerCase()) && seen.add(v.toLowerCase()));
-    if (!parts.length) parts = [term];
-    parts.forEach(text => {
-      const base = text.split(' (')[0].trim();
-      const len = [...base.replace(/^[ '\-"]+/, '').replace(/^the /i, '')].length;
-      wordVariants.push({ text, term, len, single: !/\s/.test(base) });
-    });
-  });
-  wordVariants.sort((a, b) => a.len - b.len);
-
-  function renderWords() {
-    const n = clampN(document.getElementById('nWords').value);
-    const longest = document.getElementById('wordsMode').value === 'longest';
-    const singleOnly = document.getElementById('wordsScope').value === 'single';
-    const all = singleOnly ? wordVariants.filter(w => w.single) : wordVariants;
-    fillList('wordsList', longest ? all.slice(-n).reverse() : all.slice(0, n),
-      w => `<span class="def-term" data-term="${escapeHtml(w.term)}">${escapeHtml(w.text)}</span>`);
-  }
-  function renderDefs() {
-    const n = clampN(document.getElementById('nDefs').value);
-    const longest = document.getElementById('defsMode').value === 'longest';
-    const all = stats.definitions_by_length_asc;
-    fillList('defsList', longest ? all.slice(-n).reverse() : all.slice(0, n),
-      d => `<span class="def-term" data-term="${escapeHtml(d.term)}">${escapeHtml(d.term)}</span> — <span class="def-text">${escapeHtml(d.definition)}</span>`);
-  }
-
-  // Clicking a term in either list opens the searchable dictionary for it.
-  ['wordsList', 'defsList'].forEach(id => {
-    document.getElementById(id).addEventListener('click', (e) => {
-      const el = e.target.closest('[data-term]');
-      if (el) openSearchModal(el.dataset.term);
-    });
-  });
-
-  // Fun facts, worked out from the spelling of every entry.
-  (function renderFunFacts() {
-    const box = document.getElementById('funFacts');
-    if (!box) return;
-    const terms = [...new Set(stats.words_by_length_asc || [])];
-    // " / " (spaces both sides) separates different spellings of one word, so each spelling is checked on its own.
-    // l = its letters (accents stripped, digits/spaces/punctuation skipped), idx = where each letter sits in the text.
-    const allVars = terms.flatMap(term => {
-      const seen = new Set();
-      let parts = term.split(/\s+\/\s+/).map(v => v.trim()).filter(v => v && !seen.has(v.toLowerCase()) && seen.add(v.toLowerCase()));
-      if (!parts.length) parts = [term];
-      return parts.map(t => {
-        const l = [], idx = [];
-        [...t].forEach((ch, i) => {
-          [...ch.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase()].forEach(b => { if (/\p{L}/u.test(b)) { l.push(b); idx.push(i); } });
-        });
-        return { t, term, l, idx, s: l.join('') };
-      });
-    });
-    const info = allVars.filter(x => x.l.length);
-    const isV = (ch) => 'aeiou'.includes(ch);
-    const shortestFirst = (a, b) => a.l.length - b.l.length || a.t.localeCompare(b.t);
-    const longestFirst = (a, b) => b.l.length - a.l.length || a.t.localeCompare(b.t);
-    const byTextLen = (a, b) => a.t.length - b.t.length || a.t.localeCompare(b.t);
-    const tally = (arr) => arr.reduce((m, c) => { m[c] = (m[c] || 0) + 1; return m; }, {});
-    const runMax = (arr, ok) => { let best = 0, cur = 0; arr.forEach(c => { cur = ok(c) ? cur + 1 : 0; if (cur > best) best = cur; }); return best; };
-    const ALPHA = [...'abcdefghijklmnopqrstuvwxyz'];
-
-    // Highlighters: given a spelling, return which letter positions to colour.
-    const vowelHl = x => x.l.map((c, i) => isV(c) ? i : -1).filter(i => i >= 0);
-    const runHl = (ok) => x => {
-      let best = 0, bestEnd = -1, cur = 0;
-      x.l.forEach((c, i) => { cur = ok(c) ? cur + 1 : 0; if (cur > best) { best = cur; bestEnd = i; } });
-      return Array.from({ length: best }, (_, k) => bestEnd - best + 1 + k);
-    };
-    const subHl = (sub) => x => {
-      const r = [];
-      let i = x.s.indexOf(sub);
-      while (i >= 0) { for (let k = 0; k < sub.length; k++) r.push(i + k); i = x.s.indexOf(sub, i + 1); }
-      return r;
-    };
-    const topLetter = (x) => {
-      const t = tally(x.l);
-      const m = Math.max(...Object.values(t));
-      return [Object.keys(t).find(k => t[k] === m), m];
-    };
-
-    const facts = [];
-    // Joins the spellings of the same term into one item: { term, xs: [spellings] }.
-    const toItems = (group) => {
-      const m = new Map();
-      group.forEach(x => { if (!m.has(x.term)) m.set(x.term, { term: x.term, xs: [] }); m.get(x.term).xs.push(x); });
-      return [...m.values()];
-    };
-    const listFact = (title, arr, note, runners = [], opts = {}) => {
-      if (!arr.length) return;
-      const entries = Array.isArray(arr[0]) ? arr.map(toItems) : toItems(arr).map(it => [it]);
-      const have = new Set(entries.flat().map(it => it.term));
-      const runnersUp = [];
-      if (entries.length <= 2) {
-        runners.map(r => r.x ? r : { x: r }).forEach(r => {
-          if (runnersUp.length >= 2 || have.has(r.x.term)) return;
-          have.add(r.x.term);
-          runnersUp.push({ item: { term: r.x.term, xs: [r.x] }, n: r.n || '' });
-        });
-      }
-      facts.push({ title, note, entries, runners: runnersUp, hl: opts.hl, tag: opts.tag });
-    };
-    const statFact = (title, text) => facts.push({ title, text });
-    const topFact = (title, score, noteFn, filter = () => true, opts = {}) => {
-      const scored = info.filter(filter).map(x => ({ x, v: score(x) }));
-      if (!scored.length) return;
-      const best = Math.max(...scored.map(s => s.v));
-      const group = scored.filter(s => s.v === best).map(s => s.x).sort(shortestFirst);
-      const runners = scored.filter(s => s.v < best)
-        .sort((a, b) => b.v - a.v || shortestFirst(a.x, b.x))
-        .slice(0, 12).map(s => ({ x: s.x, n: opts.val ? opts.val(s.v) : '' }));
-      listFact(title, group, noteFn(best), runners, opts);
-    };
-    const rowFact = (title, letters, minLen, note) =>
-      listFact(title, info.filter(x => x.l.length >= minLen && x.l.every(c => letters.includes(c))).sort(shortestFirst), note,
-        info.filter(x => x.l.length >= 3 && x.l.every(c => letters.includes(c))).sort(longestFirst));
-
-    listFact('Palindromes', info.filter(x => x.l.length >= 3 && x.s === [...x.s].reverse().join('')).sort(shortestFirst), 'Read the same backwards (3+ letters)');
-    listFact('All five vowels', info.filter(x => [...'aeiou'].every(v => x.l.includes(v))).sort(shortestFirst), 'Contain a, e, i, o and u', [], { hl: vowelHl });
-    topFact('Longest with no repeated letters', x => x.l.length, n => `${n} letters, every one different`, x => new Set(x.l).size === x.l.length, { val: n => `${n} letters` });
-    listFact('No repeated letters', info.filter(x => x.l.length >= 7 && new Set(x.l).size === x.l.length).sort(shortestFirst), '7+ letters, every one different');
-    topFact('Most different letters', x => new Set(x.l).size, n => `${n} different letters`, undefined, { val: n => `${n} different` });
-    topFact('Most of the same letter', x => Math.max(...Object.values(tally(x.l))), n => 'One letter repeated the most', undefined, {
-      hl: x => { const c = topLetter(x)[0]; return x.l.map((ch, i) => ch === c ? i : -1).filter(i => i >= 0); },
-      tag: x => { const [c, m] = topLetter(x); return `“${c}” ×${m.toLocaleString()}`; },
-    });
-    listFact('No vowels', info.filter(x => x.l.length >= 2 && !x.l.some(isV)).sort(shortestFirst), 'No a, e, i, o or u');
-    listFact('Only one kind of vowel', info.filter(x => x.l.length >= 7 && new Set(x.l.filter(isV)).size === 1).sort(shortestFirst), '7+ letters, a single vowel used', [], { hl: vowelHl });
-    topFact('Longest run of consonants', x => runMax(x.l, c => !isV(c)), n => `${n} in a row`, undefined, { hl: runHl(c => !isV(c)), val: n => `${n} in a row` });
-    topFact('Longest run of vowels', x => runMax(x.l, isV), n => `${n} in a row`, undefined, { hl: runHl(isV), val: n => `${n} in a row` });
-    listFact('Consonant, vowel, consonant, vowel…', info.filter(x => x.l.length >= 6 && x.l.every((c, i) => i === 0 || isV(c) !== isV(x.l[i - 1]))).sort(shortestFirst), '6+ letters, strictly alternating', [], { hl: vowelHl });
-    listFact('Starts and ends with the same letter', info.filter(x => x.l.length >= 3 && x.l[0] === x.l[x.l.length - 1]).sort(shortestFirst), undefined, [], { hl: x => [0, x.l.length - 1] });
-    listFact('Letters in alphabetical order', info.filter(x => x.l.length >= 4 && x.l.every((c, i) => i === 0 || x.l[i - 1] <= c)).sort(shortestFirst), '4+ letters, A to Z',
-      info.filter(x => x.l.length >= 3 && x.l.every((c, i) => i === 0 || x.l[i - 1] <= c)).sort(longestFirst));
-    listFact('Letters in reverse alphabetical order', info.filter(x => x.l.length >= 4 && x.l.every((c, i) => i === 0 || x.l[i - 1] >= c)).sort(shortestFirst), '4+ letters, Z to A',
-      info.filter(x => x.l.length >= 3 && x.l.every((c, i) => i === 0 || x.l[i - 1] >= c)).sort(longestFirst));
-    listFact('Two different double letters', info.filter(x => new Set(x.l.filter((c, i) => i > 0 && c === x.l[i - 1])).size >= 2).sort(shortestFirst), 'Like “bookkeeper”', [], {
-      hl: x => x.l.flatMap((c, i) => i > 0 && c === x.l[i - 1] ? [i - 1, i] : []),
-    });
-    const V = { a:1,e:1,i:1,o:1,u:1,l:1,n:1,s:1,t:1,r:1,d:2,g:2,b:3,c:3,m:3,p:3,f:4,h:4,v:4,w:4,y:4,k:5,j:8,x:8,q:10,z:10 };
-    topFact('Highest Scrabble score', x => x.l.reduce((sum, c) => sum + (V[c] || 0), 0), n => `${n} points, 15 letters or fewer`, x => x.l.length <= 15, {
-      hl: x => x.l.map((c, i) => (V[c] || 0) >= 8 ? i : -1).filter(i => i >= 0),
-      val: n => `${n} points`,
-    });
-    rowFact('Top keyboard row only', 'qwertyuiop', 3, 'Typed using only Q to P');
-    rowFact('Home row only', 'asdfghjkl', 3, 'Typed using only A to L');
-    rowFact('Bottom keyboard row only', 'zxcvbnm', 3, 'Typed using only Z to M');
-    rowFact('Left hand only', 'qwertasdfgzxcvb', 5, 'Typed with just your left hand');
-    rowFact('Right hand only', 'yuiophjklnm', 5, 'Typed with just your right hand');
-    const groups = {};
-    info.filter(x => x.l.length >= 3).forEach(x => { const k = [...x.l].sort().join(''); (groups[k] = groups[k] || []).push(x); });
-    listFact('Anagrams', Object.values(groups)
-      .filter(g => new Set(g.map(x => x.term)).size > 1 && new Set(g.map(x => x.t.toLowerCase())).size > 1)
-      .sort((a, b) => a[0].l.length - b[0].l.length), 'Same letters, different word');
-    ['uni', 'cycl'].forEach(sub => listFact(`Contains “${sub}”`, info.filter(x => x.s.includes(sub)).sort(shortestFirst), undefined, [], { hl: subHl(sub) }));
-    listFact('Phrases (with spaces)', allVars.filter(x => /\s/.test(x.t)).sort(byTextLen));
-    listFact('Hyphenated', allVars.filter(x => x.t.includes('-')).sort(byTextLen));
-    listFact('With apostrophes', allVars.filter(x => /['’]/.test(x.t)).sort(byTextLen));
-
-    // Whole-dictionary stats use each term's first spelling so alternates aren't counted twice.
-    const firstSeen = new Set();
-    const primaries = info.filter(x => !firstSeen.has(x.term) && firstSeen.add(x.term));
-    const all = tally(primaries.flatMap(x => x.l));
-    const used = ALPHA.filter(c => all[c]);
-    if (used.length) {
-      const common = [...used].sort((a, b) => all[b] - all[a])[0];
-      const rare = [...used].sort((a, b) => all[a] - all[b])[0];
-      statFact('Most common letter', `“${common}” appears ${all[common].toLocaleString()} times`);
-      statFact('Rarest letter', `“${rare}” appears only ${all[rare].toLocaleString()} time${all[rare] === 1 ? '' : 's'}`);
-      const missing = ALPHA.filter(c => !all[c]);
-      if (missing.length) statFact('Letters never used', missing.join(', '));
-      const starts = new Set(primaries.map(x => x.l[0]));
-      const noStart = ALPHA.filter(c => !starts.has(c));
-      if (noStart.length) statFact('Letters that never start a word', noStart.join(', '));
-      const lens = primaries.map(x => x.l.length).sort((a, b) => a - b);
-      const lenTally = tally(lens);
-      const modeLen = Object.keys(lenTally).sort((a, b) => lenTally[b] - lenTally[a])[0];
-      statFact('Word length', `Average ${(lens.reduce((a, b) => a + b, 0) / lens.length).toFixed(1)} letters, median ${lens[Math.floor(lens.length / 2)]}, most common ${modeLen}`);
-      statFact('Total letters', `${lens.reduce((a, b) => a + b, 0).toLocaleString()} letters across ${lens.length.toLocaleString()} entries`);
-    }
-
-    // Anything that applies to more than 50 entries isn't special, so drop it.
-    for (let i = facts.length - 1; i >= 0; i--) {
-      if (facts[i].entries && facts[i].entries.length > 50) facts.splice(i, 1);
-    }
-    // Remember each category's words so clicking its title can search them.
-    facts.forEach(f => {
-      if (f.entries) funSets.set(f.title.toLowerCase(), new Set(f.entries.flat().map(it => it.term.toLowerCase())));
-    });
-
-    // Fun facts that have a matching automatic category in wiktionary.html (same names, lowercase).
-    const FUN_CATEGORY_TITLES = new Set([
-      'palindromes', 'all five vowels', 'no repeated letters', 'no vowels', 'only one kind of vowel',
-      'consonant, vowel, consonant, vowel…', 'starts and ends with the same letter',
-      'letters in alphabetical order', 'letters in reverse alphabetical order', 'two different double letters',
-      'top keyboard row only', 'home row only', 'bottom keyboard row only', 'left hand only', 'right hand only',
-      'contains “uni”', 'contains “cycl”', 'phrases (with spaces)', 'hyphenated', 'with apostrophes',
-    ]);
-    const MAX = 6;
-    const attr = (t) => escapeHtml(t).replace(/"/g, '&quot;');
-    // One spelling: long ones are cut short, and the letters of interest are coloured.
-    const spellingHtml = (x, f) => {
-      const chars = [...x.t];
-      const hi = f && f.hl ? new Set(f.hl(x).map(i => x.idx[i])) : null;
-      let html = '', open = false;
-      chars.slice(0, 40).forEach((ch, i) => {
-        const on = !!(hi && hi.has(i));
-        if (on && !open) html += '<span class="fun-hl">';
-        if (!on && open) html += '</span>';
-        open = on;
-        html += escapeHtml(ch);
-      });
-      if (open) html += '</span>';
-      if (chars.length > 40) html += '…';
-      return html;
-    };
-    // One clickable term (clicking searches its full entry, including any other spellings).
-    const chip = (item, f) => {
-      const html = item.xs.map(x => spellingHtml(x, f)).join(' / ');
-      const needsTip = item.term.length > 16 || item.xs.length > 1 || item.xs[0].t !== item.term;
-      const tip = item.term.length > 200 ? item.term.slice(0, 200) + '…' : item.term;
-      return `<span class="fun-term" data-term="${attr(item.term)}"${needsTip ? ` title="${attr(tip)}"` : ''}>${html}</span>`;
-    };
-    const tagHtml = (item, f) => f.tag
-      ? `<span class="fun-note">${item.xs.map(x => escapeHtml(f.tag(x))).join(' / ')}</span>`
-      : '';
-    function itemHtml(f) {
-      const head = `<div class="fun-title"><span${f.entries ? ` class="fun-title-link" data-fun="${attr(f.title.toLowerCase())}"` : ''}>${escapeHtml(f.title)}</span>${f.entries ? `<span class="fun-count">${f.entries.length.toLocaleString()}</span>` : ''}</div>`;
-      const note = f.note ? `<div class="fun-note">${escapeHtml(f.note)}</div>` : '';
-      if (!f.entries) return head + `<div class="fun-text">${escapeHtml(f.text)}</div>`;
-      const shown = f.open ? f.entries : f.entries.slice(0, MAX);
-      const list = shown.map(g => `<span class="fun-entry">${g.map(it => chip(it, f) + tagHtml(it, f)).join('<span class="fun-note"> ⇄ </span>')}</span>`).join('');
-      const more = f.entries.length > MAX ? `<span class="fun-more">${f.open ? 'show less' : `+${f.entries.length - MAX} more`}</span>` : '';
-      const runs = f.runners && f.runners.length
-        ? `<div class="fun-note" style="margin-top:8px;">Runner-up${f.runners.length > 1 ? 's' : ''}</div><div class="fun-list" style="margin-top:2px;">${f.runners.map(r => `<span class="fun-entry">${chip(r.item, f)}${tagHtml(r.item, f) || (r.n ? `<span class="fun-note">${escapeHtml(r.n)}</span>` : '')}</span>`).join('')}</div>`
-        : '';
-      return head + note + `<div class="fun-list">${list}${more}</div>` + runs;
-    }
-    box.innerHTML = facts.map((f, i) => `<div class="fun-item" data-f="${i}">${itemHtml(f)}</div>`).join('');
-    box.addEventListener('click', (e) => {
-      const term = e.target.closest('[data-term]');
-      if (term) { openSearchModal(term.dataset.term); return; }
-      const titleLink = e.target.closest('[data-fun]');
-      if (titleLink) {
-        // Fun facts that also exist as an automatic category open that category in the Wiktionary view.
-        if (FUN_CATEGORY_TITLES.has(titleLink.dataset.fun)) { window.location.href = 'wiktionary.html#c=' + encodeURIComponent('fun:' + titleLink.dataset.fun); return; }
-        openSearchModal('fun:' + titleLink.dataset.fun);
-        return;
-      }
-      if (e.target.closest('.fun-more')) {
-        const item = e.target.closest('.fun-item');
-        const f = facts[Number(item.dataset.f)];
-        f.open = !f.open;
-        item.innerHTML = itemHtml(f);
-      }
-    });
-  })();
-
-  renderWords();
-  renderDefs();
-  ['nWords', 'wordsMode', 'wordsScope'].forEach(id => {
-    document.getElementById(id).addEventListener(id === 'nWords' ? 'input' : 'change', renderWords);
-  });
-  ['nDefs', 'defsMode'].forEach(id => {
-    document.getElementById(id).addEventListener(id === 'nDefs' ? 'input' : 'change', renderDefs);
-  });
-}
-
-main();
-</script>
-</body>
-</html>
+        event.native.target.style.

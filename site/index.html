@@ -1447,6 +1447,10 @@ async function main() {
   // Run the prediction after the rest of the page has painted, so the
   // other cards and charts never wait on it.
   let predictToken = 0;
+  // Settles once the first visible prediction is done, so the rest of the page
+  // waits for it instead of competing with it for the browser's time.
+  let resolveFirstPrediction;
+  const firstPrediction = new Promise(r => { resolveFirstPrediction = r; });
   function predictLater() {
     const token = ++predictToken;
     const saved = predictCache[PREDICT_MODES[predictMode].order];
@@ -1466,6 +1470,7 @@ async function main() {
         if (token !== predictToken) return; // the person switched again meanwhile
         dbg('Zoogliography ready, starting prediction for mode', predictMode);
         await predictNextWord(PREDICT_MODES[predictMode]);
+        resolveFirstPrediction();
         if (token !== predictToken) return;
         // Work out the other mode quietly too, so switching later never shows Loading.
         const kN = PREDICT_MODES.normal.order, kS = PREDICT_MODES.nonsense.order;
@@ -1478,10 +1483,13 @@ async function main() {
           predictedNonsenseWord = foundWord[kS] || '';
           refreshZoogModal();
         }
-      }).catch(err => console.error('[predict] failed:', err));
+      }).catch(err => { resolveFirstPrediction(); console.error('[predict] failed:', err); });
     }, 0));
   }
   predictLater();
+  // Give the prediction a head start (at most 2.5 seconds) before the heavy charts are built.
+  await Promise.race([firstPrediction, new Promise(r => setTimeout(r, 2500))]);
+  await paint();
   predictModeBtn.addEventListener('click', () => {
     predictMode = predictMode === 'normal' ? 'nonsense' : 'normal';
     predictModeBtn.textContent = PREDICT_MODES[predictMode].label;

@@ -479,7 +479,7 @@
 
     <div class="card">
       <h2 style="display:flex; align-items:center;">Next Predicted Word
-        <span class="tip" tabindex="0">?<span class="tip-text">Made-up guess from the spelling patterns in the entries. The tool counts which letter usually follows each group of letters (for example, what often comes after "tio"), then builds a new word one letter at a time by picking likely next letters. It only keeps words that are not already in the dictionary or the Zoogliography (main list, predicted, nonsense and rejected) or too close to one. If every try with the full letter memory is rejected, it retries with one letter fewer, and if that fails too it says the chains are exhausted. The guess changes only when a new word is added. The definition is built the same way, one word at a time, from which words usually follow each group of words, and it may not copy an existing definition. Normal looks 4 letters back for the word and 2 words back for the definition. Nonsense looks only 2 letters and 1 word back, so the result is looser and stranger.</span></span>
+        <span class="tip" tabindex="0">?<span class="tip-text">Made-up guess from the spelling patterns in the entries. The tool counts which letter usually follows each group of letters (for example, what often comes after "tio"), then builds a new word one letter at a time by picking likely next letters. It only keeps words that are not already in the dictionary or the Zoogliography (main list, predicted, nonsense and rejected) or too close to one. If every try with the full letter memory is rejected, it retries with one letter fewer, and if that fails too it says the chains are exhausted. The guess changes only when a new word is added. The definition is built the same way, one word at a time, from which words usually follow each group of words, and it may not copy an existing definition. It learns from the definitions of the entries that supplied the word's letters, and from all definitions if those are too few to avoid copying. Normal looks 4 letters back for the word and 2 words back for the definition. Nonsense looks only 2 letters and 1 word back, so the result is looser and stranger.</span></span>
         <button id="predictModeBtn" class="mode-btn" type="button">Normal</button>
       </h2>
       <div class="hover-src">
@@ -1171,20 +1171,43 @@ async function main() {
     // Predicted definition: same idea, but one word at a time, using the
     // two previous words as context (falls back to one word).
     const termSet = new Set(terms.map(t => t.toLowerCase()));
-    const defs = (stats.definitions_by_length_asc || [])
+    const allDefs = (stats.definitions_by_length_asc || [])
       .filter(d => useAll || splitSpellings([d.term]).some(v => termSet.has(v.toLowerCase())))
       .map(d => ({ term: d.term, tokens: d.definition.match(/[\p{L}\p{N}]+(?:['’\-][\p{L}\p{N}]+)*|[^\s\p{L}\p{N}]/gu) || [] }));
+    // The definitions the chain learns from. First only those of the entries
+    // that supplied the new word's letters; widened to all if that fails.
+    let defs = allDefs;
     const DSTART = '\u0002', DEND = '\u0003';
     const dTable = {};
-    defs.forEach(({ tokens: words }) => {
-      const seq = [...Array(DORDER).fill(DSTART), ...words, DEND];
-      for (let i = DORDER; i < seq.length; i++) {
-        for (let o = 1; o <= DORDER; o++) {
-          const k = seq.slice(i - o, i).join('\u0001');
-          (dTable[k] = dTable[k] || {})[seq[i]] = ((dTable[k] || {})[seq[i]] || 0) + 1;
+    function buildDefTable(list) {
+      Object.keys(dTable).forEach(k => delete dTable[k]);
+      list.forEach(({ tokens: words }) => {
+        const seq = [...Array(DORDER).fill(DSTART), ...words, DEND];
+        for (let i = DORDER; i < seq.length; i++) {
+          for (let o = 1; o <= DORDER; o++) {
+            const k = seq.slice(i - o, i).join('\u0001');
+            (dTable[k] = dTable[k] || {})[seq[i]] = ((dTable[k] || {})[seq[i]] || 0) + 1;
+          }
+        }
+      });
+    }
+    // Entries that supplied the word's letters: for each letter, the entries
+    // holding its longest matching run (at least 2 letters of context).
+    function sourceDefs(word) {
+      if (!word) return [];
+      const paddedWord = START.repeat(ORDER) + word;
+      const paddedTerms = terms.map(t => START.repeat(ORDER) + t + END);
+      const names = new Set();
+      for (let p = 0; p < word.length; p++) {
+        for (let o = ctxOrder; o >= 2; o--) {
+          const gram = paddedWord.slice(p + ORDER - o, p + ORDER + 1);
+          const hits = [];
+          paddedTerms.forEach((pt, k) => { if (pt.includes(gram)) hits.push(k); });
+          if (hits.length) { hits.forEach(k => names.add(terms[k].toLowerCase())); break; }
         }
       }
-    });
+      return allDefs.filter(d => splitSpellings([d.term]).some(v => names.has(v.toLowerCase())));
+    }
     function pickNextDefWord(history) {
       for (let o = DORDER; o >= 1; o--) {
         const options = dTable[history.slice(history.length - o).join('\u0001')];
@@ -1341,7 +1364,7 @@ async function main() {
     // apart the two are, and how much of the new definition is one
     // unbroken run copied from a single existing definition.
     const isWordTok = (t) => /[\p{L}\p{N}]/u.test(t);
-    const defWords = defs.map(d => d.tokens.filter(isWordTok).map(t => t.toLowerCase()));
+    const defWords = allDefs.map(d => d.tokens.filter(isWordTok).map(t => t.toLowerCase()));
     function defTooSimilar(tokens) {
       const a = tokens.filter(isWordTok).map(t => t.toLowerCase());
       if (!a.length) return true;
@@ -1371,16 +1394,23 @@ async function main() {
     }
     let definition = '';
     let definitionTokens = [];
-    for (let attempt = 0; attempt < 100 && !definition; attempt++) {
-      const out = [];
-      const history = Array(DORDER).fill(DSTART);
-      while (out.length < 25) {
-        const w = pickNextDefWord(history);
-        if (w === DEND) break;
-        out.push(w);
-        history.push(w);
+    // Try the source entries' definitions first, then all definitions.
+    const fromSources = sourceDefs(result);
+    for (const pool of (fromSources.length ? [fromSources, allDefs] : [allDefs])) {
+      defs = pool;
+      buildDefTable(pool);
+      for (let attempt = 0; attempt < 100 && !definition; attempt++) {
+        const out = [];
+        const history = Array(DORDER).fill(DSTART);
+        while (out.length < 25) {
+          const w = pickNextDefWord(history);
+          if (w === DEND) break;
+          out.push(w);
+          history.push(w);
+        }
+        if (out.length >= 4 && out.length < 25 && !defTooSimilar(out)) { definition = joinTokens(out, t => t); definitionTokens = out; }
       }
-      if (out.length >= 4 && out.length < 25 && !defTooSimilar(out)) { definition = joinTokens(out, t => t); definitionTokens = out; }
+      if (definition) break;
     }
     dbg(`run ${runId}: definition built (${definitionTokens.length} words, ${Math.round(performance.now() - t0)} ms total)`);
     const showDefinition = () => {

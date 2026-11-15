@@ -31,6 +31,9 @@
           font-size:calc(var(--tile) * 0.55); font-weight:bold; text-transform:uppercase; user-select:none; color:var(--text); }
   .tile[data-state="tbd"] { border-color:var(--tile-filled); }
   .tile[data-state="fixed"] { border-color:transparent; }
+  .tile[data-accent]::after { content:attr(data-accent); position:absolute; top:1px; left:0; right:0; text-align:center; font-size:calc(var(--tile) * 0.32); line-height:1; font-weight:bold; color:var(--muted); }
+  .tile[data-accent][data-below]::after { top:auto; bottom:1px; }
+  .tile[data-accent]:is([data-state="correct"],[data-state="present"],[data-state="absent"])::after { color:#fff; }
   .tile[data-state="correct"] { background:var(--correct); border-color:var(--correct); color:#fff; }
   .tile[data-state="present"] { background:var(--present); border-color:var(--present); color:#fff; }
   .tile[data-state="absent"] { background:var(--absent); border-color:var(--absent); color:#fff; }
@@ -133,7 +136,18 @@ function save(key, value) { try { localStorage.setItem(key, JSON.stringify(value
 const today = dayString();
 let answer = '', answerTerm = '', answerFullTerm = '', answerPos = '', definition = '', len = 5;
 let slots = [], validByLen = new Map(), looseLens = new Set();   // slots = positions of typeable letters
-const isLetter = (c) => /^[a-z]$/.test(c || '');
+const isLetter = (c) => /^[a-z0-9]$/.test(c || '');   // a tile the player types into (letters and digits)
+const foldChar = (c) => { const f = c.normalize('NFD').replace(/[\u0300-\u036f]/g, ''); return f.length === 1 ? f : (c.length === 1 ? c : '\uFFFD'); };   // e-acute -> e
+const ACCENTS = { '\u0300': '`', '\u0301': '\u00B4', '\u0302': '^', '\u0303': '~', '\u0304': '\u00AF', '\u0308': '\u00A8', '\u030A': '\u02DA', '\u030C': '\u02C7', '\u0327': '\u00B8', '\u0328': '\u02DB' };
+function parseTerm(term) { const shown = Array.from(term.normalize('NFC').toLowerCase()); return { shown, text: shown.map(foldChar).join('') }; }
+function accentOf(c) {
+  const d = c.normalize('NFD');
+  if (d.length < 2 || !/^[\u0300-\u036f]+$/.test(d.slice(1))) return null;
+  const marks = [...d.slice(1)];
+  return { ch: marks.map(m => ACCENTS[m] || m).join(''), below: marks.some(m => m === '\u0327' || m === '\u0328') };
+}
+let shown = [], accents = [], altAnswers = new Set();   // shown = answer as written, altAnswers = other spellings that also win
+const targetFor = (g) => altAnswers.has(g) ? g : answer;
 // turns the typed letters into a full-length guess, with spaces/punctuation filled in from the answer
 function fullFrom(letters) {
   let k = 0, out = '';
@@ -141,7 +155,7 @@ function fullFrom(letters) {
   return out;
 }
 // each word piece (run of letters) must be a dictionary word or Scrabble word of that length
-const segOk = (seg) => looseLens.has(seg.length) || (validByLen.get(seg.length) || new Set()).has(seg);
+const segOk = (seg) => /\d/.test(seg) || looseLens.has(seg.length) || (validByLen.get(seg.length) || new Set()).has(seg);
 let state = null, current = '', busy = false;
 let stats = load('dwg-stats', { played: 0, wins: 0, streak: 0, maxStreak: 0, lastWinDay: '', dist: [0, 0, 0, 0, 0, 0] });
 const keyState = {};
@@ -178,7 +192,8 @@ function buildBoard() {
     for (let c = 0; c < len; c++) {
       const t = document.createElement('div');
       t.className = 'tile';
-      if (!isLetter(answer[c])) { t.dataset.state = 'fixed'; t.textContent = answer[c] === ' ' ? '' : answer[c]; }
+      if (!isLetter(answer[c])) { t.dataset.state = 'fixed'; t.textContent = shown[c] === ' ' ? '' : shown[c]; }
+      else if (accents[c]) { t.dataset.accent = accents[c].ch; if (accents[c].below) t.dataset.below = '1'; }
       row.appendChild(t);
     }
     board.appendChild(row);
@@ -191,7 +206,7 @@ const rowEl = (r) => $('board').children[r];
 // gray letters anywhere, yellow/green letters only in the column where they were yellow/green.
 function previewHints() {
   const spot = { correct: new Set(), present: new Set() }, known = new Set(), gray = new Set();
-  state.guesses.forEach(g => evaluate(g, answer).forEach((st, i) => {
+  state.guesses.forEach(g => evaluate(g, targetFor(g)).forEach((st, i) => {
     if (st === 'fixed') return;
     if (st === 'absent') gray.add(g[i]); else { known.add(g[i]); spot[st].add(i + ':' + g[i]); }
   }));
@@ -223,10 +238,10 @@ const KB_ROWS = ['qwertyuiop', 'asdfghjkl', '*zxcvbnm#'];
 function buildKeyboard() {
   const kb = $('keyboard');
   kb.innerHTML = '';
-  KB_ROWS.forEach((r, ri) => {
+  (/\d/.test(answer) ? ['1234567890', ...KB_ROWS] : KB_ROWS).forEach((r, ri) => {
     const row = document.createElement('div');
     row.className = 'krow';
-    if (ri === 1) { const s = document.createElement('div'); s.className = 'spacer'; row.appendChild(s); }
+    if (r === 'asdfghjkl') { const s = document.createElement('div'); s.className = 'spacer'; row.appendChild(s); }
     [...r].forEach(ch => {
       const b = document.createElement('button');
       b.className = 'key';
@@ -238,7 +253,7 @@ function buildKeyboard() {
       b.addEventListener('click', () => { try { if (navigator.vibrate) navigator.vibrate(8); } catch (e) {} press(b.dataset.key); });
       row.appendChild(b);
     });
-    if (ri === 1) { const s = document.createElement('div'); s.className = 'spacer'; row.appendChild(s); }
+    if (r === 'asdfghjkl') { const s = document.createElement('div'); s.className = 'spacer'; row.appendChild(s); }
     kb.appendChild(row);
   });
 }
@@ -269,13 +284,13 @@ function press(key) {
   if (busy || !state || state.status !== 'playing' || !$('overlay').hidden) return;
   if (key === 'Enter') return submit();
   if (key === 'Backspace') { current = current.slice(0, -1); return showCurrent(); }
-  if (/^[a-z]$/.test(key) && current.length < slots.length) { current += key; showCurrent(); }
+  if (/^[a-z0-9]$/.test(key) && current.length < slots.length) { current += key; showCurrent(); }
 }
 
 function shakeRow(msg) {
   const row = rowEl(state.guesses.length);
   row.classList.remove('shake'); void row.offsetWidth; row.classList.add('shake');
-  toast(msg);
+  toast(msg, 1500);
 }
 
 function reveal(r, st, animate) {
@@ -298,15 +313,16 @@ function reveal(r, st, animate) {
 async function submit() {
   if (current.length < slots.length) return shakeRow('Not enough letters');
   const guess = fullFrom(current);
-  if (guess.split(/[^a-z]+/).filter(Boolean).some(seg => !segOk(seg))) return shakeRow('Not in word list');
+  const bad = (guess === answer || altAnswers.has(guess)) ? [] : guess.split(/[^a-z0-9]+/).filter(Boolean).filter(seg => !segOk(seg));
+  if (bad.length) return shakeRow('Not in word list: ' + bad.join(', ').toUpperCase());
   busy = true;
   const r = state.guesses.length;
   state.guesses.push(guess);
   current = '';
-  const st = evaluate(guess, answer);
+  const st = evaluate(guess, targetFor(guess));
   [...rowEl(r).children].forEach(t => delete t.dataset.hint);
   await reveal(r, st, true);
-  const won = guess === answer;
+  const won = guess === answer || altAnswers.has(guess);
   if (won) state.status = 'won'; else if (state.guesses.length >= MAX_GUESSES) state.status = 'lost';
   save('dwg-state', state);
   updateHint();
@@ -364,7 +380,7 @@ function confetti() {
 // the part of speech is a hint: it appears after the 3rd guess (or when the game is over)
 function updateHint() {
   const showPos = state.guesses.length >= 3 || state.status !== 'playing';
-  const parts = answer.split(/[^a-z]+/).filter(Boolean).map(w => w.length);
+  const parts = answer.split(/[^a-z0-9]+/).filter(Boolean).map(w => w.length);
   $('hintLine').textContent = slots.length + ' letters' + (parts.length > 1 ? ' (' + parts.join(' + ') + ')' : '') + (showPos && answerPos ? ' \u00b7 ' + answerPos : '');
 }
 
@@ -386,7 +402,7 @@ function recordResult(won, n) {
 // ---------- stats / help / share ----------
 let timerId = null;
 function shareText() {
-  const rows = state.guesses.map(g => evaluate(g, answer).map((s, i) => s === 'fixed' ? (answer[i] === ' ' ? '\u3000' : '\u2B1C') : ({ correct: '\u{1F7E9}', present: '\u{1F7E8}', absent: '\u2B1B' }[s])).join(''));
+  const rows = state.guesses.map(g => evaluate(g, targetFor(g)).map((s, i) => s === 'fixed' ? (answer[i] === ' ' ? '\u3000' : '\u2B1C') : ({ correct: '\u{1F7E9}', present: '\u{1F7E8}', absent: '\u2B1B' }[s])).join(''));
   const score = state.status === 'won' ? state.guesses.length : 'X';
   return `[Unicyclist Wordle](https://chadduffenshmoogle.github.io/dictionary-versions/wordle.html) ${today} (${slots.length} letters) ${score}/${MAX_GUESSES}\n\n${rows.join('\n')}`;
 }
@@ -434,7 +450,7 @@ function showHelp() {
   const ex = (word, idx, st) => `<div class="ex-row" style="grid-template-columns:repeat(${word.length}, 40px)">${[...word].map((c, i) => `<div class="tile" ${i === idx ? `data-state="${st}"` : ''}>${c}</div>`).join('')}</div>`;
   openModal(`<h2>How to play</h2>
     <p>Guess the Unicyclist Dictionary word in ${MAX_GUESSES} tries. The word can be any length, so count the boxes.</p>
-    <p>Spaces and punctuation are shown for you. Each word piece of a guess must be a real word (a dictionary word or a Scrabble word) of that length. Hit enter to submit.</p>
+    <p>Spaces, punctuation and accent marks are shown for you (type accented letters as plain letters). Each word piece of a guess must be a real word (a dictionary word or a Scrabble word) of that length. Hit enter to submit.</p>
     <p>After each guess, the color of the tiles shows how close your guess was.</p>
     <hr style="border:0;border-top:1px solid var(--line)">
     <p><b>Examples</b></p>
@@ -457,7 +473,7 @@ document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') return closeModal();
   if (e.key === 'Enter') { e.preventDefault(); return press('Enter'); }
   if (e.key === 'Backspace' || e.key === 'Delete') return press('Backspace');
-  if (/^[a-zA-Z]$/.test(e.key)) press(e.key.toLowerCase());
+  if (e.key.length === 1) { const k = foldChar(e.key.toLowerCase()); if (/^[a-z0-9]$/.test(k)) press(k); }
 });
 window.addEventListener('resize', fit);
 
@@ -472,7 +488,7 @@ async function init() {
   // any entry can be the answer; spaces and punctuation are shown from the start
   // " / " (spaces both sides) separates alternate spellings, so each spelling can be an answer
   const spellingRows = allRows.flatMap(r => r.term.split(/\s+\/\s+/).map(v => v.trim().replace(/\s+/g, ' ')).filter(Boolean).map(sp => Object.assign({}, r, { term: sp, fullTerm: r.term })));
-  const rows = spellingRows.filter(r => /[A-Za-z]/.test(r.term));
+  const rows = spellingRows.filter(r => /[a-z0-9]/.test(parseTerm(r.term).text));
   if (!rows.length) { toast('No words available yet', 5000); return; }
 
   // the same word for everyone: the word with the lowest score for today's date
@@ -480,18 +496,25 @@ async function init() {
   const pick = rows.reduce((best, r) => (!best || score(r) < score(best)) ? r : best, null);
   answerTerm = pick.term;
   answerFullTerm = pick.fullTerm;
-  answer = pick.term.toLowerCase();
+  const parsed = parseTerm(pick.term);
+  shown = parsed.shown;
+  answer = parsed.text;
   len = answer.length;
   slots = Array.from({ length: len }, (_, i) => i).filter(i => isLetter(answer[i]));
+  accents = shown.map(c => accentOf(c));
+  buildKeyboard();   // rebuild: adds a number row when the answer has digits
+  // other spellings with the same shape (same length, same spaces/punctuation) also count as a win
+  altAnswers = new Set(pick.fullTerm.split(/\s+\/\s+/).map(v => parseTerm(v.trim().replace(/\s+/g, ' ')).text)
+    .filter(a => a !== answer && a.length === len && [...Array(len).keys()].every(i => isLetter(a[i]) === isLetter(answer[i]) && (isLetter(a[i]) || a[i] === answer[i]))));
   const posText = (pick.pos_list || [pick.pos]).filter(p => p && p !== '(no pos)').map(p => p.toLowerCase()).join(', ');
   answerPos = posText;
   const first = pick.senses && pick.senses[0] && pick.senses[0].defs[0];
   definition = (first ? first.text : pick.definition) || '';
 
   // allowed words for each word-piece length: dictionary words plus the Scrabble list (if a list is missing, any letters are accepted for that length)
-  const segLens = [...new Set(answer.split(/[^a-z]+/).filter(Boolean).map(w => w.length))];
+  const segLens = [...new Set(answer.split(/[^a-z0-9]+/).filter(w => w && !/\d/.test(w)).map(w => w.length))];
   segLens.forEach(n => validByLen.set(n, new Set()));
-  spellingRows.forEach(r => { const w = r.term.toLowerCase(); if (/^[a-z]+$/.test(w) && validByLen.has(w.length)) validByLen.get(w.length).add(w); });
+  spellingRows.forEach(r => { const w = parseTerm(r.term).text; if (/^[a-z]+$/.test(w) && validByLen.has(w.length)) validByLen.get(w.length).add(w); });
   await Promise.all(segLens.map(async n => {
     try {
       const res = await fetch(`wordlist/${n}.txt`);
@@ -504,7 +527,7 @@ async function init() {
   if (!state || state.day !== today || state.answer !== answer) state = { day: today, answer, guesses: [], status: 'playing' };
   buildBoard();
   updateHint();
-  state.guesses.forEach((g, r) => reveal(r, evaluate(g, answer), false));
+  state.guesses.forEach((g, r) => reveal(r, evaluate(g, targetFor(g)), false));
   if (state.status !== 'playing') setTimeout(showStats, 300);
   else if (!load('dwg-seen', false)) { save('dwg-seen', true); showHelp(); }
   showCurrent();

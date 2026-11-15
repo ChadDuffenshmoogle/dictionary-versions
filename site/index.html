@@ -381,6 +381,23 @@
     font-family: Arial, sans-serif;
     box-shadow: 0 1px 4px rgba(0,0,0,0.3);
   }
+  /* zoogliography viewer */
+  .zoog-toolbar { display:flex; align-items:center; gap:12px; flex-wrap:wrap; padding:10px 18px; border-bottom:1px solid var(--line); }
+  #zoogFilter { flex:1 1 180px; min-width:0; padding:7px 10px; border-radius:8px; border:1px solid var(--line); background:var(--panel); color:var(--text); font-size:0.85rem; }
+  .zoog-total { color:var(--muted); font-size:0.8rem; }
+  #zoogModalContent { flex:1 1 auto; min-height:0; overflow:auto; padding:16px 18px; color:var(--text); font-size:0.9rem; }
+  .zoog-section { margin-bottom:20px; }
+  .zoog-section:last-child { margin-bottom:0; }
+  .zoog-h { display:flex; align-items:baseline; gap:8px; margin:0 0 8px; font-size:0.9rem; font-weight:700; color:var(--accent); }
+  .zoog-h.violet { color:var(--violet); }
+  .zoog-h.muted { color:var(--muted); }
+  .zoog-n { color:var(--muted); font-weight:400; font-size:0.75rem; }
+  .zoog-chips { display:flex; flex-wrap:wrap; gap:6px; }
+  .zoog-chip { background:var(--panel); border:1px solid var(--line); border-radius:999px; padding:3px 11px; font-size:0.85rem; overflow-wrap:anywhere; }
+  .zoog-chip.pred { border-color:var(--violet); }
+  .zoog-chip.cur { background:var(--violet); color:var(--on-accent); font-weight:700; }
+  .zoog-chip.rej { color:var(--muted); border-style:dashed; }
+  .zoog-empty { color:var(--muted); font-size:0.8rem; font-style:italic; }
   /* zoogliography: looks like an old bibliography page */
   .nav-zoog {
     background: #f4ecd8;
@@ -713,7 +730,11 @@
           <button id="zoogModalClose" style="background:none; border:none; color:var(--muted); font-size:1.4rem; cursor:pointer; line-height:1;">&times;</button>
         </div>
       </div>
-      <pre id="zoogModalContent" style="margin:0; padding:16px 18px; overflow:auto; white-space:pre-wrap; word-break:break-word; color:var(--text); font-size:0.85rem; font-family: ui-monospace, Menlo, monospace;">Loading…</pre>
+      <div class="zoog-toolbar">
+        <input id="zoogFilter" type="search" placeholder="Filter zoogs…" autocomplete="off">
+        <span class="zoog-total" id="zoogTotal"></span>
+      </div>
+      <div id="zoogModalContent">Loading…</div>
     </div>
   </div>
 
@@ -1466,6 +1487,8 @@ async function main() {
   // button is clicked and cached after that.
   const zoogModalOverlay = document.getElementById('zoogModalOverlay');
   const zoogModalContent = document.getElementById('zoogModalContent');
+  const zoogFilter = document.getElementById('zoogFilter');
+  const zoogTotal = document.getElementById('zoogTotal');
   let zoogContent = null;
   let zoogFetchPromise = null;
 
@@ -1482,9 +1505,49 @@ async function main() {
     }
     return text;
   }
-  function refreshZoogModal() {
-    if (zoogContent !== null) zoogModalContent.textContent = zoogText() || '(empty)';
+  // Split the file text into its sections. Marker lines are not shown; the
+  // Seed line (used only by generate_stats.py) is dropped here too.
+  function parseZoog(text) {
+    const out = { main: [], next: [], nonsense: [], rejected: [] };
+    let cur = 'main';
+    (text || '').split('\n').forEach(raw => {
+      const l = raw.trim();
+      if (!l) return;
+      if (l.startsWith('---')) {
+        if (/^--- Predicted Next Word/i.test(l)) cur = 'next';
+        else if (/^--- Predicted Nonsense/i.test(l)) cur = 'nonsense';
+        else if (/^--- Rejected/i.test(l)) cur = 'rejected';
+        return;
+      }
+      if (cur === 'rejected') l.split(',').forEach(w => { w = w.trim(); if (w) out.rejected.push(w); });
+      else out[cur].push(l);
+    });
+    return out;
   }
+  function refreshZoogModal() {
+    if (zoogContent === null) return;
+    const text = zoogText();
+    if (!text) { zoogModalContent.textContent = '(empty)'; zoogTotal.textContent = ''; return; }
+    const z = parseZoog(text);
+    const q = zoogFilter.value.trim().toLowerCase();
+    const keep = (arr) => q ? arr.filter(w => w.toLowerCase().includes(q)) : arr;
+    const curNext = (predictedAllWord || stats.predicted_word || '').toLowerCase();
+    const curNonsense = (predictedNonsenseWord || stats.predicted_nonsense_word || '').toLowerCase();
+    const section = (title, cls, all, chipCls, current) => {
+      const shown = keep(all);
+      const chips = shown.length
+        ? `<div class="zoog-chips">${shown.map(w => `<span class="zoog-chip ${chipCls}${current && w.toLowerCase() === current ? ' cur' : ''}">${escapeHtml(w)}</span>`).join('')}</div>`
+        : `<div class="zoog-empty">${q ? 'No matches.' : 'None yet.'}</div>`;
+      return `<div class="zoog-section"><div class="zoog-h ${cls}">${title}<span class="zoog-n">${q ? shown.length + ' of ' + all.length : all.length}</span></div>${chips}</div>`;
+    };
+    zoogTotal.textContent = `${z.main.length} zoogs · ${z.next.length + z.nonsense.length} predicted · ${z.rejected.length} rejected`;
+    zoogModalContent.innerHTML =
+      section('Predicted next words', 'violet', z.next, 'pred', curNext)
+      + section('Predicted nonsense words', 'violet', z.nonsense, 'pred', curNonsense)
+      + section('Zoogs', '', z.main, '', '')
+      + section('Rejected predictions', 'muted', z.rejected, 'rej', '');
+  }
+  zoogFilter.addEventListener('input', refreshZoogModal);
 
   function fetchZoogliography() {
     if (zoogFetchPromise) return zoogFetchPromise;

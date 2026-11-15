@@ -608,8 +608,8 @@ function topCategories(base) {
       'The 10 entries with the most a, e, i, o and u letters (ties share a spot). The number in parentheses is the vowel count.',
       e => Math.max(...spellingsOf(e.term).map(x => x.l.filter(isVowel).length)), ' vowels'),
     makeTopCategory('top-scrabble-score', 'Top 10 highest Scrabble scores',
-      'The 10 entries worth the most points in Scrabble tiles, 15 letters or fewer (ties share a spot). The number in parentheses is the score.',
-      e => Math.max(0, ...spellingsOf(e.term).filter(x => x.l.length <= 15).map(x => x.l.reduce((n, c) => n + (SCRABBLE_TILE_VALUES[c] || 0), 0))), ' points'),
+      'The 10 entries worth the most points in Scrabble tiles, 15 letters or fewer, leaving out proper nouns and any spelling with spaces or punctuation (ties share a spot). The number in parentheses is the score.',
+      e => (e.pos_list || []).some(p => /proper noun/i.test(p)) ? 0 : Math.max(0, ...spellingsOf(e.term).filter(x => /^\p{L}+$/u.test(x.t) && x.l.length <= 15).map(x => x.l.reduce((n, c) => n + (SCRABBLE_TILE_VALUES[c] || 0), 0))), ' points'),
   ];
 }
 

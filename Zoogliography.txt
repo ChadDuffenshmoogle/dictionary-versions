@@ -202,6 +202,7 @@ freasonably penappage
 freement
 French billiteral
 Frencheecrois
+frobblersationary
 garignature
 Gilbert care Washington
 gilburgmate
@@ -447,6 +448,7 @@ culvste
 cunx
 curer
 D. bicalquantre
+Daklism
 deadidin-tentup
 deebur
 deniand wing
@@ -650,4 +652,4 @@ zoostrainio
 --- Rejected Predictions (too similar to an existing word) ---
 aerkeley, aerostated, aerquinultimater are of, alcolant, amiacablesquip, anolineus, aquavacheggle, baceggchefrent, bacontuer, blaskeawnce, Boing, bomba, break a leg, breale, brogger, carpe, case cake, cette, chemuff, Chrishting, cobble, copious, cranger, croiseggchecrois, culvstardnyunbun, cunicycle, Cyborg, D. Pough, dast, debrorg, derpatronomy, despepperer, ditar, dull cheeburber, duximateur, ecorous, Elpharice, fang, fiction, foobrepploozonioccior, goosh kaspoocy, grorkirkenuine, hardcore, heedy, It's pop the Cunicular, J. C. D. P'Dough, J. C. D. Pough, JCmander, kaboompault year, legster, longworm, luncharade, Mesies, messagespific, Monopolyjamorous, nauschecroismore, orgbera, over civcop, parcheeburg, patic, pourtfolm, protozooglio, q'de, scravenge, shoobatidoobie doubt, skill issue, sobrescalient, socrong, sound, sounds, spaghetti, spaghettiquettiqueer, spleering away, sproinks, Spweem SheckleSandwich, squares, stic, string, stund, the bridge, the dead, the dead horses, the room, thiever cake, thrishting, Thup, to kill issue, train, treache, Unlunchine, versquip, zeldopolyplug
 
---- Seed: ["1401|alch", "cambient restra", "face", ["sproinks", "string", "the bridge", "train", "cette", "to kill issue"]] ---
+--- Seed: ["1402|Omni", "frobblersationary", "Daklism", []] ---

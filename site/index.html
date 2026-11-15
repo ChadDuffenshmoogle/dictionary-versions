@@ -975,6 +975,11 @@ async function main() {
       return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
     };
 
+    // Every run of ORDER letters from anywhere inside an entry (start, middle or end).
+    // A new word begins with one of these, so it need not begin like any entry.
+    const seedGrams = [];
+    terms.forEach(t => { for (let i = 0; i + ORDER <= t.length; i++) seedGrams.push(t.slice(i, i + ORDER)); });
+
     let ctxOrder = ORDER; // how many letters back the chain may look right now
     function pickNext(word) {
       const padded = START.repeat(ORDER) + word;
@@ -1011,7 +1016,7 @@ async function main() {
           if (!silent && runId !== predictRun) { dbg(`run ${runId}: cancelled (newer run exists)`); return ''; }
         }
         passAttempts = attempt + 1;
-        let word = '';
+        let word = seedGrams.length ? seedGrams[Math.floor(rand() * seedGrams.length)] : '';
         while (word.length < 24) {
           const ch = pickNext(word);
           if (ch === END) break;

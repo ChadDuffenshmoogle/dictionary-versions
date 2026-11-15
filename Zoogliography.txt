@@ -206,6 +206,7 @@ freement
 French billiteral
 Frencheecrois
 frobblersationary
+from the Three-ender
 garignature
 Gilbert care Washington
 gilburgmate
@@ -631,6 +632,7 @@ Thuard deeseng
 tosous
 tosvert
 totio
+tris
 Tsart
 twilin't of mand tha
 ukwuadezoob
@@ -660,4 +662,4 @@ zoostrainio
 --- Rejected Predictions (too similar to an existing word) ---
 aerkeley, aerostated, aerquinultimater are of, alcolant, amiacablesquip, anolineus, aquavacheggle, baceggchefrent, bacontuer, befungerswärme, blaskeawnce, Boing, bomba, break a leg, breale, brogger, carpe, case cake, cette, ched, chemuff, Chrishting, cobble, contasesquipedanti, copious, cranger, croiseggchecrois, culvstardnyunbun, cunicycle, Cyborg, D. Pough, dast, debrorg, derpatronomy, despepperer, ditar, dull cheeburber, duximateur, ecorous, Elpharice, fang, fiction, foobrepploozonioccior, goosh kaspoocy, grorkirkenuine, hardcore, heedy, It's pop the Cunicular, J. C. D. P'Dough, J. C. D. Pough, JCmander, kaboompault year, legster, longworm, luncharade, Mesies, messagespific, Monopolyjamorous, nauschecroismore, onsign, orgbera, over civcop, parcheeburg, patic, pourtfolm, protozooglio, q'de, reak peace, scravenge, shoobatidoobie doubt, sificated, skill issue, sobrescalient, socrong, sound, sounds, spaghetti, spaghettiquettiqueer, spleering away, sproinks, Spweem SheckleSandwich, squares, stic, string, stund, the bridge, the dead, the dead horses, the room, thiever cake, thrishting, Thup, to kill issue, train, treache, Unlunchine, Vers, versquip, zeldopolyplug
 
---- Seed: ["1406|juice juice", "lliteraterate", "om Millnes", ["reak peace", "Vers"]] ---
+--- Seed: ["1407|Sportugal", "from the Three-ender", "tris", []] ---

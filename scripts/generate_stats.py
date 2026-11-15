@@ -147,7 +147,11 @@ def parse_zoog_text(text):
             seed = None
         text = ZOOG_SEED_RE.sub("", text)
     main_part, _, rest = text.partition(ZOOG_MARKER)
-    main = [l.strip() for l in main_part.splitlines() if l.strip() and not l.startswith("---")]
+    # The dated "ZOOGLIOGRAPHY - <date>" heading line is a title, not a zoog.
+    main = [
+        l.strip() for l in main_part.splitlines()
+        if l.strip() and not l.startswith("---") and not re.match(r"\s*zoogliography\s*[-\u2013\u2014]", l, re.I)
+    ]
     old_normal, _, rest = rest.partition(ZOOG_NONSENSE_MARKER)
     old_nonsense, _, old_rejected = rest.partition(ZOOG_REJECTED_MARKER)
     extra = [l.strip() for l in (old_normal + "\n" + old_nonsense).splitlines() if l.strip() and not l.startswith("---")]

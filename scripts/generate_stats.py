@@ -192,6 +192,9 @@ def predict_next_word(terms, seed_text, order=4, avoid=(), rejected=None):
                 table.setdefault(padded[i - o:i], Counter())[padded[i]] += 1
 
     rng = random.Random(seed_text)
+    # Every run of `order` letters from anywhere inside an entry; a new word
+    # begins with one of these, so it need not begin like any entry.
+    seed_grams = [t[i:i + order] for t in terms for i in range(len(t) - order + 1)]
 
     def pick_next(word, max_ctx):
         padded = start * order + word
@@ -208,7 +211,7 @@ def predict_next_word(terms, seed_text, order=4, avoid=(), rejected=None):
         if max_ctx < 1:
             continue
         for _ in range(5000):
-            word = ""
+            word = rng.choice(seed_grams) if seed_grams else ""
             while len(word) < 24:
                 ch = pick_next(word, max_ctx)
                 if ch == end:

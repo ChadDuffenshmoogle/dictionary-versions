@@ -189,34 +189,39 @@ def predict_next_word(terms, seed_text, order=4, avoid=(), rejected=None):
 
     rng = random.Random(seed_text)
 
-    def pick_next(word):
+    def pick_next(word, max_ctx):
         padded = start * order + word
-        for o in range(order, 0, -1):
+        for o in range(max_ctx, 0, -1):
             options = table.get(padded[len(padded) - o:])
             if options:
                 return rng.choices(list(options), weights=list(options.values()))[0]
         return end
 
     tried = set()
-    for _ in range(5000):
-        word = ""
-        while len(word) < 24:
-            ch = pick_next(word)
-            if ch == end:
-                break
-            word += ch
-        word = word.strip()
-        if 4 <= len(word) < 24 and " / " not in word:
-            key = _norm_term(word)
-            if key in tried:
-                continue
-            tried.add(key)
-            if not too_similar(word, existing_norm):
-                return word
-            # Only near-misses are remembered; a word identical to an existing
-            # entry or zoog is just skipped, not listed as rejected.
-            if rejected is not None and _norm_term(word) not in existing_norm:
-                rejected.append(word)  # remembered for the Zoogliography
+    # First try with the full letter memory; if every try is rejected, try
+    # again with one letter fewer. After that the chains are used up ("").
+    for max_ctx in (order, order - 1):
+        if max_ctx < 1:
+            continue
+        for _ in range(5000):
+            word = ""
+            while len(word) < 24:
+                ch = pick_next(word, max_ctx)
+                if ch == end:
+                    break
+                word += ch
+            word = word.strip()
+            if 4 <= len(word) < 24 and " / " not in word:
+                key = _norm_term(word)
+                if key in tried:
+                    continue
+                tried.add(key)
+                if not too_similar(word, existing_norm):
+                    return word
+                # Only near-misses are remembered; a word identical to an existing
+                # entry or zoog is just skipped, not listed as rejected.
+                if rejected is not None and _norm_term(word) not in existing_norm:
+                    rejected.append(word)  # remembered for the Zoogliography
     return ""
 
 

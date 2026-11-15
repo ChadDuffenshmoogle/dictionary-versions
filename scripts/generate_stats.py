@@ -229,7 +229,7 @@ def predict_next_word(terms, seed_text, order=4, avoid=(), rejected=None):
     return ""
 
 
-def update_zoogliography(word, nonsense_word="", rejected=(), known_norm=(), seed_key=""):
+def update_zoogliography(word, nonsense_word="", rejected=(), known_norm=(), seed_key="", latest_rejected=()):
     """Add the new words to the two lists at the bottom of Zoogliography.txt
     (each kept A to Z): 'Predicted Next Word', then 'Predicted Nonsense Word'.
     Everything above the first marker is left untouched."""
@@ -272,7 +272,7 @@ def update_zoogliography(word, nonsense_word="", rejected=(), known_norm=(), see
         rejected_all = {w for w in rejected_all if _norm_term(w) not in known_norm}
         if rejected_all:
             new_text += f"\n\n{ZOOG_REJECTED_MARKER}\n" + ", ".join(sorted(rejected_all, key=str.lower))
-        new_text += "\n\n--- Seed: " + json.dumps([seed_key, word, nonsense_word], ensure_ascii=False) + " ---"
+        new_text += "\n\n--- Seed: " + json.dumps([seed_key, word, nonsense_word, list(latest_rejected)], ensure_ascii=False) + " ---"
         if new_text == text.rstrip("\n"):
             return  # already up to date
         put = requests.put(
@@ -895,9 +895,12 @@ def main():
     known_norm = {_norm_term(t) for t in [*spellings, *zoog_main] if _norm_term(t)}
     seed_key = f"{total_entries}|{latest_word_term}"
     rejected_words = []  # guesses thrown out for being too similar, saved to the Zoogliography
-    if saved and len(saved) == 3 and saved[0] == seed_key and (saved[1] or saved[2]):
+    # Rejected guesses added for the newest dictionary entry (the page shades these).
+    latest_rejected = []
+    if saved and len(saved) >= 3 and saved[0] == seed_key and (saved[1] or saved[2]):
         # Same dictionary as the last run: keep the words already made for it.
         predicted_word, predicted_nonsense_word = saved[1], saved[2]
+        latest_rejected = list(saved[3]) if len(saved) > 3 and isinstance(saved[3], list) else []
     else:
         predicted_word = predict_next_word(
             spellings, f"all|{seed_key}", avoid=zoog_words, rejected=rejected_words
@@ -909,7 +912,9 @@ def main():
             avoid=[*zoog_words, predicted_word] if predicted_word else zoog_words, rejected=rejected_words
         )
     try:
-        update_zoogliography(predicted_word, predicted_nonsense_word, rejected_words, known_norm, seed_key)
+        if rejected_words:
+            latest_rejected = list(rejected_words)
+        update_zoogliography(predicted_word, predicted_nonsense_word, rejected_words, known_norm, seed_key, latest_rejected)
     except Exception as e:
         print(f"Zoogliography update failed: {e}", file=sys.stderr)
 

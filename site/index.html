@@ -862,6 +862,10 @@ async function main() {
   // Later predictions must stay clear of both.
   const sessionRejected = new Set();
   const sessionPredicted = {};
+  // Finished predictions per letter memory (4 = Normal, 2 = Nonsense). Once a mode is
+  // in here, switching to it (or changing theme) shows it at once, never "Loading…".
+  const foundWord = {};
+  const predictCache = {};
   const dbg = (...a) => console.log('[predict]', ...a);
   let predictRun = 0; // newest prediction number, so late results can be dropped
   async function predictNextWord(opts, silent) {
@@ -1008,11 +1012,10 @@ async function main() {
     if (useAll && ORDER === 4 && stats.predicted_word && !tooSimilar(stats.predicted_word)) { result = stats.predicted_word; ctxOrder = ORDER; }
     else if (useAll && ORDER === 2 && stats.predicted_nonsense_word && !tooSimilar(stats.predicted_nonsense_word)) { result = stats.predicted_nonsense_word; ctxOrder = ORDER; }
     sessionPredicted[ORDER] = result;
-    if (silent) return result; // only the word was wanted, no card update
-    if (result) document.getElementById('predictedWord').textContent = result;
-    else document.getElementById('predictedWord').innerHTML = '<span style="font-size:0.9rem; color:var(--muted);">Those Markov chains have been exhausted for the current entry list.</span>';
+    foundWord[ORDER] = result;
     // Hover panels: show which existing entries each piece came from.
-    const PALETTE = ['#6ee7b7', '#7dd3fc', '#fbbf24', '#f472b6', '#a78bfa', '#fb923c'].map(T);
+    const PALETTE_BASE = ['#6ee7b7', '#7dd3fc', '#fbbf24', '#f472b6', '#a78bfa', '#fb923c'];
+    let PALETTE = PALETTE_BASE.map(T); // rebuilt on every redraw so a theme change recolours it
     const swatch = (i) => `background:${PALETTE[i % PALETTE.length]}; color:${ink(PALETTE[i % PALETTE.length])}; border-radius:3px; padding:0 2px;`;
     const COPY_BTN = '<button type="button" class="copy-btn">Copy</button>';
     const mutedNote = (t) => `<div style="color:var(--muted); margin-top:8px;">${t}</div>`;
@@ -1121,12 +1124,22 @@ async function main() {
         + (anyPlain ? mutedNote('Dashed letters matched no entry and were picked by chance.') : '');
     }
 
-    renderWordSources(result);
-    document.getElementById('predictedDefinition').textContent = 'Loading…';
-    document.getElementById('predictedDefinitionSrc').innerHTML = '';
+    const showWord = () => {
+      if (result) renderWordSources(result);
+      else {
+        document.getElementById('predictedWord').innerHTML = '<span style="font-size:0.9rem; color:var(--muted);">Those Markov chains have been exhausted for the current entry list.</span>';
+        document.getElementById('predictedWordSrc').innerHTML = '';
+      }
+    };
+    // Silent runs only work out and save the prediction; they never touch the card.
+    if (!silent) {
+      showWord();
+      document.getElementById('predictedDefinition').textContent = 'Loading…';
+      document.getElementById('predictedDefinitionSrc').innerHTML = '';
+    }
     // The definition loads after the word has been shown.
     setTimeout(() => {
-      if (runId !== predictRun) return; // a newer prediction replaced this one
+      if (!silent && runId !== predictRun) return; // a newer prediction replaced this one
     // Predicted definition: same idea, but one word at a time, using the
     // two previous words as context (falls back to one word).
     const termSet = new Set(terms.map(t => t.toLowerCase()));
@@ -1342,9 +1355,16 @@ async function main() {
       if (out.length >= 4 && out.length < 25 && !defTooSimilar(out)) { definition = joinTokens(out, t => t); definitionTokens = out; }
     }
     dbg(`run ${runId}: definition built (${definitionTokens.length} words, ${Math.round(performance.now() - t0)} ms total)`);
-    document.getElementById('predictedDefinition').textContent = definition;
-    renderDefinitionSources(definitionTokens);
+    const showDefinition = () => {
+      document.getElementById('predictedDefinition').textContent = definition;
+      renderDefinitionSources(definitionTokens);
+    };
+    // Saved so switching back to this mode (or a theme change) just redraws it.
+    predictCache[ORDER] = { rerender: () => { PALETTE = PALETTE_BASE.map(T); showWord(); showDefinition(); } };
+    dbg(`run ${runId}: prediction for order ${ORDER} saved`);
+    if (!silent) showDefinition();
     }, 0);
+    return result;
   }
   // Normal matches the saved word in stats.json / Zoogliography.txt
   // (4 letters of memory, made by generate_stats.py).
@@ -1356,7 +1376,15 @@ async function main() {
   const predictModeBtn = document.getElementById('predictModeBtn');
   // Run the prediction after the rest of the page has painted, so the
   // other cards and charts never wait on it.
+  let predictToken = 0;
   function predictLater() {
+    const token = ++predictToken;
+    const saved = predictCache[PREDICT_MODES[predictMode].order];
+    if (saved) {
+      dbg('showing saved prediction for', predictMode, '(no loading)');
+      saved.rerender();
+      return;
+    }
     document.getElementById('predictedWord').textContent = 'Loading…';
     document.getElementById('predictedDefinition').textContent = 'Loading…';
     document.getElementById('predictedWordSrc').innerHTML = '';
@@ -1365,12 +1393,19 @@ async function main() {
       // Load the Zoogliography first so predictions can avoid its words.
       dbg('fetching Zoogliography…');
       fetchZoogliography().then(async () => {
+        if (token !== predictToken) return; // the person switched again meanwhile
         dbg('Zoogliography ready, starting prediction for mode', predictMode);
         await predictNextWord(PREDICT_MODES[predictMode]);
+        if (token !== predictToken) return;
+        // Work out the other mode quietly too, so switching later never shows Loading.
+        const kN = PREDICT_MODES.normal.order, kS = PREDICT_MODES.nonsense.order;
+        if (!(kN in foundWord)) await predictNextWord(PREDICT_MODES.normal, true);
+        if (token !== predictToken) return;
+        if (!(kS in foundWord)) await predictNextWord(PREDICT_MODES.nonsense, true);
         if (predictedAllWord === null) {
           // the Zoogliography always uses Normal
-          predictedAllWord = (await predictNextWord(PREDICT_MODES.normal, true)) || '';
-          predictedNonsenseWord = (await predictNextWord(PREDICT_MODES.nonsense, true)) || '';
+          predictedAllWord = foundWord[kN] || '';
+          predictedNonsenseWord = foundWord[kS] || '';
           refreshZoogModal();
         }
       }).catch(err => console.error('[predict] failed:', err));

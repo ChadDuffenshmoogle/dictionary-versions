@@ -863,8 +863,9 @@ async function main() {
     return parts.length ? parts : [t];
   });
   let predictRun = 0; // newest prediction number, so late definitions can be dropped
-  function predictNextWord(opts, silent) {
+  async function predictNextWord(opts, silent) {
     const { limit, order: ORDER, dorder: DORDER } = opts;
+    const runId = silent ? predictRun : ++predictRun;
     const useAll = !limit;
     const allTerms = splitSpellings(stats.words_by_length_asc || []);
     const existing = new Set(allTerms.map(t => t.toLowerCase()));
@@ -960,7 +961,16 @@ async function main() {
     // try again with one letter fewer (3). After that the chains are used up.
     for (let ctx = ORDER; ctx >= Math.max(1, ORDER - 1) && !result; ctx--) {
       ctxOrder = ctx;
+      // Show which chain length is being tried, and give the browser a moment
+      // to paint it (and to keep the rest of the page responsive).
+      if (!silent) document.getElementById('predictedWord').textContent = `Loading… (${ctx}-letter chains)`;
+      await new Promise(r => setTimeout(r, 30));
+      if (!silent && runId !== predictRun) return '';
       for (let attempt = 0; attempt < 5000 && !result; attempt++) {
+        if (attempt % 150 === 149) {
+          await new Promise(r => setTimeout(r, 0));
+          if (!silent && runId !== predictRun) return '';
+        }
         let word = '';
         while (word.length < 24) {
           const ch = pickNext(word);
@@ -976,6 +986,7 @@ async function main() {
         else sessionRejected.add(clean); // too close to something: rejected, try again
       }
     }
+    if (!silent && runId !== predictRun) return result; // a newer prediction replaced this one
     // For "All words", use the one word made by generate_stats.py so the
     // card and Zoogliography.txt always show the same word.
     // The nonsense card likewise uses the word saved in stats.json.
@@ -983,7 +994,6 @@ async function main() {
     else if (useAll && ORDER === 2 && stats.predicted_nonsense_word && !tooSimilar(stats.predicted_nonsense_word)) { result = stats.predicted_nonsense_word; ctxOrder = ORDER; }
     sessionPredicted[ORDER] = result;
     if (silent) return result; // only the word was wanted, no card update
-    const runId = ++predictRun;
     if (result) document.getElementById('predictedWord').textContent = result;
     else document.getElementById('predictedWord').innerHTML = '<span style="font-size:0.9rem; color:var(--muted);">Those Markov chains have been exhausted for the current entry list.</span>';
     refreshZoogModal();
@@ -1332,18 +1342,18 @@ async function main() {
   // Run the prediction after the rest of the page has painted, so the
   // other cards and charts never wait on it.
   function predictLater() {
-    document.getElementById('predictedWord').textContent = '…';
-    document.getElementById('predictedDefinition').textContent = '';
+    document.getElementById('predictedWord').textContent = 'Loading…';
+    document.getElementById('predictedDefinition').textContent = 'Loading…';
     document.getElementById('predictedWordSrc').innerHTML = '';
     document.getElementById('predictedDefinitionSrc').innerHTML = '';
     requestAnimationFrame(() => setTimeout(() => {
       // Load the Zoogliography first so predictions can avoid its words.
-      fetchZoogliography().then(() => {
-        predictNextWord(PREDICT_MODES[predictMode]);
+      fetchZoogliography().then(async () => {
+        await predictNextWord(PREDICT_MODES[predictMode]);
         if (predictedAllWord === null) {
           // the Zoogliography always uses Normal
-          predictedAllWord = predictNextWord(PREDICT_MODES.normal, true) || '';
-          predictedNonsenseWord = predictNextWord(PREDICT_MODES.nonsense, true) || '';
+          predictedAllWord = (await predictNextWord(PREDICT_MODES.normal, true)) || '';
+          predictedNonsenseWord = (await predictNextWord(PREDICT_MODES.nonsense, true)) || '';
           refreshZoogModal();
         }
       });

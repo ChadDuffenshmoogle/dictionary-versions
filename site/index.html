@@ -394,8 +394,8 @@
   .zoog-h.violet { color:var(--violet); }
   .zoog-h.muted { color:var(--muted); }
   .zoog-n { color:var(--muted); font-weight:400; font-size:0.75rem; }
-  .zoog-chips { display:flex; flex-wrap:wrap; gap:6px; }
-  .zoog-chip { background:var(--panel); border:1px solid var(--line); border-radius:999px; padding:3px 11px; font-size:0.85rem; overflow-wrap:anywhere; }
+  .zoog-chips { display:flex; flex-direction:column; gap:5px; }
+  .zoog-chip { background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:6px 12px; font-size:1rem; overflow-wrap:anywhere; }
   .zoog-chip.pred { border-color:var(--violet); }
   .zoog-chip.cur { background:var(--violet); color:var(--on-accent); font-weight:700; }
   .zoog-chip.rej { color:var(--muted); border-style:dashed; }
@@ -1532,9 +1532,9 @@ async function main() {
   }
   // Authentic zoogs are anthroopozoogs; predicted ones are autozoogs.
   const ZOOG_SECTIONS = [
-    { key: 'main',     id: 'zoogSec-main',     title: 'Anthroopozoogs',     short: 'anthroopozoogs',     cls: '',       chip: '' },
-    { key: 'next',     id: 'zoogSec-next',     title: 'Normal autozoogs',   short: 'normal autozoogs',   cls: 'violet', chip: 'pred' },
-    { key: 'nonsense', id: 'zoogSec-nonsense', title: 'Nonsense autozoogs', short: 'nonsense autozoogs', cls: 'violet', chip: 'pred' },
+    { key: 'main',     id: 'zoogSec-main',     title: 'Authentic zoogs (anthroopozoogs)', short: 'anthroopozoogs',     cls: '',       chip: '' },
+    { key: 'next',     id: 'zoogSec-next',     title: 'Predicted zoogs (autozoogs): normal', short: 'normal autozoogs',   cls: 'violet', chip: 'pred' },
+    { key: 'nonsense', id: 'zoogSec-nonsense', title: 'Predicted zoogs (autozoogs): nonsense', short: 'nonsense autozoogs', cls: 'violet', chip: 'pred' },
     { key: 'rejected', id: 'zoogSec-rejected', title: 'Rejected zoogs',     short: 'rejected',           cls: 'muted',  chip: 'rej' },
   ];
   function refreshZoogModal() {

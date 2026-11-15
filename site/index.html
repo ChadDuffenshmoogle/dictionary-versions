@@ -396,8 +396,6 @@
   .zoog-n { color:var(--muted); font-weight:400; font-size:0.75rem; }
   .zoog-chips { display:flex; flex-direction:column; gap:5px; }
   .zoog-chip { background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:6px 12px; font-size:1rem; overflow-wrap:anywhere; }
-  .zoog-chip.pred { border-color:var(--violet); }
-  .zoog-chip.cur { background:var(--violet); color:var(--on-accent); font-weight:700; }
   .zoog-chip.rej { color:var(--muted); border-style:dashed; }
   .zoog-empty { color:var(--muted); font-size:0.8rem; font-style:italic; }
   /* zoogliography: looks like an old bibliography page */
@@ -1544,14 +1542,10 @@ async function main() {
     const z = parseZoog(text);
     const q = zoogFilter.value.trim().toLowerCase();
     const keep = (arr) => q ? arr.filter(w => w.toLowerCase().includes(q)) : arr;
-    const current = {
-      next: (predictedAllWord || stats.predicted_word || '').toLowerCase(),
-      nonsense: (predictedNonsenseWord || stats.predicted_nonsense_word || '').toLowerCase(),
-    };
     const section = (sec) => {
-      const all = z[sec.key], shown = keep(all), cur = current[sec.key];
+      const all = z[sec.key], shown = keep(all);
       const chips = shown.length
-        ? `<div class="zoog-chips">${shown.map(w => `<span class="zoog-chip ${sec.chip}${cur && w.toLowerCase() === cur ? ' cur' : ''}">${escapeHtml(w)}</span>`).join('')}</div>`
+        ? `<div class="zoog-chips">${shown.map(w => `<span class="zoog-chip ${sec.chip}">${escapeHtml(w)}</span>`).join('')}</div>`
         : `<div class="zoog-empty">${q ? 'No matches.' : 'None yet.'}</div>`;
       return `<div class="zoog-section" id="${sec.id}"><div class="zoog-h ${sec.cls}">${sec.title}<span class="zoog-n">${q ? shown.length + ' of ' + all.length : all.length}</span></div>${chips}</div>`;
     };

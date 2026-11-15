@@ -1,1054 +1,3051 @@
-"""
-Generates site/stats.json for the UNICYCLIST DICTIONARY stats page.
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Unicyclist Dictionary Stats</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script>try { if (localStorage.getItem('theme') === 'light') document.documentElement.dataset.theme = 'light'; } catch (e) {}</script>
+<style>
+  :root {
+    --bg: #0f1115;
+    --card: #171a21;
+    --text: #e8e8ec;
+    --muted: #9a9fab;
+    --accent: #6ee7b7;
+    --on-accent: #0f1115;
+    --line: #262a33;
+    --panel: #0f1115;
+    --violet: #a78bfa;
+    --mark: #fbbf24;
+    --overlay: rgba(0, 0, 0, 0.6);
+    color-scheme: dark;
+  }
+  :root[data-theme="light"] {
+    --bg: #f3f4f8;
+    --card: #ffffff;
+    --text: #1b1f2a;
+    --muted: #667085;
+    --accent: #0b8a68;
+    --on-accent: #ffffff;
+    --line: #e1e4ec;
+    --panel: #eef0f6;
+    --violet: #7c5cd6;
+    --mark: #fde68a;
+    --overlay: rgba(20, 24, 36, 0.45);
+    color-scheme: light;
+  }
+  body { transition: background 0.25s, color 0.25s; }
+  .card { transition: background 0.25s, border-color 0.25s; }
+  .site-footer { text-align: center; margin: 28px 0 8px; }
+  .theme-btn {
+    padding: 2px 6px;
+    border: none;
+    background: transparent;
+    font-size: 0.85rem;
+    line-height: 1;
+    cursor: pointer;
+    opacity: 0.7;
+  }
+  .theme-btn:hover { opacity: 1; }
+  .theme-btn span { display: inline-block; }
+  .theme-btn.swap span { animation: themeSwap 0.3s ease; }
+  @keyframes themeSwap {
+    0%   { transform: scale(1);   opacity: 1; }
+    50%  { transform: scale(0.3); opacity: 0; }
+    100% { transform: scale(1);   opacity: 1; }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    padding: 24px;
+    overflow-x: hidden;
+  }
+  h1 { font-size: 1.6rem; margin-bottom: 4px; }
+  .subtitle { color: var(--muted); margin-top: 0; margin-bottom: 24px; }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 16px;
+  }
+  .card {
+    background: var(--card);
+    border-radius: 12px;
+    padding: 18px;
+    border: 1px solid var(--line);
+  }
+  .card h2 { margin: 0 0 12px 0; font-size: 1rem; color: var(--accent); }
+  .stat-big { font-size: 2.2rem; font-weight: 700; }
+  .wide { grid-column: 1 / -1; }
+  .fun-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 12px; }
+  .fun-item { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; min-width: 0; }
+  .fun-title { display: flex; justify-content: space-between; gap: 8px; color: var(--accent); font-weight: 700; font-size: 0.9rem; }
+  .fun-count { color: var(--muted); font-weight: 400; }
+  .fun-note { color: var(--muted); font-size: 0.75rem; margin-top: 2px; }
+  .fun-list { display: flex; flex-wrap: wrap; gap: 4px 10px; margin-top: 8px; font-size: 0.85rem; }
+  .fun-entry { display: inline-flex; flex-wrap: wrap; align-items: baseline; column-gap: 5px; min-width: 0; max-width: 100%; }
+  .fun-entry .fun-note { margin-top: 0; }
+  .fun-hl { text-decoration: underline; text-underline-offset: 2px; }
+  .fun-term { cursor: pointer; display: inline-block; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: bottom; }
+  .fun-title-link { cursor: pointer; }
+  .fun-title-link:hover { text-decoration: underline; }
+  .fun-term:hover { text-decoration: underline; }
+  .fun-more { color: var(--muted); cursor: pointer; font-size: 0.75rem; align-self: center; }
+  .fun-more:hover { color: var(--text); }
+  .fun-text { margin-top: 8px; font-size: 0.9rem; }
+  .top-row { display: flex; flex-wrap: wrap; gap: 16px; }
+  .top-row > .card { flex: 1 1 280px; min-width: 0; }
+  ol { margin: 0; padding-left: 20px; }
+  li { margin-bottom: 6px; overflow-wrap: anywhere; word-break: break-word; }
+  .def-term { color: var(--accent); font-weight: 600; }
+  .def-term[data-term] { cursor: pointer; }
+  .def-term[data-term]:hover { text-decoration: underline; }
+  .def-text { color: var(--muted); }
+  canvas { max-height: 320px; }
+  .loading, .error { color: var(--muted); padding: 40px; text-align: center; }
+  .n-input {
+    width: 52px;
+    padding: 2px 4px;
+    border-radius: 6px;
+    border: 1px solid var(--line);
+    background: var(--panel);
+    color: var(--accent);
+    font: inherit;
+    font-weight: 700;
+  }
+  #dictSearchInput {
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    background: var(--panel);
+    color: var(--text);
+    font-size: 0.95rem;
+    box-sizing: border-box;
+  }
+  .scope-toggle {
+    display: flex;
+    gap: 6px;
+    margin: 10px 0 12px 0;
+  }
+  .scope-toggle button {
+    background: var(--panel);
+    color: var(--muted);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 0.85rem;
+    cursor: pointer;
+  }
+  .scope-toggle button.active {
+    background: var(--accent);
+    color: var(--on-accent);
+    border-color: var(--accent);
+    font-weight: 700;
+  }
+  .dict-entry {
+    padding: 10px 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .dict-entry:last-child { border-bottom: none; }
+  .dict-entry .term {
+    color: var(--accent);
+    font-weight: 700;
+  }
+  .dict-entry .def { white-space: pre-line; }
+  .dict-entry .pos {
+    color: var(--muted);
+    font-size: 0.75rem;
+    font-weight: 400;
+    font-style: italic;
+  }
+  .dict-entry .def {
+    color: var(--muted);
+    margin-top: 2px;
+  }
+  #dictResultCount {
+    color: var(--muted);
+    font-size: 0.8rem;
+    margin-bottom: 8px;
+  }
+  .growth-chart-wrap { position: relative; }
+  .lookback-control {
+    position: absolute; top: 4px; right: 0; z-index: 1;
+    display: flex; align-items: center; gap: 4px;
+    font-size: 0.8rem; color: var(--muted);
+  }
+  .lookback-control button {
+    background: var(--panel); color: var(--accent); border: 1px solid var(--line);
+    border-radius: 6px; padding: 2px 6px; cursor: pointer; font: inherit; line-height: 1;
+  }
+  .lookback-control button:disabled { opacity: 0.35; cursor: default; }
+  @media (max-width: 1100px) {
+    .lookback-control { position: static; justify-content: flex-end; margin-bottom: 6px; }
+  }
+  .letter-chart-title {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0 0 12px 0;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--accent);
+  }
+  .inline-select {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 2px 6px;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .inline-select option {
+    color: var(--text);
+    background: var(--card);
+    font-weight: 400;
+    font-size: 0.95rem;
+  }
+  .additions-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    color: var(--muted);
+    font-size: 0.8rem;
+    margin-top: 6px;
+  }
+  #wordCloudCanvas {
+    display: block;
+    width: 100%;
+    cursor: pointer;
+    border-radius: 8px;
+    margin-top: 8px;
+    max-height: none !important;
+  }
+  .cloud-breakout {
+    width: 96vw;
+    max-width: 96vw;
+    margin-left: calc(-48vw + 50%);
+    margin-right: calc(-48vw + 50%);
+    box-sizing: border-box;
+  }
+  .pie-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  @media (max-width: 700px) {
+    .pie-row { grid-template-columns: 1fr; }
+  }
+  .tip {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    margin-left: 6px;
+    border: 1px solid var(--muted);
+    border-radius: 50%;
+    color: var(--muted);
+    font-size: 0.7rem;
+    font-weight: 700;
+    cursor: help;
+    text-transform: none;
+    letter-spacing: 0;
+  }
+  .tip .tip-text {
+    display: none;
+    position: absolute;
+    top: 22px;
+    left: -10px;
+    width: 280px;
+    padding: 10px 12px;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    color: var(--text);
+    font-size: 0.8rem;
+    font-weight: 400;
+    line-height: 1.4;
+    text-align: left;
+    z-index: 20;
+  }
+  .tip:hover .tip-text, .tip:focus .tip-text { display: block; }
+  .mode-btn {
+    margin-left: auto;
+    padding: 5px 16px;
+    border: 1px solid var(--accent);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--accent);
+    font-size: 0.8rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.3s, color 0.3s, border-color 0.3s, transform 0.15s;
+  }
+  .mode-btn:active { transform: scale(0.94); }
+  .mode-btn.nonsense {
+    background: var(--violet);
+    border-color: var(--violet);
+    color: var(--on-accent);
+  }
+  .mode-btn.pop { animation: modePop 0.4s ease; }
+  @keyframes modePop {
+    0%   { transform: scale(1); }
+    30%  { transform: scale(0.9); }
+    60%  { transform: scale(1.08); }
+    100% { transform: scale(1); }
+  }
+  .speak-btn {
+    padding: 0 4px;
+    border: none;
+    background: transparent;
+    font-size: 0.75rem;
+    cursor: pointer;
+  }
+  .speak-btn:active { transform: scale(0.94); }
+  .hover-src { position: relative; cursor: help; padding-bottom: 6px; }
+  .src-panel {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 320px;
+    max-width: 85vw;
+    max-height: 360px;
+    overflow: auto;
+    margin-top: 0;
+    padding: 10px 12px;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    color: var(--text);
+    font-size: 0.8rem;
+    font-weight: 400;
+    line-height: 1.5;
+    z-index: 20;
+  }
+  .copy-btn {
+    float: right;
+    margin: 0 0 4px 8px;
+    padding: 1px 8px;
+    border: 1px solid var(--muted);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--muted);
+    font-size: 0.7rem;
+    cursor: pointer;
+  }
+  .copy-btn:hover { color: var(--text); border-color: var(--text); }
+  .hover-src:hover .src-panel:not(:empty) { display: block; }
+  .tip .tip-text::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: -10px;
+    height: 10px;
+  }
+  .nav-btn {
+    display: inline-block;
+    padding: 6px 12px;
+    font-size: 0.8rem;
+    line-height: 1.2;
+    text-decoration: none;
+    cursor: pointer;
+    border: 1px solid transparent;
+  }
+  /* file: looks like a terminal / text file */
+  .nav-file {
+    background: #0f1115;
+    color: var(--accent);
+    border-color: var(--accent);
+    border-radius: 4px;
+    font-family: ui-monospace, Menlo, Consolas, monospace;
+  }
+  /* search: looks like a search bar */
+  .nav-search {
+    background: #fff;
+    color: #3c4043;
+    border-color: #dfe1e5;
+    border-radius: 999px;
+    padding: 6px 16px;
+    font-family: Arial, sans-serif;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+  }
+  /* zoogliography viewer */
+  .zoog-toolbar { display:flex; align-items:center; gap:12px; flex-wrap:wrap; padding:10px 18px; border-bottom:1px solid var(--line); }
+  #zoogFilter { flex:1 1 180px; min-width:0; padding:7px 10px; border-radius:8px; border:1px solid var(--line); background:var(--panel); color:var(--text); font-size:0.85rem; }
+  .zoog-total { color:var(--muted); font-size:0.8rem; }
+  .zoog-jump { background:none; border:none; padding:0; color:var(--muted); font:inherit; cursor:pointer; text-decoration:underline dotted; text-underline-offset:3px; }
+  .zoog-jump:hover { color:var(--text); }
+  #zoogModalContent { flex:1 1 auto; min-height:0; overflow:auto; padding:16px 18px; color:var(--text); font-size:0.9rem; }
+  .zoog-section { margin-bottom:20px; }
+  .zoog-section:last-child { margin-bottom:0; }
+  .zoog-h { display:flex; align-items:baseline; gap:8px; margin:0 0 8px; font-size:0.9rem; font-weight:700; color:var(--accent); }
+  .zoog-h.violet { color:var(--violet); }
+  .zoog-h.muted { color:var(--muted); }
+  .zoog-n { color:var(--muted); font-weight:400; font-size:0.75rem; }
+  .zoog-chips { display:flex; flex-wrap:wrap; gap:6px; }
+  .zoog-chip { background:var(--panel); border:1px solid var(--line); border-radius:999px; padding:3px 11px; font-size:0.85rem; overflow-wrap:anywhere; }
+  .zoog-chip.pred { border-color:var(--violet); }
+  .zoog-chip.cur { background:var(--violet); color:var(--on-accent); font-weight:700; }
+  .zoog-chip.rej { color:var(--muted); border-style:dashed; }
+  .zoog-empty { color:var(--muted); font-size:0.8rem; font-style:italic; }
+  /* zoogliography: looks like an old bibliography page */
+  .nav-zoog {
+    background: #f4ecd8;
+    color: #4a3621;
+    border-color: #b79b6c;
+    border-radius: 3px;
+    font-family: Georgia, 'Times New Roman', serif;
+    font-style: italic;
+  }
+  /* wiktionary: looks like a Wiktionary page */
+  .nav-wikt {
+    background: #f8f9fa;
+    color: #0645ad;
+    border-color: #a2a9b1;
+    border-radius: 2px;
+    font-family: 'Linux Libertine', Georgia, Times, serif;
+  }
+  /* wordle: looks like a Wordle tile */
+  .nav-wordle {
+    background: #6aaa64;
+    color: #fff;
+    border-color: #6aaa64;
+    border-radius: 2px;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  /* connections: looks like a Connections tile with the four group colors */
+  .nav-conn {
+    background:
+      linear-gradient(90deg, #f9df6d 25%, #a0c35a 25% 50%, #b0c4ef 50% 75%, #ba81c5 75%) bottom / 100% 4px no-repeat,
+      #efefe6;
+    color: #000;
+    border-radius: 6px;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-weight: 700;
+    text-transform: uppercase;
+    padding-bottom: 10px;
+  }
+  .nav-btn:hover { filter: brightness(0.93); }
+</style>
 
-Reads:
-  - Full commit history of the repo (for the "new words added over time"
-    frequency chart -- one commit == one new file == one new word, per
-    the existing bot logic in dictionary_manager.py).
-  - The single most recent "UNICYCLIST DICTIONARY v*.txt" file (for
-    total entries, entries-per-letter, shortest/longest words, and
-    shortest/longest definitions).
+</head>
+<body>
+  <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;">
+    <div>
+    <h1>Unicyclist Dictionary Live Stats</h1>
+    <p class="subtitle" id="subtitle" style="margin-bottom:0;">Loading…</p>
+    </div>
+    <div style="display:flex; flex-direction:column; align-items:flex-end; gap:6px;">
+      <div style="display:flex; flex-direction:row; flex-wrap:wrap; justify-content:flex-end; gap:6px;">
+        <button id="viewFileBtn" class="nav-btn nav-file">📄 View Current Dictionary File</button>
+        <button id="viewSearchBtn" class="nav-btn nav-search">🔍 View Searchable Dictionary</button>
+        <button id="viewZoogBtn" class="nav-btn nav-zoog">📚 View Zoogliography</button>
+      </div>
+      <div style="display:flex; flex-direction:row; flex-wrap:wrap; justify-content:flex-end; gap:6px;">
+        <a href="wiktionary.html" class="nav-btn nav-wikt">Wiktionary view</a>
+        <a href="wordle.html" class="nav-btn nav-wordle">Unicyclist Wordle</a>
+        <a href="connections.html" class="nav-btn nav-conn">Unicyclist Connections</a>
+      </div>
+    </div>
+  </div>
+  <div style="height:24px;"></div>
 
-Requires no secrets for a public repo: GITHUB_TOKEN provided
-automatically by GitHub Actions is enough to raise the anonymous rate
-limit from 60/hr to 1000/hr.
-"""
+  <div id="content" class="grid" style="display:none;">
+    <div class="wide top-row">
+    <div class="card">
+      <h2>Total Entries</h2>
+      <div class="stat-big" id="totalEntries">—</div>
+    </div>
 
-import base64
-import json
-import os
-import random
-import re
-import sys
-from collections import Counter
-from datetime import datetime
-from zoneinfo import ZoneInfo
+    <div class="card">
+      <h2>Most Recent Word</h2>
+      <div class="stat-big" id="latestWord" style="font-size:1.6rem;">—</div>
+      <div id="latestWordTime" style="color:var(--muted); font-size:0.85rem; margin-top:4px;"></div>
+    </div>
 
-import requests
-import unicodedata
+    <div class="card">
+      <h2 style="display:flex; align-items:center;">Next Predicted Word
+        <span class="tip" tabindex="0">?<span class="tip-text">Made-up guess from the spelling patterns in the entries. The tool counts which letter usually follows each group of letters (for example, what often comes after "tio"), then builds a new word one letter at a time by picking likely next letters. It only keeps words that are not already in the dictionary or the Zoogliography (main list, predicted, nonsense and rejected) or too close to one. If every try with the full letter memory is rejected, it retries with one letter fewer, and if that fails too it says the chains are exhausted. The guess changes only when a new word is added. The definition is built the same way, one word at a time, from which words usually follow each group of words, and it may not copy an existing definition. Normal looks 4 letters back for the word and 2 words back for the definition. Nonsense looks only 2 letters and 1 word back, so the result is looser and stranger.</span></span>
+        <button id="predictModeBtn" class="mode-btn" type="button">Normal</button>
+      </h2>
+      <div class="hover-src">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <div class="stat-big" id="predictedWord" style="font-size:1.6rem;">—</div>
+          <button id="speakBtn" class="speak-btn" type="button" title="Hear it">🔊</button>
+        </div>
+        <div class="src-panel" id="predictedWordSrc"></div>
+      </div>
+      <div class="hover-src" style="margin-top:4px;">
+        <div id="predictedDefinition" style="color:var(--muted); font-size:0.8rem;"></div>
+        <div class="src-panel" id="predictedDefinitionSrc"></div>
+      </div>
+    </div>
 
-CENTRAL = ZoneInfo("America/Chicago")
-SCRABBLE_FILE = "178,691 Scrabble Legal Words.txt"
-SCRABBLE_SOURCE_URL = "https://github.com/redbo/scrabble/blob/master/dictionary.txt"
-SCRABBLE_SOURCE_LABEL = "Scrabble word list source"
+    </div>
 
-def to_central_date(iso_timestamp):
-    """GitHub commit timestamps come back in UTC (Z-suffixed). Convert to
-    Central time before taking the calendar date, otherwise a commit made
-    in the evening Central time lands on the wrong (next) UTC day."""
-    dt = datetime.fromisoformat(iso_timestamp.replace("Z", "+00:00"))
-    return dt.astimezone(CENTRAL).strftime("%Y-%m-%d")
+    <div class="card wide">
+      <div style="display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:14px;">
+        <h2 style="margin:0;">Total Word Count Over Time (+ <input type="number" id="projMonths" value="6" min="1" step="1"
+          style="width:56px; padding:2px 4px; border-radius:6px; border:1px solid var(--line); background:var(--panel); color:var(--accent); font:inherit; font-weight:700;">
+          Month Projection)</h2>
+        <div style="display:flex; flex-direction:column; gap:6px; font-size:0.8rem; color:var(--muted); text-align:right;">
+          <div>Current rate: <strong id="currentRateDisplay" style="color:var(--accent);">—</strong></div>
+          <div style="display:flex; align-items:center; gap:4px; flex-wrap:wrap; justify-content:flex-end;">
+            Rate needed for
+            <input type="number" id="goalWords" value="1000" min="1" style="width:64px; padding:2px 4px; border-radius:6px; border:1px solid var(--line); background:var(--panel); color:var(--accent); font:inherit; font-weight:700;">
+            words by
+            <select id="goalMonth" style="padding:2px 4px; border-radius:6px; border:1px solid var(--line); background:var(--panel); color:var(--accent); font:inherit; font-weight:700;">
+              <option value="0">Jan</option>
+              <option value="1">Feb</option>
+              <option value="2">Mar</option>
+              <option value="3">Apr</option>
+              <option value="4" selected>May</option>
+              <option value="5">Jun</option>
+              <option value="6">Jul</option>
+              <option value="7">Aug</option>
+              <option value="8">Sep</option>
+              <option value="9">Oct</option>
+              <option value="10">Nov</option>
+              <option value="11">Dec</option>
+            </select>
+            <input type="number" id="goalYear" value="2027" min="2026" style="width:70px; padding:2px 4px; border-radius:6px; border:1px solid var(--line); background:var(--panel); color:var(--accent); font:inherit; font-weight:700;">
+            : <strong id="goalRateDisplay" style="color:var(--accent);">—</strong>
+          </div>
+        </div>
+      </div>
+      <div class="growth-chart-wrap">
+        <div class="lookback-control">
+          Projections based on last
+          <button type="button" id="lookbackDown" title="Fewer months">&#9660;</button>
+          <strong id="lookbackValue" style="color:var(--accent);">—</strong>
+          <button type="button" id="lookbackUp" title="More months">&#9650;</button>
+          months
+        </div>
+        <canvas id="growthChart"></canvas>
+      </div>
+    </div>
 
+    <div class="card wide">
+      <h2>New Words Added Over Time</h2>
+      <canvas id="additionsChart"></canvas>
+      <div class="additions-footer">
+        <span>Click a bar to see all words added that day.</span>
+        <span id="longestStreak"></span>
+      </div>
+    </div>
 
-def to_central_datetime_str(iso_timestamp):
-    """Human-readable Central time, e.g. 'Sep 2, 2025, 3:45 PM CT'."""
-    dt = datetime.fromisoformat(iso_timestamp.replace("Z", "+00:00"))
-    local = dt.astimezone(CENTRAL)
-    return local.strftime("%b %-d, %Y, %-I:%M %p") + " CT"
+    <div class="card wide">
+      <div class="letter-chart-title">
+        Entries per first
+        <select id="letterGroupMode" class="inline-select">
+          <option value="1">1</option>
+          <option value="2">2</option>
+          <option value="3">3</option>
+          <option value="4">4</option>
+          <option value="5">5</option>
+          <option value="6">6</option>
+          <option value="7">7</option>
+          <option value="8">8</option>
+          <option value="9">9</option>
+          <option value="10">10</option>
+          <option value="11">11</option>
+          <option value="12">12</option>
+          <option value="13">13</option>
+          <option value="14">14</option>
+          <option value="15">15</option>
+          <option value="16">16</option>
+          <option value="17">17</option>
+          <option value="18">18</option>
+          <option value="19">19</option>
+          <option value="20">20</option>
+        </select>
+        Letters
+      </div>
+      <div id="letterChartOuter" style="overflow-x:auto;">
+        <div id="letterChartInner" style="height:320px;">
+          <canvas id="letterChart"></canvas>
+        </div>
+      </div>
+      <div style="color:var(--muted); font-size:0.8rem; margin-top:6px;">Click a <span id="letterChartClickLabel">letter</span> to see all words that start with it.</div>
+    </div>
 
-GITHUB_OWNER = "ChadDuffenshmoogle"
-GITHUB_REPO = "dictionary-versions"
-GITHUB_BRANCH = "main"
-FILE_PREFIX = "UNICYCLIST DICTIONARY"
-FILE_EXTENSION = ".txt"
-ENTRY_PATTERN = r'^(.+?) \((.+?)\) - (.+)$'
+    <div class="card wide">
+      <div class="letter-chart-title">
+        <select id="lenWhat" class="inline-select">
+          <option value="entries">Entries</option>
+          <option value="definitions">Definitions</option>
+        </select>
+        by
+        <select id="lenMode" class="inline-select">
+          <option value="letter">letter</option>
+          <option value="character">character</option>
+        </select>
+        count
+      </div>
+      <div style="height:320px;">
+        <canvas id="lengthChart"></canvas>
+      </div>
+      <div style="color:var(--muted); font-size:0.8rem; margin-top:6px;">Click a bar to see everything with that count (letter skips spaces and punctuation, character counts them).</div>
+    </div>
 
-# Everything up through this date is noise (bulk backfill + a week of
-# test/delete/reset churn) and gets excluded from both charts entirely.
-# Only commits strictly after this date represent real new words. The
-# word count as of this date is solved dynamically in main() (see
-# "effective_baseline") rather than hardcoded, so it can never drift out
-# of sync with the live file's actual total_entries.
-BASELINE_DATE = "2025-08-13"
+    <div class="card wide">
+      <div class="letter-chart-title" style="flex-wrap:wrap;">
+        <select id="usedWhat" class="inline-select">
+          <option value="characters">Characters</option>
+          <option value="words">Words</option>
+        </select>
+        used in
+        <select id="usedSource" class="inline-select">
+          <option value="entries">Entries</option>
+          <option value="definitions">Definitions</option>
+          <option value="both">Entries + Definitions</option>
+        </select>
+        <select id="usedTop" class="inline-select" style="display:none;">
+          <option value="30">(Top 30)</option>
+          <option value="100">(Top 100)</option>
+          <option value="multi">(Used more than once)</option>
+        </select>
+      </div>
+      <div id="usedChartOuter" style="overflow-x:auto;">
+        <div id="usedChartInner" style="height:320px;">
+          <canvas id="usedChart"></canvas>
+        </div>
+      </div>
+      <div style="color:var(--muted); font-size:0.8rem; margin-top:6px;">Each bar counts every time that character (or word) appears. Capital and lowercase letters are counted together. Click a bar to see the entries it comes from.</div>
+    </div>
 
-API_ROOT = f"https://api.github.com/repos/{GITHUB_OWNER}/{GITHUB_REPO}"
-RAW_ROOT = f"https://raw.githubusercontent.com/{GITHUB_OWNER}/{GITHUB_REPO}/{GITHUB_BRANCH}"
+    <div class="wide" style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
+      <div class="card">
+        <h2 id="wordsTitle" style="display:flex; align-items:center; flex-wrap:wrap; gap:8px;">
+          <select id="wordsMode" class="inline-select">
+            <option value="shortest">Shortest</option>
+            <option value="longest">Longest</option>
+          </select>
+          <input type="number" id="nWords" value="5" min="1" step="1" class="n-input">
+          <select id="wordsScope" class="inline-select">
+            <option value="all">Entries</option>
+            <option value="single">Single Words</option>
+          </select>
+        </h2>
+        <ol id="wordsList"></ol>
+      </div>
 
-TOKEN = os.environ.get("GITHUB_TOKEN")
-HEADERS = {"Accept": "application/vnd.github+json"}
-if TOKEN:
-    HEADERS["Authorization"] = f"Bearer {TOKEN}"
+      <div class="card">
+        <h2 id="defsTitle" style="display:flex; align-items:center; flex-wrap:wrap; gap:8px;">
+          <select id="defsMode" class="inline-select">
+            <option value="shortest">Shortest</option>
+            <option value="longest">Longest</option>
+          </select>
+          <input type="number" id="nDefs" value="5" min="1" step="1" class="n-input">
+          Definitions
+        </h2>
+        <ol id="defsList"></ol>
+      </div>
+    </div>
 
+    <div class="wide pie-row">
+      <div class="card">
+        <h2>Parts of Speech</h2>
+        <canvas id="posChart"></canvas>
+        <div style="color:var(--muted); font-size:0.8rem; margin-top:6px;">Click a slice to search words of that type, or a name in the key to open its Wiktionary category.</div>
+      </div>
 
-# --- Predicted next word, saved into Zoogliography.txt ---------------------
-ZOOG_FILE = "Zoogliography.txt"
-ZOOG_MARKER = "--- Predicted Next Word ---"
-ZOOG_NONSENSE_MARKER = "--- Predicted Nonsense Word ---"
-ZOOG_REJECTED_MARKER = "--- Rejected Predictions (too similar to an existing word) ---"
-# Last line of the file: remembers which dictionary state the saved predictions
-# were made for, so re-running on an unchanged dictionary keeps the same words
-# instead of rejecting its own earlier guesses and drifting.
-ZOOG_SEED_RE = re.compile(r"^--- Seed: (\[.*\]) ---[ \t]*$", re.M)
-# A separate token that is allowed to write to the dictionary repo. It comes
-# from a GitHub Actions secret, so it never appears in this file.
-ZOOG_TOKEN = os.environ.get("ZOOG_WRITE_TOKEN")
+      <div class="card">
+        <h2>Scrabble Legality</h2>
+        <canvas id="scrabbleChart"></canvas>
+        <div style="color:var(--muted); font-size:0.8rem; margin-top:6px;">
+          Click a slice to search those words, or a name in the key to open its Wiktionary category.
+        </div>
+        <div id="scrabbleCredit" style="color:var(--muted); font-size:0.75rem; margin-top:4px;"></div>
+      </div>
+    </div>
 
+    <div class="card wide">
+      <div id="funFacts" class="fun-grid"></div>
+    </div>
 
-def split_spellings(terms):
-    """A slash WITH spaces on both sides separates alternate spellings of one
-    entry ("aa / ab" is two spellings). A slash without those spaces is part
-    of the word ("aa/ab" is one word). The spaces are part of the separator,
-    not of either spelling."""
-    out = []
-    for t in terms:
-        seen = set()
-        parts = []
-        for v in re.split(r"\s+/\s+", t):
-            v = v.strip()
-            if v and v.lower() not in seen:
-                seen.add(v.lower())
-                parts.append(v)
-        out.extend(parts or [t])
-    return out
+    <div class="card wide cloud-breakout">
+      <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px 16px;">
+        <h2 style="margin:0;">Word Cloud</h2>
+        <div style="display:flex; align-items:center; gap:14px; flex-wrap:wrap; font-size:0.8rem; color:var(--muted);">
+          <label style="display:flex; align-items:center; gap:5px; cursor:pointer;">
+            <input type="checkbox" id="cloudMixedOrder"> Mixed order
+          </label>
+          <label style="display:flex; align-items:center; gap:5px; cursor:pointer;">
+            <input type="checkbox" id="cloudRandomSize"> Random sizes
+          </label>
+          <label style="display:flex; align-items:center; gap:5px;">
+            Min <input type="number" id="cloudMinSize" value="9" min="3" max="100" style="width:48px; background:var(--panel); color:var(--accent); border:1px solid var(--line); border-radius:6px; padding:2px 4px;">
+          </label>
+          <label style="display:flex; align-items:center; gap:5px;">
+            Max <input type="number" id="cloudMaxSize" value="38" min="3" max="120" style="width:48px; background:var(--panel); color:var(--accent); border:1px solid var(--line); border-radius:6px; padding:2px 4px;">
+          </label>
+          <button id="cloudRebuild" style="background:var(--accent); color:var(--on-accent); border:none; border-radius:6px; padding:5px 12px; font-weight:700; cursor:pointer; font-size:0.8rem;">Apply</button>
+        </div>
+      </div>
+      <canvas id="wordCloudCanvas"></canvas>
+      <div id="wordCloudCaption" style="color:var(--muted); font-size:0.8rem; margin-top:6px;"></div>
+    </div>
+  </div>
 
+  <div id="errorBox" class="error" style="display:none;"></div>
 
-def _norm_term(s):
-    """Lowercase with spaces, hyphens and punctuation removed."""
-    return re.sub(r"[\W_]+", "", s.lower())
+  <footer class="site-footer">
+    <button id="themeBtn" class="theme-btn" type="button" aria-label="Switch light/dark mode"><span id="themeIcon">🌙</span></button>
+  </footer>
 
+  <div id="fileModalOverlay" style="display:none; position:fixed; inset:0; background:var(--overlay); z-index:100; align-items:center; justify-content:center; padding:20px;">
+    <div style="background:var(--card); border:1px solid var(--line); border-radius:12px; max-width:800px; width:100%; max-height:85vh; display:flex; flex-direction:column;">
+      <div style="display:flex; justify-content:space-between; align-items:center; padding:14px 18px; border-bottom:1px solid var(--line); gap:12px; flex-wrap:wrap;">
+        <a id="fileModalTitle" href="#" target="_blank" rel="noopener" style="color:var(--accent); text-decoration:none; font-weight:700;">Current Dictionary File</a>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <button id="downloadTxtBtn" style="background:var(--panel); color:var(--text); border:1px solid var(--line); border-radius:6px; padding:6px 12px; font-size:0.8rem; cursor:pointer;">⬇ .txt</button>
+          <button id="downloadJsonBtn" style="background:var(--panel); color:var(--text); border:1px solid var(--line); border-radius:6px; padding:6px 12px; font-size:0.8rem; cursor:pointer;">⬇ .json</button>
+          <button id="fileModalClose" style="background:none; border:none; color:var(--muted); font-size:1.4rem; cursor:pointer; line-height:1;">&times;</button>
+        </div>
+      </div>
+      <pre id="fileModalContent" style="margin:0; padding:16px 18px; overflow:auto; white-space:pre-wrap; word-break:break-word; color:var(--text); font-size:0.85rem; font-family: ui-monospace, Menlo, monospace;"></pre>
+    </div>
+  </div>
 
-def _edit_distance(a, b):
-    prev = list(range(len(b) + 1))
-    for i, ca in enumerate(a, 1):
-        row = [i]
-        for j, cb in enumerate(b, 1):
-            row.append(min(prev[j] + 1, row[j - 1] + 1, prev[j - 1] + (ca != cb)))
-        prev = row
-    return prev[-1]
+  <div id="zoogModalOverlay" style="display:none; position:fixed; inset:0; background:var(--overlay); z-index:100; align-items:center; justify-content:center; padding:20px;">
+    <div style="background:var(--card); border:1px solid var(--line); border-radius:12px; max-width:800px; width:100%; max-height:85vh; display:flex; flex-direction:column;">
+      <div style="display:flex; justify-content:space-between; align-items:center; padding:14px 18px; border-bottom:1px solid var(--line); gap:12px; flex-wrap:wrap;">
+        <a id="zoogModalTitle" href="https://github.com/ChadDuffenshmoogle/dictionary-versions/blob/main/Zoogliography.txt" target="_blank" rel="noopener" style="color:var(--violet); text-decoration:none; font-weight:700;">Zoogliography</a>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <button id="zoogDownloadBtn" style="background:var(--panel); color:var(--text); border:1px solid var(--line); border-radius:6px; padding:6px 12px; font-size:0.8rem; cursor:pointer;">⬇ .txt</button>
+          <button id="zoogModalClose" style="background:none; border:none; color:var(--muted); font-size:1.4rem; cursor:pointer; line-height:1;">&times;</button>
+        </div>
+      </div>
+      <div class="zoog-toolbar">
+        <input id="zoogFilter" type="search" placeholder="Filter zoogs…" autocomplete="off">
+        <span class="zoog-total" id="zoogTotal"></span>
+      </div>
+      <div id="zoogModalContent">Loading…</div>
+    </div>
+  </div>
 
+  <div id="searchModalOverlay" style="display:none; position:fixed; inset:0; background:var(--overlay); z-index:100; align-items:center; justify-content:center; padding:20px;">
+    <div style="background:var(--card); border:1px solid var(--line); border-radius:12px; max-width:800px; width:100%; max-height:85vh; display:flex; flex-direction:column;">
+      <div style="display:flex; justify-content:space-between; align-items:center; padding:14px 18px; border-bottom:1px solid var(--line);">
+        <strong>Searchable Dictionary</strong>
+        <button id="searchModalClose" style="background:none; border:none; color:var(--muted); font-size:1.4rem; cursor:pointer; line-height:1;">&times;</button>
+      </div>
+      <div style="padding:16px 18px 0 18px;">
+        <input type="text" id="dictSearchInput" placeholder="Search the dictionary…" autocomplete="off">
+        <div class="scope-toggle">
+          <button type="button" data-scope="both" class="active">Both</button>
+          <button type="button" data-scope="term">Terms</button>
+          <button type="button" data-scope="definition">Definitions</button>
+        </div>
+        <div id="dictResultCount"></div>
+      </div>
+      <div id="dictEntryList" style="overflow:auto; padding:0 18px 16px 18px;"></div>
+    </div>
+  </div>
 
-def too_similar(word, existing_norm):
-    """True if the word is, or nearly is, something already in the dictionary:
-    same once punctuation is ignored, one contains the other (5+ letters), or
-    only about a quarter of its length apart."""
-    w = _norm_term(word)
-    if not w:
-        return True
-    for e in existing_norm:
-        if e == w:
-            return True
-        if len(w) >= 5 and len(e) >= 5 and (w in e or e in w):
-            return True
-        limit = max(1, int(0.25 * max(len(w), len(e))))
-        if abs(len(w) - len(e)) <= limit and _edit_distance(w, e) <= limit:
-            return True
-    return False
+<script>
+// Theme colours for the charts, read fresh each time so they follow the toggle.
+const C = {
+  get muted() { return getComputedStyle(document.documentElement).getPropertyValue('--muted').trim(); },
+  get line() { return getComputedStyle(document.documentElement).getPropertyValue('--line').trim(); },
+  get text() { return getComputedStyle(document.documentElement).getPropertyValue('--text').trim(); },
+  get accent() { return getComputedStyle(document.documentElement).getPropertyValue('--accent').trim(); },
+  get crosshair() { return document.documentElement.dataset.theme === 'light' ? 'rgba(26, 29, 36, 0.35)' : 'rgba(232, 232, 236, 0.35)'; },
+};
+// Every pastel colour the charts and text use, as [dark theme, light theme].
+const TONES = [
+  ['#6ee7b7', '#0b8a68'], ['#7dd3fc', '#2b8fd6'], ['#fbbf24', '#d98b06'], ['#f472b6', '#d6408a'],
+  ['#a78bfa', '#7c5cd6'], ['#fb923c', '#e0671c'], ['#34d399', '#2fa36b'], ['#60a5fa', '#3b7be0'],
+  ['#f87171', '#d64545'], ['#c084fc', '#a24fd6'], ['#9a9fab', '#8a90a0'], ['#171a21', '#ffffff'],
+];
+// T(colour) gives the version that fits the current theme.
+function T(c) {
+  if (typeof c !== 'string') return c;
+  const light = document.documentElement.dataset.theme === 'light';
+  const k = c.toLowerCase();
+  for (const [d, l] of TONES) if (k === d || k === l) return light ? l : d;
+  return c;
+}
+// Dark or white text, whichever reads better on this background colour.
+function ink(hex) {
+  const n = parseInt(hex.slice(1), 16);
+  const lum = (0.299 * ((n >> 16) & 255) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255)) / 255;
+  return lum > 0.46 ? '#0f1115' : '#ffffff';
+}
+function recolorCharts() {
+  Object.values(Chart.instances).forEach(ch => {
+    Object.values(ch.options.scales || {}).forEach(sc => {
+      if (sc.ticks) sc.ticks.color = C.muted;
+      if (sc.grid) sc.grid.color = C.line;
+    });
+    const lg = ch.options.plugins && ch.options.plugins.legend;
+    if (lg && lg.labels) lg.labels.color = C.text;
+    ch.data.datasets.forEach(d => {
+      ['backgroundColor', 'borderColor', 'pointBackgroundColor', 'pointBorderColor'].forEach(k => {
+        if (typeof d[k] === 'string') d[k] = T(d[k]);
+        else if (Array.isArray(d[k])) d[k] = d[k].map(T);
+      });
+    });
+    ch.update('none');
+  });
+}
+// Light / dark toggle: an emoji that swaps with a small shrink-and-grow, remembered between visits.
+(function () {
+  const btn = document.getElementById('themeBtn');
+  const icon = document.getElementById('themeIcon');
+  const isLight = () => document.documentElement.dataset.theme === 'light';
+  icon.textContent = isLight() ? '☀️' : '🌙';
+  btn.addEventListener('click', () => {
+    btn.classList.remove('swap');
+    void btn.offsetWidth;
+    btn.classList.add('swap');
+    setTimeout(() => {
+      if (isLight()) delete document.documentElement.dataset.theme;
+      else document.documentElement.dataset.theme = 'light';
+      icon.textContent = isLight() ? '☀️' : '🌙';
+      try { localStorage.setItem('theme', isLight() ? 'light' : 'dark'); } catch (e) {}
+      recolorCharts();
+      document.dispatchEvent(new Event('themechange'));
+    }, 150);
+  });
+})();
+// Thin vertical line at the hovered x-position, on every chart.
+Chart.register({
+  id: 'crosshair',
+  afterDraw(chart) {
+    const active = chart.tooltip && chart.tooltip._active;
+    if (!active || !active.length) return;
+    const x = active[0].element.x;
+    const { top, bottom } = chart.chartArea;
+    const ctx = chart.ctx;
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(x, top);
+    ctx.lineTo(x, bottom);
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = C.crosshair;
+    ctx.stroke();
+    ctx.restore();
+  },
+});
 
+async function main() {
+  let stats;
+  try {
+    const res = await fetch('stats.json', { cache: 'no-store' });
+    if (!res.ok) throw new Error('stats.json not found (' + res.status + ')');
+    stats = await res.json();
+  } catch (e) {
+    document.getElementById('subtitle').textContent = '';
+    const box = document.getElementById('errorBox');
+    box.style.display = 'block';
+    box.textContent = 'Could not load stats: ' + e.message;
+    return;
+  }
 
-def parse_zoog_text(text):
-    """Split Zoogliography.txt into (main-list words, words from every other
-    section: predicted, nonsense and rejected, saved seed info or None)."""
-    seed = None
-    m = ZOOG_SEED_RE.search(text)
-    if m:
-        try:
-            seed = tuple(json.loads(m.group(1)))
-        except Exception:
-            seed = None
-        text = ZOOG_SEED_RE.sub("", text)
-    main_part, _, rest = text.partition(ZOOG_MARKER)
-    # The dated "ZOOGLIOGRAPHY - <date>" heading line is a title, not a zoog.
-    main = [
-        l.strip() for l in main_part.splitlines()
-        if l.strip() and not l.startswith("---") and not re.match(r"\s*zoogliography\s*[-\u2013\u2014]", l, re.I)
-    ]
-    old_normal, _, rest = rest.partition(ZOOG_NONSENSE_MARKER)
-    old_nonsense, _, old_rejected = rest.partition(ZOOG_REJECTED_MARKER)
-    extra = [l.strip() for l in (old_normal + "\n" + old_nonsense).splitlines() if l.strip() and not l.startswith("---")]
-    extra += [w.strip() for w in old_rejected.replace("\n", ",").split(",") if w.strip()]
-    return main, extra, seed
+  document.getElementById('subtitle').textContent =
+    'Automatically rebuilt whenever a new word is added.';
+  document.getElementById('content').style.display = 'grid';
 
+  document.getElementById('totalEntries').textContent = stats.total_entries;
+  document.getElementById('latestWord').textContent = stats.latest_word_term || '—';
+  document.getElementById('latestWordTime').textContent = stats.latest_word_timestamp || '';
 
-def fetch_zoog_state():
-    """Everything already in Zoogliography.txt, so new predictions avoid all of
-    it. Returns ([], [], None) if it can't be read."""
-    try:
-        headers = {"Accept": "application/vnd.github+json"}
-        if ZOOG_TOKEN:
-            headers["Authorization"] = f"Bearer {ZOOG_TOKEN}"
-        url = f"{API_ROOT}/contents/{requests.utils.quote(ZOOG_FILE)}"
-        resp = requests.get(url, headers=headers, params={"ref": GITHUB_BRANCH}, timeout=30)
-        resp.raise_for_status()
-        text = base64.b64decode(resp.json()["content"]).decode("utf-8")
-        return parse_zoog_text(text)
-    except Exception as e:
-        print(f"Could not read Zoogliography for similarity check: {e}", file=sys.stderr)
-        return [], [], None
-
-
-def predict_next_word(terms, seed_text, order=4, avoid=(), rejected=None):
-    """Guess a new word letter by letter from the spelling of every entry
-    (a Markov chain; order = how many letters back it looks, 4 for the normal
-    guess and 2 for the looser nonsense guess). The same seed gives the same
-    word, so it only changes when the dictionary changes. Pass the terms
-    already split into single spellings (see split_spellings)."""
-    start, end = "\x02", "\x03"
-    existing_norm = list({_norm_term(t) for t in [*terms, *avoid] if _norm_term(t)})
-    table = {}
-    for t in terms:
-        padded = start * order + t + end
-        for i in range(order, len(padded)):
-            for o in range(1, order + 1):
-                table.setdefault(padded[i - o:i], Counter())[padded[i]] += 1
-
-    rng = random.Random(seed_text)
-
-    def pick_next(word, max_ctx):
-        padded = start * order + word
-        for o in range(max_ctx, 0, -1):
-            options = table.get(padded[len(padded) - o:])
-            if options:
-                return rng.choices(list(options), weights=list(options.values()))[0]
-        return end
-
-    tried = set()
-    # First try with the full letter memory; if every try is rejected, try
-    # again with one letter fewer. After that the chains are used up ("").
-    for max_ctx in (order, order - 1):
-        if max_ctx < 1:
-            continue
-        for _ in range(5000):
-            word = ""
-            while len(word) < 24:
-                ch = pick_next(word, max_ctx)
-                if ch == end:
-                    break
-                word += ch
-            word = word.strip()
-            if 4 <= len(word) < 24 and " / " not in word:
-                key = _norm_term(word)
-                if key in tried:
-                    continue
-                tried.add(key)
-                if not too_similar(word, existing_norm):
-                    return word
-                # Only near-misses are remembered; a word identical to an existing
-                # entry or zoog is just skipped, not listed as rejected.
-                if rejected is not None and _norm_term(word) not in existing_norm:
-                    rejected.append(word)  # remembered for the Zoogliography
-    return ""
-
-
-def update_zoogliography(word, nonsense_word="", rejected=(), known_norm=(), seed_key=""):
-    """Add the new words to the two lists at the bottom of Zoogliography.txt
-    (each kept A to Z): 'Predicted Next Word', then 'Predicted Nonsense Word'.
-    Everything above the first marker is left untouched."""
-    if not ZOOG_TOKEN or not (word or nonsense_word):
-        print("Skipping Zoogliography update (no token or no word).")
-        return
-    headers = {
-        "Accept": "application/vnd.github+json",
-        "Authorization": f"Bearer {ZOOG_TOKEN}",
+  // Next predicted word: a letter-by-letter (order-3 Markov) guess built
+  // from every existing entry. A seeded random generator keeps the guess
+  // the same until the dictionary changes.
+  let predictedAllWord = null; // the all-words prediction, shown in the Zoogliography
+  let predictedNonsenseWord = null; // the nonsense prediction, shown below it
+  // A slash with spaces on both sides ("aa / ab") separates alternate spellings,
+  // so each spelling is its own word. A slash without those spaces ("aa/ab")
+  // is part of the word.
+  const splitSpellings = (list) => list.flatMap(t => {
+    const seen = new Set();
+    const parts = t.split(/\s+\/\s+/).map(v => v.trim()).filter(v => v && !seen.has(v.toLowerCase()) && seen.add(v.toLowerCase()));
+    return parts.length ? parts : [t];
+  });
+  // Every candidate thrown out for being too close to an existing zoog this
+  // session, and the latest accepted word per mode (keyed by letter memory).
+  // Later predictions must stay clear of both.
+  const sessionRejected = new Set();
+  const sessionPredicted = {};
+  // Finished predictions per letter memory (4 = Normal, 2 = Nonsense). Once a mode is
+  // in here, switching to it (or changing theme) shows it at once, never "Loading…".
+  const foundWord = {};
+  const predictCache = {};
+  const dbg = (...a) => console.log('[predict]', ...a);
+  let predictRun = 0; // newest prediction number, so late results can be dropped
+  async function predictNextWord(opts, silent) {
+    const { limit, order: ORDER, dorder: DORDER } = opts;
+    const runId = silent ? predictRun : ++predictRun;
+    const t0 = performance.now();
+    const useAll = !limit;
+    const allTerms = splitSpellings(stats.words_by_length_asc || []);
+    const existing = new Set(allTerms.map(t => t.toLowerCase()));
+    // A new word may not be (or nearly be) anything already in the
+    // dictionary. Compare with spaces, hyphens and punctuation removed, so
+    // "hame tizer" and "hametizer" count as the same word.
+    const norm = (t) => t.toLowerCase().replace(/[^\p{L}\p{N}]/gu, '');
+    // Words already listed in the Zoogliography also count as existing.
+    // Every section counts (main list, predicted, nonsense, rejected), not
+    // just the first. The rejected section is one comma-separated line.
+    // This mode's own saved prediction is left out so it doesn't reject itself.
+    const ownSaved = norm((ORDER === 4 ? stats.predicted_word : ORDER === 2 ? stats.predicted_nonsense_word : '') || '');
+    const zoogParts = (zoogContent || '').split('\n').reduce((acc, raw) => {
+      const l = raw.trim();
+      if (!l) return acc;
+      if (l.startsWith('---')) { acc.rejected = /^--- Rejected/i.test(l); return acc; }
+      if (/^zoogliography\s*[-\u2013\u2014]/i.test(l)) return acc; // the dated heading is not a zoog
+      if (acc.rejected) l.split(',').forEach(w => { if (w.trim()) acc.words.push(w.trim()); });
+      else acc.words.push(l);
+      return acc;
+    }, { words: [], rejected: false }).words;
+    const zoogTerms = splitSpellings(zoogParts).filter(t => !ownSaved || norm(t) !== ownSaved);
+    const otherPredicted = Object.entries(sessionPredicted).filter(([k, v]) => k !== String(ORDER) && v).map(([, v]) => v);
+    const existingNorm = [...new Set([...allTerms, ...zoogTerms, ...sessionRejected, ...otherPredicted].map(norm).filter(Boolean))];
+    dbg(`run ${runId}${silent ? ' (silent)' : ''}: order=${ORDER}, dictionary words=${allTerms.length}, zoogliography words=${zoogTerms.length}, session rejected=${sessionRejected.size}, avoiding ${existingNorm.length} in total`);
+    function editDistance(a, b) {
+      let prev = Array.from({ length: b.length + 1 }, (_, j) => j);
+      for (let i = 1; i <= a.length; i++) {
+        const row = [i];
+        for (let j = 1; j <= b.length; j++) {
+          row[j] = Math.min(prev[j] + 1, row[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+        }
+        prev = row;
+      }
+      return prev[b.length];
     }
-    url = f"{API_ROOT}/contents/{requests.utils.quote(ZOOG_FILE)}"
+    // Too similar = the same word, one containing the other (5+ letters),
+    // or only a few letters apart (about a quarter of the length).
+    function tooSimilar(word) {
+      const w = norm(word);
+      if (!w) return true;
+      for (const e of existingNorm) {
+        if (e === w) return true;
+        if (w.length >= 5 && e.length >= 5 && (w.includes(e) || e.includes(w))) return true;
+        const limit = Math.max(1, Math.floor(0.25 * Math.max(w.length, e.length)));
+        if (Math.abs(w.length - e.length) <= limit && editDistance(w, e) <= limit) return true;
+      }
+      return false;
+    }
+    // "Last N" uses the order words were added (the timeline), sorted by
+    // date; the full dictionary is still used to reject duplicates.
+    const timeline = (stats.added_terms_timeline || [])
+      .map((e, i) => ({ date: e.date, term: e.term, i }))
+      .sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : a.i - b.i));
+    const terms = useAll || !timeline.length
+      ? allTerms
+      : splitSpellings(timeline.slice(-limit).map(e => e.term));
+    const START = '\u0002', END = '\u0003';
+    const table = {};
+    terms.forEach(t => {
+      const padded = START.repeat(ORDER) + t + END;
+      for (let i = ORDER; i < padded.length; i++) {
+        for (let o = 1; o <= ORDER; o++) {
+          const ctx = padded.slice(i - o, i);
+          const next = padded[i];
+          (table[ctx] = table[ctx] || {})[next] = ((table[ctx] || {})[next] || 0) + 1;
+        }
+      }
+    });
 
-    def merged(old_lines, new_word):
-        # Keep every earlier prediction, add the new one, and sort A to Z.
-        words = {w.strip() for w in old_lines.splitlines() if w.strip()}
-        if new_word and new_word.lower() not in {w.lower() for w in words}:
-            words.add(new_word)
-        return "\n".join(sorted(words, key=str.lower))
+    let seed = 0;
+    const seedText = [limit, ORDER, DORDER].join('-') + '|' + terms.length + '|' + (stats.latest_word_term || '');
+    for (let i = 0; i < seedText.length; i++) seed = (seed * 31 + seedText.charCodeAt(i)) >>> 0;
+    const rand = () => {
+      seed = (seed + 0x6D2B79F5) >>> 0;
+      let t = seed;
+      t = Math.imul(t ^ (t >>> 15), t | 1);
+      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
 
-    for _ in range(3):
-        resp = requests.get(url, headers=headers, params={"ref": GITHUB_BRANCH}, timeout=30)
-        resp.raise_for_status()
-        info = resp.json()
-        text = base64.b64decode(info["content"]).decode("utf-8")
-        body = ZOOG_SEED_RE.sub("", text).rstrip("\n")
-        base, _, old_section = body.partition(ZOOG_MARKER)
-        base = base.rstrip("\n")
-        old_normal, _, rest = old_section.partition(ZOOG_NONSENSE_MARKER)
-        old_nonsense, _, old_rejected = rest.partition(ZOOG_REJECTED_MARKER)
-        new_text = (
-            f"{base}\n\n{ZOOG_MARKER}\n{merged(old_normal, word)}"
-            f"\n\n{ZOOG_NONSENSE_MARKER}\n{merged(old_nonsense, nonsense_word)}"
-        )
-        # Rejected guesses: every earlier one plus new ones, A to Z, on one comma-separated line.
-        rejected_all = {w.strip() for w in old_rejected.replace("\n", ",").split(",") if w.strip()}
-        for w in rejected:
-            if w.lower() not in {r.lower() for r in rejected_all}:
-                rejected_all.add(w)
-        # Drop any that are identical to an existing word or zoog (old ones too).
-        rejected_all = {w for w in rejected_all if _norm_term(w) not in known_norm}
-        if rejected_all:
-            new_text += f"\n\n{ZOOG_REJECTED_MARKER}\n" + ", ".join(sorted(rejected_all, key=str.lower))
-        new_text += "\n\n--- Seed: " + json.dumps([seed_key, word, nonsense_word], ensure_ascii=False) + " ---"
-        if new_text == text.rstrip("\n"):
-            return  # already up to date
-        put = requests.put(
-            url,
-            headers=headers,
-            json={
-                "message": f"Update predicted next word: {word}; nonsense: {nonsense_word} [skip ci]",
-                "content": base64.b64encode(new_text.encode("utf-8")).decode("ascii"),
-                "sha": info["sha"],  # fails if the bot saved the file first
-                "branch": GITHUB_BRANCH,
+    let ctxOrder = ORDER; // how many letters back the chain may look right now
+    function pickNext(word) {
+      const padded = START.repeat(ORDER) + word;
+      for (let o = ctxOrder; o >= 1; o--) {
+        const options = table[padded.slice(padded.length - o)];
+        if (!options) continue;
+        const entries = Object.entries(options);
+        const total = entries.reduce((s, [, c]) => s + c, 0);
+        let r = rand() * total;
+        for (const [ch, c] of entries) {
+          r -= c;
+          if (r <= 0) return ch;
+        }
+      }
+      return END;
+    }
+
+    let result = '';
+    const tried = new Set();
+    // First try with the full letter memory (4). If every try is rejected,
+    // try again with one letter fewer (3). After that the chains are used up.
+    for (let ctx = ORDER; ctx >= Math.max(1, ORDER - 1) && !result; ctx--) {
+      ctxOrder = ctx;
+      // Show which chain length is being tried, and give the browser a moment
+      // to paint it (and to keep the rest of the page responsive).
+      if (!silent) document.getElementById('predictedWord').textContent = `Loading… (${ctx}-letter chains)`;
+      dbg(`run ${runId}: pass with ${ctx}-letter chains started`);
+      await new Promise(r => setTimeout(r, 30));
+      if (!silent && runId !== predictRun) { dbg(`run ${runId}: cancelled (newer run exists)`); return ''; }
+      let passRejected = 0, passAttempts = 0;
+      for (let attempt = 0; attempt < 5000 && !result; attempt++) {
+        if (attempt % 150 === 149) {
+          await new Promise(r => setTimeout(r, 0));
+          if (!silent && runId !== predictRun) { dbg(`run ${runId}: cancelled (newer run exists)`); return ''; }
+        }
+        passAttempts = attempt + 1;
+        let word = '';
+        while (word.length < 24) {
+          const ch = pickNext(word);
+          if (ch === END) break;
+          word += ch;
+        }
+        const clean = word.trim();
+        if (clean.length < 4 || clean.length >= 24) continue;
+        const key = norm(clean);
+        if (tried.has(key)) continue;
+        tried.add(key);
+        if (!tooSimilar(clean)) result = clean;
+        else { sessionRejected.add(clean); passRejected++; } // too close to something: rejected, try again
+      }
+      dbg(`run ${runId}: ${ctx}-letter pass done after ${passAttempts} attempts, ${passRejected} rejected, ${tried.size} unique tried, found=${result || 'none'} (${Math.round(performance.now() - t0)} ms)`);
+    }
+    if (!result) dbg(`run ${runId}: chains exhausted for order ${ORDER}`);
+    if (!silent && runId !== predictRun) return result; // a newer prediction replaced this one
+    // For "All words", use the one word made by generate_stats.py so the
+    // card and Zoogliography.txt always show the same word.
+    // The nonsense card likewise uses the word saved in stats.json.
+    if (useAll && ORDER === 4 && stats.predicted_word && !tooSimilar(stats.predicted_word)) { result = stats.predicted_word; ctxOrder = ORDER; }
+    else if (useAll && ORDER === 2 && stats.predicted_nonsense_word && !tooSimilar(stats.predicted_nonsense_word)) { result = stats.predicted_nonsense_word; ctxOrder = ORDER; }
+    sessionPredicted[ORDER] = result;
+    foundWord[ORDER] = result;
+    // Hover panels: show which existing entries each piece came from.
+    const PALETTE_BASE = ['#6ee7b7', '#7dd3fc', '#fbbf24', '#f472b6', '#a78bfa', '#fb923c'];
+    let PALETTE = PALETTE_BASE.map(T); // rebuilt on every redraw so a theme change recolours it
+    const swatch = (i) => `background:${PALETTE[i % PALETTE.length]}; color:${ink(PALETTE[i % PALETTE.length])}; border-radius:3px; padding:0 2px;`;
+    const COPY_BTN = '<button type="button" class="copy-btn">Copy</button>';
+    const mutedNote = (t) => `<div style="color:var(--muted); margin-top:8px;">${t}</div>`;
+
+    function renderWordSources(word) {
+      const panel = document.getElementById('predictedWordSrc');
+      if (!word) { panel.innerHTML = ''; return; }
+      // The chain picks each letter from the letters right before it (up to
+      // ORDER of them), falling back to fewer when that exact run never
+      // appeared. So for every letter, find the longest run ending at it
+      // that exists in some entry; only entries with that exact run could
+      // have supplied the letter. (Entries are padded with START so
+      // "starts with" matches only at the start.)
+      const paddedWord = START.repeat(ORDER) + word;
+      const paddedTerms = terms.map(t => START.repeat(ORDER) + t + END);
+      const perLetter = [];
+      for (let p = 0; p < word.length; p++) {
+        const pp = p + ORDER;
+        let found = null;
+        for (let o = ctxOrder; o >= 1 && !found; o--) {
+          const gram = paddedWord.slice(pp - o, pp + 1);
+          const hits = [];
+          paddedTerms.forEach((pt, k) => {
+            let from = pt.indexOf(gram);
+            while (from !== -1) {
+              hits.push({ k, end: from + o }); // index of this letter in the padded entry
+              from = pt.indexOf(gram, from + 1);
+            }
+          });
+          if (hits.length) found = { o, hits };
+        }
+        perLetter.push(found);
+      }
+
+      // Join neighbouring letters into one piece while at least one entry
+      // supplies them side by side. A new piece starts where that breaks,
+      // and its first letters re-use ("overlap") the end of the last piece.
+      const segs = [];
+      let cur = null;
+      for (let p = 0; p < word.length; p++) {
+        const f = perLetter[p];
+        if (!f) { cur = null; segs.push({ start: p, end: p, plain: true }); continue; }
+        if (cur) {
+          const next = f.hits.filter(h => cur.hits.some(c => c.k === h.k && c.end + 1 === h.end));
+          if (next.length) { cur.end = p; cur.hits = next; continue; }
+        }
+        cur = { start: p, end: p, ctx: Math.min(f.o, p), hits: f.hits };
+        segs.push(cur);
+      }
+      let c = 0;
+      segs.forEach(sg => { if (!sg.plain) sg.c = c++; });
+      // Underline each piece of the big word in its hover-panel colour.
+      document.getElementById('predictedWord').innerHTML = segs.map(sg => {
+        const col = sg.plain ? 'var(--muted)' : PALETTE[sg.c % PALETTE.length];
+        const style = `text-decoration:underline ${sg.plain ? 'dashed ' : ''}${col}; text-decoration-thickness:3px; text-underline-offset:5px;`;
+        return `<span style="${style}">${escapeHtml(word.slice(sg.start, sg.end + 1))}</span>`;
+      }).join('');
+
+      const fade = 'opacity:.55; font-weight:400; text-decoration:underline;';
+      const chip = (sg) => {
+        if (sg.plain) {
+          return `<span style="border:1px dashed var(--muted); color:var(--muted); border-radius:3px; padding:0 5px;">${escapeHtml(word[sg.start])}</span>`;
+        }
+        const ctxText = word.slice(sg.start - sg.ctx, sg.start);
+        const newText = word.slice(sg.start, sg.end + 1);
+        return `<span style="${swatch(sg.c)} padding:1px 6px; font-weight:700;"><span style="${fade}">${escapeHtml(ctxText)}</span>${escapeHtml(newText)}</span>`;
+      };
+      const formula = segs.map(chip).join('<span style="color:var(--muted);"> + </span>');
+
+      const blocks = segs.filter(sg => !sg.plain).map(sg => {
+        const len = sg.end - sg.start + 1;
+        const seen = new Set();
+        const rows = [];
+        sg.hits.forEach(h => {
+          if (seen.has(h.k)) return;
+          seen.add(h.k);
+          const t = terms[h.k];
+          const first = h.end - (len - 1) - ORDER;   // where the new letters begin in the entry
+          const ctxStart = first - sg.ctx;
+          rows.push(`<div>${escapeHtml(t.slice(0, ctxStart))}<span style="${swatch(sg.c)} ${fade}">${escapeHtml(t.slice(ctxStart, first))}</span><span style="${swatch(sg.c)}">${escapeHtml(t.slice(first, first + len))}</span>${escapeHtml(t.slice(first + len))}</div>`);
+        });
+        return `<div style="margin-top:12px; padding-left:8px; border-left:3px solid ${PALETTE[sg.c % PALETTE.length]};">
+          ${rows.join('')}</div>`;
+      }).join('');
+      const anyPlain = segs.some(sg => sg.plain);
+      // Discord markdown: __underline__ = the matched run (context + new
+      // letters), **bold** = the new letters picked from it.
+      const wordPiece = (sg) => sg.plain ? `[${word[sg.start]}]`
+        : `__${word.slice(sg.start - sg.ctx, sg.start)}**${word.slice(sg.start, sg.end + 1)}**__`;
+      const wordLines = [`${word} = ${segs.map(wordPiece).join(' + ')}`];
+      segs.forEach(sg => {
+        wordLines.push('');
+        if (sg.plain) { wordLines.push(`[${word[sg.start]}] picked by chance`); return; }
+        const len = sg.end - sg.start + 1, seen = new Set();
+        sg.hits.forEach(h => {
+          if (seen.has(h.k)) return;
+          seen.add(h.k);
+          const t = terms[h.k];
+          const first = h.end - (len - 1) - ORDER;
+          const cs = first - sg.ctx;
+          wordLines.push(t.slice(0, cs) + '__' + t.slice(cs, first) + '**' + t.slice(first, first + len) + '**__' + t.slice(first + len));
+        });
+      });
+      panel.dataset.copy = wordLines.join('\n');
+      panel.innerHTML = COPY_BTN + `<div style="font-size:1rem; line-height:2;">${formula}</div>${blocks}`
+        + (anyPlain ? mutedNote('Dashed letters matched no entry and were picked by chance.') : '');
+    }
+
+    const showWord = () => {
+      if (result) renderWordSources(result);
+      else {
+        document.getElementById('predictedWord').innerHTML = '<span style="font-size:0.9rem; color:var(--muted);">Those Markov chains have been exhausted for the current entry list.</span>';
+        document.getElementById('predictedWordSrc').innerHTML = '';
+      }
+    };
+    // Silent runs only work out and save the prediction; they never touch the card.
+    if (!silent) {
+      showWord();
+      document.getElementById('predictedDefinition').textContent = 'Loading…';
+      document.getElementById('predictedDefinitionSrc').innerHTML = '';
+    }
+    // The definition loads after the word has been shown.
+    setTimeout(() => {
+      if (!silent && runId !== predictRun) return; // a newer prediction replaced this one
+    // Predicted definition: same idea, but one word at a time, using the
+    // two previous words as context (falls back to one word).
+    const termSet = new Set(terms.map(t => t.toLowerCase()));
+    const defs = (stats.definitions_by_length_asc || [])
+      .filter(d => useAll || splitSpellings([d.term]).some(v => termSet.has(v.toLowerCase())))
+      .map(d => ({ term: d.term, tokens: d.definition.match(/[\p{L}\p{N}]+(?:['’\-][\p{L}\p{N}]+)*|[^\s\p{L}\p{N}]/gu) || [] }));
+    const DSTART = '\u0002', DEND = '\u0003';
+    const dTable = {};
+    defs.forEach(({ tokens: words }) => {
+      const seq = [...Array(DORDER).fill(DSTART), ...words, DEND];
+      for (let i = DORDER; i < seq.length; i++) {
+        for (let o = 1; o <= DORDER; o++) {
+          const k = seq.slice(i - o, i).join('\u0001');
+          (dTable[k] = dTable[k] || {})[seq[i]] = ((dTable[k] || {})[seq[i]] || 0) + 1;
+        }
+      }
+    });
+    function pickNextDefWord(history) {
+      for (let o = DORDER; o >= 1; o--) {
+        const options = dTable[history.slice(history.length - o).join('\u0001')];
+        if (!options) continue;
+        const entries = Object.entries(options);
+        const total = entries.reduce((s, [, c]) => s + c, 0);
+        let r = rand() * total;
+        for (const [w, c] of entries) {
+          r -= c;
+          if (r <= 0) return w;
+        }
+      }
+      return DEND;
+    }
+    // Put the tokens back together with normal spacing: no space before
+    // , . ; : ! ? ) ] } or after ( [ {, quotes hug the words inside them.
+    // wrap(token, index) lets the caller add markup around each token.
+    function joinTokens(tokens, wrap) {
+      let text = '';
+      const quoteOpen = {};
+      let prev = '';
+      tokens.forEach((tok, idx) => {
+        let space = idx ? ' ' : '';
+        if (/^[,.;:!?)\]}%…]$/.test(tok)) space = '';
+        else if (/^[(\[{]$/.test(prev)) space = '';
+        if (/^["'“”‘’]$/.test(tok)) {
+          const closing = !!quoteOpen[tok];
+          quoteOpen[tok] = !closing;
+          if (closing) space = '';
+          prev = closing ? '' : '(';
+        } else {
+          prev = tok;
+        }
+        text += space + wrap(tok, idx);
+      });
+      return text;
+    }
+
+    function renderDefinitionSources(tokens) {
+      const panel = document.getElementById('predictedDefinitionSrc');
+      if (!tokens.length) { panel.innerHTML = ''; return; }
+      // Same idea as the word panel: each word (or punctuation mark) was
+      // picked from the DORDER tokens before it, falling back to fewer when
+      // that exact run never appeared. Find the longest run ending at each
+      // token that exists in some definition; only those definitions could
+      // have supplied it.
+      const paddedTokens = [...Array(DORDER).fill(DSTART), ...tokens];
+      const paddedDefs = defs.map(d => [...Array(DORDER).fill(DSTART), ...d.tokens, DEND]);
+      const perToken = [];
+      for (let p = 0; p < tokens.length; p++) {
+        const pp = p + DORDER;
+        let found = null;
+        for (let o = DORDER; o >= 1 && !found; o--) {
+          const gram = paddedTokens.slice(pp - o, pp + 1);
+          const hits = [];
+          paddedDefs.forEach((pd, k) => {
+            for (let i = 0; i + o < pd.length; i++) {
+              let ok = true;
+              for (let g = 0; g <= o; g++) if (pd[i + g] !== gram[g]) { ok = false; break; }
+              if (ok) hits.push({ k, end: i + o });
+            }
+          });
+          if (hits.length) found = { o, hits };
+        }
+        perToken.push(found);
+      }
+
+      // Join neighbouring tokens into one piece while at least one
+      // definition supplies them side by side; the next piece's first
+      // tokens overlap the end of the last one.
+      const segs = [];
+      let cur = null;
+      for (let p = 0; p < tokens.length; p++) {
+        const f = perToken[p];
+        if (!f) { cur = null; segs.push({ start: p, end: p, plain: true }); continue; }
+        if (cur) {
+          const next = f.hits.filter(h => cur.hits.some(c => c.k === h.k && c.end + 1 === h.end));
+          if (next.length) { cur.end = p; cur.hits = next; continue; }
+        }
+        cur = { start: p, end: p, ctx: Math.min(f.o, p), hits: f.hits };
+        segs.push(cur);
+      }
+      let c = 0;
+      segs.forEach(sg => { if (!sg.plain) sg.c = c++; });
+
+      const fade = 'opacity:.55; font-weight:400; text-decoration:underline;';
+      const chip = (sg) => {
+        if (sg.plain) {
+          return `<span style="border:1px dashed var(--muted); color:var(--muted); border-radius:3px; padding:0 5px;">${escapeHtml(tokens[sg.start])}</span>`;
+        }
+        const piece = tokens.slice(sg.start - sg.ctx, sg.end + 1);
+        const text = joinTokens(piece, (t, idx) => idx < sg.ctx
+          ? `<span style="${fade}">${escapeHtml(t)}</span>` : escapeHtml(t));
+        return `<span style="${swatch(sg.c)} padding:1px 6px; font-weight:700;">${text}</span>`;
+      };
+      const formula = segs.map(chip).join('<span style="color:var(--muted);"> + </span>');
+
+      const blocks = segs.filter(sg => !sg.plain).map(sg => {
+        const len = sg.end - sg.start + 1;
+        const seen = new Set();
+        const rows = [];
+        sg.hits.forEach(h => {
+          if (seen.has(h.k)) return;
+          seen.add(h.k);
+          const dt = defs[h.k].tokens;
+          const first = h.end - (len - 1) - DORDER;   // where the new tokens begin in this definition
+          const ctxStart = first - sg.ctx;
+          const from = Math.max(0, ctxStart - 4);
+          const to = Math.min(dt.length, first + len + 4);
+          const snippet = joinTokens(dt.slice(from, to), (t, idx) => {
+            const abs = from + idx;
+            if (abs >= first && abs < first + len) return `<span style="${swatch(sg.c)}">${escapeHtml(t)}</span>`;
+            if (abs >= ctxStart && abs < first) return `<span style="${swatch(sg.c)} ${fade}">${escapeHtml(t)}</span>`;
+            return escapeHtml(t);
+          });
+          rows.push(`<div style="margin-top:2px;">${from > 0 ? '… ' : ''}${snippet}${to < dt.length ? ' …' : ''} <span style="color:var(--muted);">(${escapeHtml(defs[h.k].term)})</span></div>`);
+        });
+        return `<div style="margin-top:12px; padding-left:8px; border-left:3px solid ${PALETTE[sg.c % PALETTE.length]};">${rows.join('')}</div>`;
+      }).join('');
+      const anyPlain = segs.some(sg => sg.plain);
+      // Discord markdown: __underline__ = the matched run (context + new
+      // words), **bold** = the new words picked from it.
+      const defText = (arr) => joinTokens(arr, t => t);
+      const mark = (from, ctxStart, first, len) => (t, i) => {
+        const abs = from + i;
+        return (abs === ctxStart ? '__' : '') + (abs === first ? '**' : '') + t
+          + (abs === first + len - 1 ? '**__' : '');
+      };
+      const defPiece = (sg) => {
+        if (sg.plain) return `[${tokens[sg.start]}]`;
+        const len = sg.end - sg.start + 1, from = sg.start - sg.ctx;
+        return joinTokens(tokens.slice(from, sg.end + 1), mark(from, from, sg.start, len));
+      };
+      const defLines = [`${defText(tokens)} = ${segs.map(defPiece).join(' + ')}`];
+      segs.forEach(sg => {
+        defLines.push('');
+        if (sg.plain) { defLines.push(`[${tokens[sg.start]}] picked by chance`); return; }
+        const len = sg.end - sg.start + 1, seen = new Set();
+        sg.hits.forEach(h => {
+          if (seen.has(h.k)) return;
+          seen.add(h.k);
+          const dt = defs[h.k].tokens;
+          const first = h.end - (len - 1) - DORDER;
+          defLines.push(joinTokens(dt, mark(0, first - sg.ctx, first, len)));
+        });
+      });
+      panel.dataset.copy = defLines.join('\n');
+      panel.innerHTML = COPY_BTN + `<div style="line-height:2;">${formula}</div>${blocks}`
+        + (anyPlain ? mutedNote('Dashed words matched no definition and were picked by chance.') : '');
+    }
+
+    // A new definition may not copy an existing one. Compare only the words
+    // (ignoring capitals and punctuation) in two ways: how many word edits
+    // apart the two are, and how much of the new definition is one
+    // unbroken run copied from a single existing definition.
+    const isWordTok = (t) => /[\p{L}\p{N}]/u.test(t);
+    const defWords = defs.map(d => d.tokens.filter(isWordTok).map(t => t.toLowerCase()));
+    function defTooSimilar(tokens) {
+      const a = tokens.filter(isWordTok).map(t => t.toLowerCase());
+      if (!a.length) return true;
+      for (const b of defWords) {
+        if (!b.length) continue;
+        const maxLen = Math.max(a.length, b.length);
+        // word-level edit distance, and longest shared run, in one pass
+        let prev = Array.from({ length: b.length + 1 }, (_, j) => j);
+        let prevRun = new Array(b.length + 1).fill(0);
+        let longest = 0;
+        for (let i = 1; i <= a.length; i++) {
+          const row = [i];
+          const runRow = [0];
+          for (let j = 1; j <= b.length; j++) {
+            const same = a[i - 1] === b[j - 1];
+            row[j] = Math.min(prev[j] + 1, row[j - 1] + 1, prev[j - 1] + (same ? 0 : 1));
+            runRow[j] = same ? prevRun[j - 1] + 1 : 0;
+            if (runRow[j] > longest) longest = runRow[j];
+          }
+          prev = row;
+          prevRun = runRow;
+        }
+        const closeness = 1 - prev[b.length] / maxLen;
+        if (closeness >= 0.65 || longest / a.length >= 0.6) return true;
+      }
+      return false;
+    }
+    let definition = '';
+    let definitionTokens = [];
+    for (let attempt = 0; attempt < 100 && !definition; attempt++) {
+      const out = [];
+      const history = Array(DORDER).fill(DSTART);
+      while (out.length < 25) {
+        const w = pickNextDefWord(history);
+        if (w === DEND) break;
+        out.push(w);
+        history.push(w);
+      }
+      if (out.length >= 4 && out.length < 25 && !defTooSimilar(out)) { definition = joinTokens(out, t => t); definitionTokens = out; }
+    }
+    dbg(`run ${runId}: definition built (${definitionTokens.length} words, ${Math.round(performance.now() - t0)} ms total)`);
+    const showDefinition = () => {
+      document.getElementById('predictedDefinition').textContent = definition;
+      renderDefinitionSources(definitionTokens);
+    };
+    // Saved so switching back to this mode (or a theme change) just redraws it.
+    predictCache[ORDER] = { rerender: () => { PALETTE = PALETTE_BASE.map(T); showWord(); showDefinition(); } };
+    dbg(`run ${runId}: prediction for order ${ORDER} saved`);
+    if (!silent) showDefinition();
+    }, 0);
+    return result;
+  }
+  // Normal matches the saved word in stats.json / Zoogliography.txt
+  // (4 letters of memory, made by generate_stats.py).
+  const PREDICT_MODES = {
+    normal:   { label: 'Normal',   limit: 0, order: 4, dorder: 2 },
+    nonsense: { label: 'Nonsense', limit: 0, order: 2, dorder: 1 },
+  };
+  let predictMode = 'normal';
+  const predictModeBtn = document.getElementById('predictModeBtn');
+  // Run the prediction after the rest of the page has painted, so the
+  // other cards and charts never wait on it.
+  let predictToken = 0;
+  function predictLater() {
+    const token = ++predictToken;
+    const saved = predictCache[PREDICT_MODES[predictMode].order];
+    if (saved) {
+      dbg('showing saved prediction for', predictMode, '(no loading)');
+      saved.rerender();
+      return;
+    }
+    document.getElementById('predictedWord').textContent = 'Loading…';
+    document.getElementById('predictedDefinition').textContent = 'Loading…';
+    document.getElementById('predictedWordSrc').innerHTML = '';
+    document.getElementById('predictedDefinitionSrc').innerHTML = '';
+    requestAnimationFrame(() => setTimeout(() => {
+      // Load the Zoogliography first so predictions can avoid its words.
+      dbg('fetching Zoogliography…');
+      fetchZoogliography().then(async () => {
+        if (token !== predictToken) return; // the person switched again meanwhile
+        dbg('Zoogliography ready, starting prediction for mode', predictMode);
+        await predictNextWord(PREDICT_MODES[predictMode]);
+        if (token !== predictToken) return;
+        // Work out the other mode quietly too, so switching later never shows Loading.
+        const kN = PREDICT_MODES.normal.order, kS = PREDICT_MODES.nonsense.order;
+        if (!(kN in foundWord)) await predictNextWord(PREDICT_MODES.normal, true);
+        if (token !== predictToken) return;
+        if (!(kS in foundWord)) await predictNextWord(PREDICT_MODES.nonsense, true);
+        if (predictedAllWord === null) {
+          // the Zoogliography always uses Normal
+          predictedAllWord = foundWord[kN] || '';
+          predictedNonsenseWord = foundWord[kS] || '';
+          refreshZoogModal();
+        }
+      }).catch(err => console.error('[predict] failed:', err));
+    }, 0));
+  }
+  predictLater();
+  predictModeBtn.addEventListener('click', () => {
+    predictMode = predictMode === 'normal' ? 'nonsense' : 'normal';
+    predictModeBtn.textContent = PREDICT_MODES[predictMode].label;
+    predictModeBtn.classList.toggle('nonsense', predictMode === 'nonsense');
+    // little wobble each press
+    predictModeBtn.classList.remove('pop');
+    void predictModeBtn.offsetWidth;
+    predictModeBtn.classList.add('pop');
+    predictLater();
+  });
+  predictModeBtn.addEventListener('animationend', () => predictModeBtn.classList.remove('pop'));
+  document.addEventListener('themechange', () => {
+    predictLater();
+    const rebuild = document.getElementById('cloudRebuild');
+    if (rebuild) rebuild.click();
+  });
+  document.addEventListener('click', (e) => {
+    const btn = e.target.closest('.copy-btn');
+    if (!btn) return;
+    const text = btn.closest('.src-panel').dataset.copy || '';
+    navigator.clipboard.writeText(text).then(() => {
+      btn.textContent = 'Copied';
+      setTimeout(() => { btn.textContent = 'Copy'; }, 1200);
+    });
+  });
+  document.getElementById('speakBtn').addEventListener('click', () => {
+    const w = document.getElementById('predictedWord').textContent;
+    if (!w || w === '—' || w === '…' || /^Loading|exhausted/.test(w) || !window.speechSynthesis) return;
+    speechSynthesis.cancel();
+    speechSynthesis.speak(new SpeechSynthesisUtterance(w));
+  });
+
+  const fileModalOverlay = document.getElementById('fileModalOverlay');
+  const fileModalTitle = document.getElementById('fileModalTitle');
+  fileModalTitle.textContent = (stats.latest_version || 'Current Dictionary File').replace('.txt', '');
+  fileModalTitle.href = stats.latest_version
+    ? `https://github.com/ChadDuffenshmoogle/dictionary-versions/blob/main/${encodeURIComponent(stats.latest_version)}`
+    : '#';
+  document.getElementById('fileModalContent').textContent = stats.latest_file_content || 'No file content available.';
+  document.getElementById('viewFileBtn').addEventListener('click', () => {
+    fileModalOverlay.style.display = 'flex';
+  });
+  document.getElementById('fileModalClose').addEventListener('click', () => {
+    fileModalOverlay.style.display = 'none';
+  });
+  fileModalOverlay.addEventListener('click', (e) => {
+    if (e.target === fileModalOverlay) fileModalOverlay.style.display = 'none';
+  });
+
+  // Zoogliography -- not preloaded in stats.json (it's a separate,
+  // unversioned file), so it's fetched on demand the first time the
+  // button is clicked and cached after that.
+  const zoogModalOverlay = document.getElementById('zoogModalOverlay');
+  const zoogModalContent = document.getElementById('zoogModalContent');
+  const zoogFilter = document.getElementById('zoogFilter');
+  const zoogTotal = document.getElementById('zoogTotal');
+  let zoogContent = null;
+  let zoogFetchPromise = null;
+
+  // The Zoogliography file text plus a separate section at the bottom for
+  // the predicted next word (all-words version, no definition), then
+  // another for the predicted nonsense word.
+  function zoogText() {
+    let text = zoogContent;
+    if (predictedAllWord && !text.includes('--- Predicted Next Word ---')) {
+      text += `\n\n--- Predicted Next Word ---\n${predictedAllWord}`;
+    }
+    if (predictedNonsenseWord && !text.includes('--- Predicted Nonsense Word ---')) {
+      text += `\n\n--- Predicted Nonsense Word ---\n${predictedNonsenseWord}`;
+    }
+    return text;
+  }
+  // Split the file text into its sections. Marker lines are not shown; the
+  // Seed line (used only by generate_stats.py) is dropped here too, and the
+  // "ZOOGLIOGRAPHY - <date>" heading line is kept as the title, not as a zoog.
+  const isZoogTitle = (l) => /^zoogliography\s*[-\u2013\u2014]/i.test(l);
+  function parseZoog(text) {
+    const out = { title: '', main: [], next: [], nonsense: [], rejected: [] };
+    let cur = 'main';
+    (text || '').split('\n').forEach(raw => {
+      const l = raw.trim();
+      if (!l) return;
+      if (l.startsWith('---')) {
+        if (/^--- Predicted Next Word/i.test(l)) cur = 'next';
+        else if (/^--- Predicted Nonsense/i.test(l)) cur = 'nonsense';
+        else if (/^--- Rejected/i.test(l)) cur = 'rejected';
+        return;
+      }
+      if (cur === 'main' && isZoogTitle(l)) { out.title = l; return; }
+      if (cur === 'rejected') l.split(',').forEach(w => { w = w.trim(); if (w) out.rejected.push(w); });
+      else out[cur].push(l);
+    });
+    return out;
+  }
+  // Authentic zoogs are anthroopozoogs; predicted ones are autozoogs.
+  const ZOOG_SECTIONS = [
+    { key: 'main',     id: 'zoogSec-main',     title: 'Authentic zoogs (anthroopozoogs)', short: 'anthroopozoogs',     cls: '',       chip: '' },
+    { key: 'next',     id: 'zoogSec-next',     title: 'Predicted zoogs (autozoogs): normal', short: 'normal autozoogs',   cls: 'violet', chip: 'pred' },
+    { key: 'nonsense', id: 'zoogSec-nonsense', title: 'Predicted zoogs (autozoogs): nonsense', short: 'nonsense autozoogs', cls: 'violet', chip: 'pred' },
+    { key: 'rejected', id: 'zoogSec-rejected', title: 'Rejected zoogs',     short: 'rejected',           cls: 'muted',  chip: 'rej' },
+  ];
+  function refreshZoogModal() {
+    if (zoogContent === null) return;
+    const text = zoogText();
+    if (!text) { zoogModalContent.textContent = '(empty)'; zoogTotal.textContent = ''; return; }
+    const z = parseZoog(text);
+    const q = zoogFilter.value.trim().toLowerCase();
+    const keep = (arr) => q ? arr.filter(w => w.toLowerCase().includes(q)) : arr;
+    const current = {
+      next: (predictedAllWord || stats.predicted_word || '').toLowerCase(),
+      nonsense: (predictedNonsenseWord || stats.predicted_nonsense_word || '').toLowerCase(),
+    };
+    const section = (sec) => {
+      const all = z[sec.key], shown = keep(all), cur = current[sec.key];
+      const chips = shown.length
+        ? `<div class="zoog-chips">${shown.map(w => `<span class="zoog-chip ${sec.chip}${cur && w.toLowerCase() === cur ? ' cur' : ''}">${escapeHtml(w)}</span>`).join('')}</div>`
+        : `<div class="zoog-empty">${q ? 'No matches.' : 'None yet.'}</div>`;
+      return `<div class="zoog-section" id="${sec.id}"><div class="zoog-h ${sec.cls}">${sec.title}<span class="zoog-n">${q ? shown.length + ' of ' + all.length : all.length}</span></div>${chips}</div>`;
+    };
+    // Counts next to the filter; each one jumps to its section.
+    zoogTotal.innerHTML = ZOOG_SECTIONS
+      .map(sec => `<button type="button" class="zoog-jump" data-sec="${sec.id}">${z[sec.key].length} ${sec.short}</button>`)
+      .join(' · ');
+    zoogModalContent.innerHTML =
+      (z.title ? `<div class="zoog-n" style="margin-bottom:14px;">${escapeHtml(z.title)}</div>` : '')
+      + ZOOG_SECTIONS.map(section).join('');
+  }
+  zoogTotal.addEventListener('click', (e) => {
+    const b = e.target.closest('[data-sec]');
+    const el = b && document.getElementById(b.dataset.sec);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+  zoogFilter.addEventListener('input', refreshZoogModal);
+
+  function fetchZoogliography() {
+    if (zoogFetchPromise) return zoogFetchPromise;
+    zoogFetchPromise = fetch('https://raw.githubusercontent.com/ChadDuffenshmoogle/dictionary-versions/main/Zoogliography.txt', { cache: 'no-store' })
+      .then(res => {
+        if (!res.ok) throw new Error('Zoogliography.txt not found (' + res.status + ')');
+        return res.text();
+      })
+      .then(text => {
+        zoogContent = text;
+        refreshZoogModal();
+      })
+      .catch(err => {
+        zoogModalContent.textContent = 'Could not load Zoogliography: ' + err.message;
+        zoogFetchPromise = null; // allow retry on next open
+      });
+    return zoogFetchPromise;
+  }
+
+  document.getElementById('viewZoogBtn').addEventListener('click', () => {
+    zoogModalOverlay.style.display = 'flex';
+    if (!zoogContent) {
+      zoogModalContent.textContent = 'Loading…';
+      fetchZoogliography();
+    }
+  });
+  document.getElementById('zoogModalClose').addEventListener('click', () => {
+    zoogModalOverlay.style.display = 'none';
+  });
+  zoogModalOverlay.addEventListener('click', (e) => {
+    if (e.target === zoogModalOverlay) zoogModalOverlay.style.display = 'none';
+  });
+  document.getElementById('zoogDownloadBtn').addEventListener('click', () => {
+    if (zoogContent !== null) downloadBlob(zoogText(), 'Zoogliography.txt', 'text/plain');
+  });
+
+  function downloadBlob(text, filename, mimeType) {
+    const blob = new Blob([text], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  document.getElementById('downloadTxtBtn').addEventListener('click', () => {
+    downloadBlob(
+      stats.latest_file_content || '',
+      stats.latest_version || 'dictionary.txt',
+      'text/plain'
+    );
+  });
+  document.getElementById('downloadJsonBtn').addEventListener('click', () => {
+    const jsonName = (stats.latest_version || 'dictionary.txt').replace(/\.txt$/, '.json');
+    downloadBlob(JSON.stringify(dictEntries, null, 2), jsonName, 'application/json');
+  });
+
+  // Searchable dictionary modal
+  const searchModalOverlay = document.getElementById('searchModalOverlay');
+  const dictEntryList = document.getElementById('dictEntryList');
+  const dictSearchInput = document.getElementById('dictSearchInput');
+  const dictResultCount = document.getElementById('dictResultCount');
+  const scopeButtons = Array.from(document.querySelectorAll('.scope-toggle button'));
+  let searchScope = 'both';
+
+  // Defined early (not just down near the pie chart) so the searchable
+  // dictionary list below can color terms by part of speech too.
+  const posEntries = Object.entries(stats.pos_counts || {}).sort((a, b) => b[1] - a[1]);
+  const posLabels = posEntries.map(([label]) => label);
+  const posColors = [
+    '#6ee7b7', '#7dd3fc', '#fbbf24', '#f472b6', '#a78bfa',
+    '#fb923c', '#34d399', '#60a5fa', '#f87171', '#c084fc',
+    '#9a9fab',
+  ];
+  function colorForPos(pos) {
+    const idx = posLabels.indexOf(pos || '(no pos)');
+    return T(posColors[(idx === -1 ? posLabels.length : idx) % posColors.length]);
+  }
+
+  const dictEntries = (stats.definitions_by_length_asc || [])
+    .slice()
+    .sort((a, b) => a.term.toLowerCase().localeCompare(b.term.toLowerCase()));
+
+  const funSets = new Map();
+  const termsByDate = new Map();
+  (stats.added_terms_timeline || []).forEach(({ date, term }) => {
+    if (!termsByDate.has(date)) termsByDate.set(date, new Set());
+    termsByDate.get(date).add(term.toLowerCase());
+  });
+
+  function escapeHtml(s) {
+    return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  function highlight(text, q) {
+    const escaped = escapeHtml(text);
+    if (!q) return escaped;
+    const escapedQ = q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    return escaped.replace(
+      new RegExp(`(${escapedQ})`, 'ig'),
+      '<mark style="background:var(--mark); color:#0f1115; border-radius:3px; padding:0 2px;">$1</mark>'
+    );
+  }
+
+  dictEntryList.innerHTML = dictEntries.map((e, i) => `
+    <div class="dict-entry" data-i="${i}">
+      <div style="display:flex; align-items:baseline; gap:8px; flex-wrap:wrap;">
+        <span class="term" data-term="${escapeHtml(e.term)}"></span>
+        <span class="pos">${escapeHtml(e.pos || '')}</span>${e.pronunciation ? `<span class="pos">${escapeHtml(e.pronunciation)}</span>` : ''}
+      </div>
+      <div class="def" data-def="${escapeHtml(e.definition)}"></div>
+    </div>
+  `).join('');
+  const entryEls = Array.from(dictEntryList.children);
+
+  function filterDict() {
+    const raw = dictSearchInput.value.replace(/^\s+/, '').toLowerCase();
+    const startsWithMatch = raw.match(/^startswith:\s*(.*)$/);
+    const posMatch = raw.match(/^pos:\s*(.*)$/);
+    const dateMatch = raw.match(/^date:\s*(.*)$/);
+    const funMatch = raw.match(/^fun:\s*(.*)$/);
+    const lengthMatch = raw.match(/^length:\s*(.*)$/);
+    const usedMatch = raw.match(/^used:(characters|words):(entries|definitions|both):(.*)$/);
+    const scrabbleMatch = raw.match(/^scrabble(legal|normalized|illegal|phrase|both):?\s*(.*)$/);
+    const q = startsWithMatch ? startsWithMatch[1]
+            : posMatch ? posMatch[1]
+            : dateMatch ? dateMatch[1]
+            : funMatch ? funMatch[1]
+            : lengthMatch ? lengthMatch[1]
+            : usedMatch ? usedMatch[3]
+            : scrabbleMatch ? scrabbleMatch[2]
+            : raw;
+    const isPrefix = !!startsWithMatch;
+    const isPos = !!posMatch;
+    const isDate = !!dateMatch;
+    const isFun = !!funMatch;
+    const funSet = isFun ? (funSets.get(q.trim()) || new Set()) : null;
+    const isLength = !!lengthMatch;
+    const isUsed = !!usedMatch;
+    const isScrabble = !!scrabbleMatch;
+    const wantScrabbleLegal = isScrabble && scrabbleMatch[1] === 'legal';
+    const dateTerms = isDate ? (termsByDate.get(q) || new Set()) : null;
+
+    let visible = 0;
+    dictEntries.forEach((e, i) => {
+      const term = e.term.toLowerCase();
+      const def = e.definition.toLowerCase();
+      const pos = (e.pos || '').toLowerCase() || '(no pos)';
+      let match;
+      if (isScrabble) match = e.scrabble === scrabbleMatch[1] && (!q || term.includes(q));
+      else if (!q) match = true;
+      else if (isUsed) {
+        const inText = (text) => usedMatch[1] === 'characters'
+          ? text.includes(q)
+          : text.split(/\s+/).some(w => w.replace(/^[^a-z0-9]+|[^a-z0-9]+$/g, '') === q);
+        match = (usedMatch[2] !== 'definitions' && inText(term)) || (usedMatch[2] !== 'entries' && inText(def));
+      }
+      else if (isFun) match = funSet.has(term);
+      else if (isDate) match = dateTerms.has(term);
+      else if (isLength) {
+        const [w, m, n] = q.split(':');
+        const text = w === 'definitions' ? def : term;
+        const len = m === 'character' ? text.length : text.replace(/[^a-z0-9]/g, '').length;
+        match = len === parseInt(n, 10);
+      }
+      else if (isPos) match = (e.pos_list || [e.pos || '']).some(p => (p || '(no pos)').toLowerCase() === q);
+      else if (isPrefix) match = term.startsWith(q);
+      else if (searchScope === 'term') match = term.includes(q);
+      else if (searchScope === 'definition') match = def.includes(q);
+      else match = term.includes(q) || def.includes(q);
+
+      entryEls[i].style.display = match ? '' : 'none';
+      if (match) {
+        visible++;
+        const noHighlight = isPos || isDate || isLength || isScrabble || isFun;
+        const highlightTerm = isUsed ? usedMatch[2] !== 'definitions'
+          : noHighlight ? false : (q && (isPrefix || searchScope !== 'definition'));
+        const highlightDef = isUsed ? usedMatch[2] !== 'entries'
+          : noHighlight ? false : (q && !isPrefix && searchScope !== 'term');
+        entryEls[i].querySelector('.term').innerHTML = highlight(e.term, highlightTerm ? q : '');
+        entryEls[i].querySelector('.def').innerHTML = highlight(e.definition, highlightDef ? q : '');
+        const monoWhat = isLength ? q.split(':')[0] : '';
+        entryEls[i].querySelector('.term').style.fontFamily = monoWhat === 'entries' ? 'monospace' : '';
+        entryEls[i].querySelector('.def').style.fontFamily = monoWhat === 'definitions' ? 'monospace' : '';
+      }
+    });
+    dictResultCount.textContent = `${visible} of ${dictEntries.length} entries`;
+  }
+  filterDict();
+
+  dictSearchInput.addEventListener('input', filterDict);
+  scopeButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      scopeButtons.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      searchScope = btn.dataset.scope;
+      filterDict();
+    });
+  });
+
+  function openSearchModal(query) {
+    searchModalOverlay.style.display = 'flex';
+    if (query !== undefined) dictSearchInput.value = query;
+    filterDict();
+    dictSearchInput.focus();
+  }
+
+  document.getElementById('viewSearchBtn').addEventListener('click', () => openSearchModal());
+  document.getElementById('searchModalClose').addEventListener('click', () => {
+    searchModalOverlay.style.display = 'none';
+  });
+  searchModalOverlay.addEventListener('click', (e) => {
+    if (e.target === searchModalOverlay) searchModalOverlay.style.display = 'none';
+  });
+
+  // Esc closes whichever popup is open.
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape') return;
+    [fileModalOverlay, zoogModalOverlay, searchModalOverlay].forEach(o => { o.style.display = 'none'; });
+  });
+
+  // Total word count over time, with an editable-length linear projection
+  let growthChartInstance = null;
+  let lookbackMonths = null;   // null = use every month available (the max)
+  let growthMaxMonths = 1;
+  let currentDailyRate = null;
+  let latestPointDate = null;
+  let latestPointTotal = null;
+
+  function updateRateDisplays() {
+    const currentRateEl = document.getElementById('currentRateDisplay');
+    const goalRateEl = document.getElementById('goalRateDisplay');
+    if (currentDailyRate === null || latestPointDate === null) return;
+
+    currentRateEl.textContent = `${currentDailyRate.toFixed(2)} words/day`;
+
+    const goalWords = Math.max(1, parseInt(document.getElementById('goalWords').value, 10) || 1000);
+    const goalMonth = parseInt(document.getElementById('goalMonth').value, 10);
+    const goalYear = parseInt(document.getElementById('goalYear').value, 10) || 2027;
+
+    // Last day of the target month, in UTC, so "by May 2027" means
+    // anywhere up through the end of May.
+    const goalDate = new Date(Date.UTC(goalYear, goalMonth + 1, 0));
+    const daysRemaining = (goalDate - latestPointDate) / 86400000;
+    const wordsNeeded = goalWords - latestPointTotal;
+
+    if (wordsNeeded <= 0) {
+      goalRateEl.textContent = 'goal already reached';
+    } else if (daysRemaining <= 0) {
+      goalRateEl.textContent = 'date already passed';
+    } else {
+      goalRateEl.textContent = `${(wordsNeeded / daysRemaining).toFixed(2)} words/day`;
+    }
+  }
+
+  ['goalWords', 'goalMonth', 'goalYear'].forEach(id => {
+    document.getElementById(id).addEventListener('input', updateRateDisplays);
+    document.getElementById(id).addEventListener('change', updateRateDisplays);
+  });
+
+  function buildGrowthChart(cumulative, projectionMonths) {
+    if (!cumulative || cumulative.length < 2) return;
+
+    const dayMs = 86400000;
+    const firstDate = new Date(cumulative[0].date + 'T00:00:00Z');
+    const points = cumulative.map(p => ({
+      x: (new Date(p.date + 'T00:00:00Z') - firstDate) / dayMs,
+      y: p.total,
+    }));
+
+    // Only the last N months of points are used to fit the projection lines.
+    // The max grows by itself as new months of data arrive.
+    const lastX = points[points.length - 1].x;
+    growthMaxMonths = Math.max(1, Math.ceil(lastX / 30.4));
+    const lookback = lookbackMonths === null ? growthMaxMonths : Math.min(lookbackMonths, growthMaxMonths);
+    let fitPoints = points.filter(p => p.x >= lastX - lookback * 30.4);
+    if (fitPoints.length < 3) fitPoints = points.slice(-3);
+    document.getElementById('lookbackValue').textContent = lookback;
+    document.getElementById('lookbackUp').disabled = lookback >= growthMaxMonths;
+    document.getElementById('lookbackDown').disabled = lookback <= 1;
+
+    // Simple least-squares linear regression: y = a + b*x
+    const n = fitPoints.length;
+    const sumX = fitPoints.reduce((s, p) => s + p.x, 0);
+    const sumY = fitPoints.reduce((s, p) => s + p.y, 0);
+    const sumXY = fitPoints.reduce((s, p) => s + p.x * p.y, 0);
+    const sumXX = fitPoints.reduce((s, p) => s + p.x * p.x, 0);
+    const b = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
+    const a = (sumY - b * sumX) / n;
+
+    // Exposed for the "current rate" / "rate needed for goal" displays
+    // in the card header.
+    currentDailyRate = b;
+    latestPointDate = new Date(firstDate.getTime() + points[points.length - 1].x * dayMs);
+    latestPointTotal = points[points.length - 1].y;
+    updateRateDisplays();
+
+    const lastPoint = points[points.length - 1];
+    const projectionDays = Math.round(projectionMonths * 30.4);
+    const projected = [];
+    // Start exactly at the real last data point, then continue forward
+    // using the fitted slope -- the regression line itself is a best-fit
+    // average through the whole history and usually does NOT pass through
+    // the actual last point, which would otherwise show as a fake drop
+    // right where the dashed projection begins.
+    for (let d = 0; d <= projectionDays; d++) {
+      const x = lastPoint.x + d;
+      projected.push({ x, y: lastPoint.y + b * d });
+    }
+
+    // Power fit: y = A * (x+1)^k, found by a straight-line fit on the
+    // logs (x is shifted by 1 so day 0 is not log(0)).
+    const logPts = fitPoints.filter(p => p.y > 0);
+    const lsx = logPts.reduce((s, p) => s + Math.log(p.x + 1), 0);
+    const lsy = logPts.reduce((s, p) => s + Math.log(p.y), 0);
+    const lsxy = logPts.reduce((s, p) => s + Math.log(p.x + 1) * Math.log(p.y), 0);
+    const lsxx = logPts.reduce((s, p) => s + Math.log(p.x + 1) ** 2, 0);
+    const ln = logPts.length;
+    const powK = (ln * lsxy - lsx * lsy) / (ln * lsxx - lsx * lsx);
+    const powA = Math.exp((lsy - powK * lsx) / ln);
+    const powerAt = (x) => powA * Math.pow(x + 1, powK);
+
+    // Quadratic (degree-2 polynomial) fit: y = c0 + c1*t + c2*t^2, with
+    // t = x / lastX so the numbers stay small, solved with the normal
+    // equations.
+    const fitStartX = fitPoints[0].x;
+    const scaleX = (lastPoint.x - fitStartX) || 1;
+    const pw = (k) => fitPoints.reduce((s, p) => s + Math.pow((p.x - fitStartX) / scaleX, k), 0);
+    const pyw = (k) => fitPoints.reduce((s, p) => s + p.y * Math.pow((p.x - fitStartX) / scaleX, k), 0);
+    const M = [
+      [n, pw(1), pw(2), pyw(0)],
+      [pw(1), pw(2), pw(3), pyw(1)],
+      [pw(2), pw(3), pw(4), pyw(2)],
+    ];
+    for (let i = 0; i < 3; i++) {
+      let big = i;
+      for (let r = i + 1; r < 3; r++) if (Math.abs(M[r][i]) > Math.abs(M[big][i])) big = r;
+      [M[i], M[big]] = [M[big], M[i]];
+      for (let r = i + 1; r < 3; r++) {
+        const f = M[r][i] / M[i][i];
+        for (let c = i; c < 4; c++) M[r][c] -= f * M[i][c];
+      }
+    }
+    const coef = [0, 0, 0];
+    for (let i = 2; i >= 0; i--) {
+      let v = M[i][3];
+      for (let c = i + 1; c < 3; c++) v -= M[i][c] * coef[c];
+      coef[i] = v / M[i][i];
+    }
+    const polyAt = (x) => coef[0] + coef[1] * ((x - fitStartX) / scaleX) + coef[2] * Math.pow((x - fitStartX) / scaleX, 2);
+
+    // Like the linear line, both curves are shifted to start exactly at
+    // the real last data point so there is no fake jump.
+    const powerProjected = [];
+    const polyProjected = [];
+    for (let d = 0; d <= projectionDays; d++) {
+      const x = lastPoint.x + d;
+      powerProjected.push({ x, y: lastPoint.y + powerAt(x) - powerAt(lastPoint.x) });
+      polyProjected.push({ x, y: lastPoint.y + polyAt(x) - polyAt(lastPoint.x) });
+    }
+
+    const dateLabel = (x) => {
+      const d = new Date(firstDate.getTime() + x * dayMs);
+      return d.toISOString().slice(0, 10);
+    };
+
+    const monthYearLabel = (x) => {
+      const d = new Date(firstDate.getTime() + x * dayMs);
+      const month = d.toLocaleString('en-US', { month: 'short', timeZone: 'UTC' });
+      return `${month}. ${d.getUTCFullYear()}`;
+    };
+
+    function monthStartTicks(minX, maxX) {
+      const ticks = [];
+      let d = new Date(Date.UTC(firstDate.getUTCFullYear(), firstDate.getUTCMonth(), 1));
+      while ((d - firstDate) / dayMs < minX) d.setUTCMonth(d.getUTCMonth() + 1);
+      while ((d - firstDate) / dayMs <= maxX) {
+        ticks.push({ value: Math.round((d - firstDate) / dayMs) });
+        d.setUTCMonth(d.getUTCMonth() + 1);
+      }
+      return ticks;
+    }
+
+    if (growthChartInstance) {
+      growthChartInstance.destroy();
+    }
+
+    // Very faint accent-coloured band behind the part of the chart used for the projection fit.
+    const fitWindowShade = {
+      id: 'fitWindowShade',
+      beforeDatasetsDraw(chart) {
+        const { ctx, chartArea, scales } = chart;
+        const left = Math.max(chartArea.left, scales.x.getPixelForValue(fitStartX));
+        const right = Math.min(chartArea.right, scales.x.getPixelForValue(lastPoint.x));
+        if (right <= left) return;
+        ctx.save();
+        ctx.globalAlpha = 0.07;
+        ctx.fillStyle = C.accent;
+        ctx.fillRect(left, chartArea.top, right - left, chartArea.bottom - chartArea.top);
+        ctx.restore();
+      },
+    };
+
+    growthChartInstance = new Chart(document.getElementById('growthChart'), {
+      type: 'line',
+      plugins: [fitWindowShade],
+      data: {
+        datasets: [
+          {
+            label: 'Actual total entries',
+            data: points.map(p => ({ x: p.x, y: p.y })),
+            borderColor: C.accent,
+            backgroundColor: C.accent,
+            pointRadius: 2,
+            tension: 0.15,
+          },
+          {
+            label: `Projected (linear trend, next ${projectionMonths} month${projectionMonths === 1 ? '' : 's'})`,
+            data: projected,
+            borderColor: T('#fbbf24'),
+            borderDash: [6, 4],
+            pointRadius: 0,
+          },
+          {
+            label: `Projected (power fit, exponent ${powK.toFixed(2)})`,
+            data: powerProjected,
+            borderColor: T('#f472b6'),
+            borderDash: [6, 4],
+            pointRadius: 0,
+          },
+          {
+            label: 'Projected (quadratic polynomial)',
+            data: polyProjected,
+            borderColor: T('#a78bfa'),
+            borderDash: [6, 4],
+            pointRadius: 0,
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        parsing: false,
+        interaction: { mode: 'nearest', axis: 'x', intersect: false },
+        scales: {
+          x: {
+            type: 'linear',
+            afterBuildTicks: (scale) => {
+              scale.ticks = monthStartTicks(scale.min, scale.max);
             },
-            timeout=30,
-        )
-        if put.status_code in (200, 201):
-            print(f"Zoogliography predicted words set to: {word} / nonsense: {nonsense_word}")
-            return
-        if put.status_code in (409, 422):
-            continue  # the file changed while we worked; read it again and retry
-        put.raise_for_status()
-
-
-def api_get(url, params=None):
-    resp = requests.get(url, headers=HEADERS, params=params, timeout=30)
-    resp.raise_for_status()
-    return resp
-
-
-def get_all_commits():
-    """Paginate through every commit on the branch."""
-    commits = []
-    page = 1
-    while True:
-        resp = api_get(
-            f"{API_ROOT}/commits",
-            params={"sha": GITHUB_BRANCH, "per_page": 100, "page": page},
-        )
-        batch = resp.json()
-        if not batch:
-            break
-        commits.extend(batch)
-        if len(batch) < 100:
-            break
-        page += 1
-    return commits
-
-
-def get_dictionary_filenames():
-    """List every dictionary version file in the repo root."""
-    resp = api_get(f"{API_ROOT}/git/trees/{GITHUB_BRANCH}")
-    files = resp.json()["tree"]
-    names = [
-        f["path"] for f in files
-        if f["type"] == "blob"
-        and f["path"].startswith(FILE_PREFIX) and f["path"].endswith(FILE_EXTENSION)
-    ]
-    return names
-
-
-def parse_version_tuple(filename):
-    m = re.search(r"v\.?(\d+)\.(\d+)\.(\d+)", filename, re.IGNORECASE)
-    if not m:
-        return (0, 0, 0)
-    return tuple(int(x) for x in m.groups())
-
-
-def get_latest_filename(filenames):
-    return max(filenames, key=parse_version_tuple)
-
-
-def fetch_dictionary_file(filename):
-    """Read the dictionary file through the API instead of raw.githubusercontent.com,
-    whose cache can serve a version that is several minutes old."""
-    resp = requests.get(
-        f"{API_ROOT}/contents/{requests.utils.quote(filename)}",
-        headers={**HEADERS, "Accept": "application/vnd.github.raw+json"},
-        params={"ref": GITHUB_BRANCH},
-        timeout=30,
-    )
-    resp.raise_for_status()
-    resp.encoding = "utf-8"
-    return resp.text
-
-
-def sort_key_ignore_punct(s):
-    term = s.split(" (")[0] if " (" in s else s
-    term = term.lstrip(" '-\"")
-    if term.lower().startswith("the "):
-        term = term[4:] + ", the"
-    return term.lower()
-
-
-def fetch_raw(filename):
-    url = f"{RAW_ROOT}/{requests.utils.quote(filename)}"
-    resp = requests.get(url, timeout=30)
-    resp.raise_for_status()
-    return resp.text
-
-
-def _clean_term(raw_term):
-    term = re.sub(r"\(pronounced:\s*[^)]+\)", "", raw_term, flags=re.IGNORECASE)
-    term = re.sub(r"\[[^\]]+\]", "", term)
-    return term.strip()
-
-
-def _parse_entry_line(line):
-    """Try progressively looser patterns to pull (term, pos, definition)
-    out of one line, so entries with nonstandard punctuation aren't
-    silently dropped from the definitions list."""
-    # Normalize "(pos)-definition" (missing space before the dash) so
-    # every pattern below can assume a space is there.
-    line = re.sub(r"\)-", ") -", line)
-
-    # 1. Strict standard pattern: "term (pos) - definition"
-    m = re.match(ENTRY_PATTERN, line)
-    if m:
-        raw_term, pos, definition = m.groups()
-        return _clean_term(raw_term), pos.strip(), definition.strip()
-
-    # 2. Flexible: use the LAST "(...)" before " - " as the part-of-speech,
-    #    everything before it is the term (handles terms that themselves
-    #    contain parentheses, e.g. pronunciation guides).
-    if "(" in line and ")" in line and " - " in line:
-        left, _, definition = line.partition(" - ")
-        paren_matches = list(re.finditer(r"\(([^)]+)\)", left))
-        if paren_matches:
-            term_part = left[: paren_matches[-1].start()].strip()
-            if term_part and definition.strip():
-                return _clean_term(term_part), paren_matches[-1].group(1).strip(), definition.strip()
-
-    # 3. Em dash instead of " - "
-    for sep in (" — ", " – "):
-        if sep in line and "(" in line and ")" in line:
-            left, _, definition = line.partition(sep)
-            paren_matches = list(re.finditer(r"\(([^)]+)\)", left))
-            if paren_matches and definition.strip():
-                term_part = left[: paren_matches[-1].start()].strip()
-                if term_part:
-                    return _clean_term(term_part), paren_matches[-1].group(1).strip(), definition.strip()
-
-    # 4. No parentheses at all, just "term - definition" (em/en dash or
-    #    plain hyphen with spaces on both sides -- NOT a bare colon, which
-    #    is too easy to false-positive on ordinary sentences). No pos tag
-    #    available in this format.
-    for sep in (" - ", " — ", " – "):
-        if sep in line:
-            term_part, _, definition = line.partition(sep)
-            if term_part.strip() and definition.strip():
-                return _clean_term(term_part), "", definition.strip()
-
-    # 5. "term (pos): definition" -- colon right after the pos tag instead
-    #    of " - ".
-    m4 = re.match(r"^(.+?)\s*\(([^)]+)\)\s*:\s*(.+)$", line)
-    if m4:
-        term_part, pos, definition = m4.groups()
-        if definition.strip():
-            return _clean_term(term_part), pos.strip(), definition.strip()
-
-    # 6. "term (pos) definition" -- no separator at all, just whitespace
-    #    right after the pos tag. Skip if the "definition" captured is
-    #    actually just a pronunciation guide (e.g. "/aenline/") with
-    #    nothing else -- that's not real definition text.
-    m5 = re.match(r"^(.+?)\s*\(([^)]+)\)\.?\s+(\S.*)$", line)
-    if m5:
-        term_part, pos, definition = m5.groups()
-        if definition.strip() and not re.match(r"^/[^/]+/$", definition.strip()):
-            return _clean_term(term_part), pos.strip(), definition.strip()
-
-    return None
-
-
-METADATA_LABELS = {
-    "etymology", "derived terms", "synonym", "synonyms",
-    "ex", "example", "notes", "antonym", "antonyms", "pronunciation",
-}
-
-POS_WORDS = ("noun", "verb", "adjective", "adverb", "interjection", "pronoun", "preposition")
-
-
-def _is_metadata_line(line):
-    """Lines that are part of an entry's metadata (etymology, examples,
-    pronunciation, synonyms, numbered extra senses, a lone part-of-speech
-    tag, ...) rather than the entry's own term/definition line."""
-    stripped = line.strip()
-    label = stripped.rstrip(":").lower()
-    if label in METADATA_LABELS:
-        return True
-    if stripped.lower().startswith(
-        ("etymology:", "derived terms:", "synonym:", "synonyms:",
-         "ex:", "example:", "notes:", "antonym:", "antonyms:", "- example:",
-         "pronunciation:")
-    ):
-        return True
-    if re.match(r"^\d+\.\s", stripped):
-        return True
-    if re.match(r"^\([^)]{1,12}\)\.?$", stripped):
-        return True
-    if re.match(r"^[a-zA-Z\-']+\)$", stripped):
-        return True
-    return False
-
-
-def _make_entry(term, pos, definition):
-    return {"term": term, "etymology": "", "pronunciation": "",
-            "sections": [{"pos": pos, "defs": [{"text": definition, "examples": []}]}]}
-
-
-def _move_leading_ipa(entry):
-    """Old entries sometimes start their definition with /ipa/. Treat that as
-    the pronunciation so the form and the pages show it in the right place."""
-    if entry["pronunciation"] or not entry["sections"] or not entry["sections"][0]["defs"]:
-        return entry
-    first = entry["sections"][0]["defs"][0]
-    m = re.match(r"^(/[^/]+/)\s*(\S.*)$", first["text"])
-    if m:
-        entry["pronunciation"] = m.group(1)
-        first["text"] = m.group(2)
-    return entry
-
-
-def _emit(results, entry):
-    entry = _move_leading_ipa(entry)
-    term = entry["term"]
-    results.append(dict(entry, primary=True))
-    # " / " (spaces both sides) separates alternate spellings; a slash
-    # without those spaces is part of the word.
-    if re.search(r"\s/\s", term):
-        for part in re.split(r"\s+/\s+", term):
-            part = part.strip()
-            if part and part != term:
-                results.append(dict(entry, term=part, primary=False))
-    if re.match(r"^the\s+", term, re.IGNORECASE):
-        results.append(dict(entry, term=re.sub(r"^the\s+", "", term, flags=re.IGNORECASE), primary=False))
-
-
-def _parse_block_structured(block_lines):
-    """Read one hyphen block: several parts of speech, numbered senses,
-    examples, Etymology and Pronunciation. Old-style blocks (definition on
-    later lines, quote lines, Etymology above the definition) still work."""
-    term = None
-    sections, cur, sense = [], None, None
-    last = None
-    ety = []
-    pron = ""
-
-    for line in block_lines:
-        if not line:
-            continue
-        m = re.match(r"^etymology:\s*(.*)$", line, re.IGNORECASE)
-        if m:
-            ety.append(m.group(1).strip()); last = "ety"; continue
-        m = re.match(r"^pronunciation:\s*(.*)$", line, re.IGNORECASE)
-        if m:
-            pron = m.group(1).strip(); last = "pron"; continue
-        m = re.match(r"^(?:-\s*)?(?:examples?|ex):\s*(.*)$", line, re.IGNORECASE)
-        if m:
-            if sense is not None:
-                sense["examples"].append(m.group(1).strip())
-                last = "ex"
-            else:
-                last = "other"
-            continue
-        if re.match(r"^(?:-\s*)?(derived terms|synonyms?|antonyms?|notes)\s*:", line, re.IGNORECASE):
-            last = "other"; continue
-        m = re.match(r"^(\d+)\.\s+(.*)$", line)
-        if cur is not None and m:
-            sense = {"text": m.group(2).strip(), "examples": []}
-            cur["defs"].append(sense); last = "def"; continue
-
-        parsed = _parse_entry_line(line)
-        if parsed and (term is None or parsed[0].lower() == term.lower()):
-            if term is None:
-                term = parsed[0]
-            cur = {"pos": parsed[1], "defs": []}
-            sense = {"text": re.sub(r"^1\.\s+", "", parsed[2]), "examples": []}
-            cur["defs"].append(sense); sections.append(cur); last = "def"; continue
-
-        if re.match(r"^\([^)]{1,12}\)\.?$", line) or line.lower() in POS_WORDS:
-            continue  # lone part-of-speech subheading
-
-        text = re.sub(r"^-\s*", "", line)
-        if term is None:
-            # "term (pos)" with the definition on the next lines, or a bare term line
-            bare = re.sub(r"\s*/[^/]+/\s*$", "", line)
-            pm = re.search(r"\(([^)]{1,20})\)\.?\s*$", bare)
-            pos = pm.group(1).strip() if pm else ""
-            term = _clean_term(re.sub(r"\s*\([^)]{1,20}\)\.?\s*$", "", bare).strip())
-            if not term:
-                term = None
-                continue
-            cur = {"pos": pos, "defs": []}; sections.append(cur)
-            sense = None; last = "need"
-        elif last == "need":
-            sense = {"text": text, "examples": []}
-            cur["defs"].append(sense); last = "def"
-        elif last == "ety" and ety:
-            ety[-1] += " " + text
-        elif last == "ex" and sense is not None:
-            sense["examples"].append(text)
-        elif last == "def" and sense is not None:
-            if re.match(r"^[\"“'‘]", text) and not sense["examples"]:
-                sense["examples"].append(text)
-                last = "ex"
-            else:
-                sense["text"] += "; " + text
-
-    sections = [s for s in sections if any(d["text"] for d in s["defs"])]
-    if not term or not sections:
-        return None
-    return {"term": term, "sections": sections,
-            "etymology": " ".join(e for e in ety if e).strip(), "pronunciation": pron}
-
-
-def _process_block(results, block_lines):
-    entry = _parse_block_structured(block_lines)
-    if entry:
-        _emit(results, entry)
-
-
-def extract_definitions(content):
-    """Return a list of entry dicts: term, sections (pos + numbered senses +
-    examples), etymology, pronunciation, primary. A word with several parts
-    of speech is ONE entry with several sections. primary is True for the
-    real term and False for a derived alternate form (a " / "-split variant
-    or a "the "-stripped variant).
-
-    Uses a simple linear state machine (in-block / not-in-block) so a stray
-    "-----" line cannot swallow the entries after it."""
-    if "-----DICTIONARY PROPER-----" not in content:
-        return []
-    body = content.split("-----DICTIONARY PROPER-----", 1)[1]
-
-    results = []
-    in_block = False
-    block_lines = []
-
-    for raw_line in body.split("\n"):
-        line = raw_line.strip()
-
-        if re.match(r"^-{20,}$", line):
-            if in_block:
-                _process_block(results, block_lines)
-                block_lines = []
-                in_block = False
-            else:
-                in_block = True
-                block_lines = []
-            continue
-
-        if in_block:
-            block_lines.append(line)
-        else:
-            if not line or _is_metadata_line(line):
-                continue
-            parsed = _parse_entry_line(line)
-            if parsed:
-                _emit(results, _make_entry(parsed[0], parsed[1], parsed[2]))
-
-    if in_block and block_lines:
-        _process_block(results, block_lines)
-
-    return results
-
-
-# Standard part-of-speech abbreviation variants (as used across Merriam-
-# Webster, Oxford, and Wiktionary conventions), mapped to one canonical
-# label so "n." / "n" / "noun" all count as the same pie slice. Includes
-# a few tags this dictionary uses that aren't in standard style guides
-# (expr., ono., acr.) grouped under their closest real category.
-POS_NORMALIZATION = {
-    # Noun
-    "n": "Noun", "noun": "Noun", "nn": "Noun", "s": "Noun", "sb": "Noun",
-    # Proper noun
-    "pn": "Proper Noun", "propern": "Proper Noun", "propernoun": "Proper Noun", "propn": "Proper Noun",
-    # Mass / uncountable noun (kept distinct -- meaningfully different from a plain noun)
-    "massn": "Mass Noun", "massnoun": "Mass Noun", "uncountable": "Mass Noun", "uncountablen": "Mass Noun",
-    # Verb (transitive/intransitive folded into plain Verb)
-    "v": "Verb", "verb": "Verb", "vb": "Verb",
-    "vt": "Verb", "vtr": "Verb", "vi": "Verb", "vintr": "Verb",
-    "phrasalv": "Verb", "phrasalverb": "Verb",
-    # Adjective
-    "adj": "Adjective", "adjective": "Adjective", "a": "Adjective",
-    # Adverb
-    "adv": "Adverb", "adverb": "Adverb",
-    # Pronoun
-    "pron": "Pronoun", "pronoun": "Pronoun",
-    # Preposition
-    "prep": "Preposition", "preposition": "Preposition",
-    # Conjunction
-    "conj": "Conjunction", "conjunction": "Conjunction",
-    # Determiner / article
-    "det": "Determiner", "determiner": "Determiner", "art": "Determiner", "article": "Determiner",
-    # Interjection
-    "int": "Interjection", "inter": "Interjection", "interj": "Interjection",
-    "interjection": "Interjection", "excl": "Interjection", "exclamation": "Interjection",
-    # Expression / idiom / phrase
-    "expr": "Expression", "expression": "Expression",
-    "idiom": "Expression", "phr": "Expression", "phrase": "Expression", "saying": "Expression",
-    # Abbreviation
-    "abbr": "Abbreviation", "abbreviation": "Abbreviation", "abbrev": "Abbreviation",
-    # Acronym / initialism
-    "acr": "Acronym", "acro": "Acronym", "acronym": "Acronym",
-    "init": "Acronym", "initialism": "Acronym",
-    # Onomatopoeia
-    "ono": "Onomatopoeia", "onom": "Onomatopoeia", "onomatopoeia": "Onomatopoeia", "onomatopoeic": "Onomatopoeia",
-    # Particle
-    "part": "Particle", "particle": "Particle",
-    # Suffix / prefix / infix / combining form
-    "suffix": "Suffix", "suf": "Suffix", "suff": "Suffix",
-    "prefix": "Prefix", "pref": "Prefix",
-    "infix": "Infix",
-    "combform": "Combining Form", "combiningform": "Combining Form",
-    # Alternate/variant form marker
-    "alt": "Alternate Form", "alternate": "Alternate Form", "alternateform": "Alternate Form",
-    "var": "Alternate Form", "variant": "Alternate Form", "altform": "Alternate Form",
-    # Numeral
-    "num": "Numeral", "numeral": "Numeral", "number": "Numeral",
-    # Auxiliary / modal verb
-    "aux": "Auxiliary Verb", "auxiliary": "Auxiliary Verb", "auxiliaryverb": "Auxiliary Verb",
-    "modal": "Auxiliary Verb", "modalv": "Auxiliary Verb", "modalverb": "Auxiliary Verb",
-    # Contraction / clipping
-    "contr": "Contraction", "contraction": "Contraction",
-    "clipping": "Clipping", "clip": "Clipping",
-    # Symbol / letter
-    "sym": "Symbol", "symbol": "Symbol", "letter": "Letter",
-    # Gerund / participle
-    "ger": "Gerund", "gerund": "Gerund",
-    "ptcp": "Participle", "participle": "Participle",
-    # Proverb / collocation
-    "prov": "Proverb", "proverb": "Proverb",
-    "colloc": "Collocation", "collocation": "Collocation",
-    # Usage/register labels this dictionary sometimes uses in place of a
-    # real POS tag
-    "slang": "Slang", "colloq": "Colloquial", "colloquial": "Colloquial",
-    "informal": "Informal", "vulgar": "Vulgar", "derog": "Derogatory", "derogatory": "Derogatory",
-    "archaic": "Archaic", "obs": "Obsolete", "obsolete": "Obsolete",
-    "dial": "Dialectal", "dialect": "Dialectal", "dialectal": "Dialectal",
-    # Interrogative / demonstrative / quantifier / classifier
-    "interrog": "Interrogative", "interrogative": "Interrogative",
-    "dem": "Demonstrative", "demonstrative": "Demonstrative",
-    "quant": "Quantifier", "quantifier": "Quantifier",
-    "class": "Classifier", "classifier": "Classifier",
-    # Honorific / salutation
-    "honorific": "Honorific", "salutation": "Salutation",
-}
-
-
-def _normalize_pos(raw_pos):
-    """Map a huge range of amateur-written pos tags to one canonical label.
-    Rather than enumerate every punctuation/spacing variant, this strips
-    ALL periods/commas/spaces before lookup (so "v.t.", "vt", "v t", and
-    "v.t" all collapse to the same key), then falls back to a naive
-    singular/plural fold ("nouns" / "verbs" / "adjs" -> "noun" / "verb" /
-    "adj") before giving up and just showing the tag as its own slice."""
-    if not raw_pos or not raw_pos.strip():
-        return "(no pos)"
-    raw = raw_pos.strip()
-    key = re.sub(r"[.,\s]", "", raw.lower())
-    if key in POS_NORMALIZATION:
-        return POS_NORMALIZATION[key]
-    if key.endswith("s") and key[:-1] in POS_NORMALIZATION:
-        return POS_NORMALIZATION[key[:-1]]
-    if key.endswith("es") and key[:-2] in POS_NORMALIZATION:
-        return POS_NORMALIZATION[key[:-2]]
-    return raw
-
-def _split_pos(raw_pos):
-    """Split one raw pos label into (real parts of speech, extra tags).
-    "Cyrilism, v."  -> (["Verb"], ["Cyrilism"])   any "...ism" word is a tag
-    "mass n."       -> (["Noun"], ["Uncountable"])
-    "v. + pron."    -> (["Verb", "Pronoun"], [])"""
-    labels, tags = [], []
-    for tok in re.split(r"\s*(?:,|\+|/|&|;)\s*", raw_pos or ""):
-        tok = tok.strip()
-        if not tok:
-            continue
-        if re.fullmatch(r"[A-Za-z]+ism", tok, re.IGNORECASE):
-            tag = tok[0].upper() + tok[1:]
-            if tag not in tags:
-                tags.append(tag)
-            continue
-        label = _normalize_pos(tok)
-        if label == "Mass Noun":
-            label = "Noun"
-            if "Uncountable" not in tags:
-                tags.append("Uncountable")
-        if label not in labels:
-            labels.append(label)
-    return labels, tags
-
-
-def fetch_scrabble_words():
-    """Load the Scrabble word list into a set of uppercase words."""
-    text = fetch_raw(SCRABBLE_FILE)
-    return {line.strip().upper() for line in text.splitlines() if line.strip()}
-
-
-def strip_accents(s):
-    """Fold accented characters to their plain ASCII equivalent, e.g.
-    café -> cafe, naïve -> naive."""
-    return "".join(
-        c for c in unicodedata.normalize("NFKD", s)
-        if not unicodedata.combining(c)
-    )
-
-
-def scrabble_status(term, scrabble_set):
-    """Returns 'legal', 'phrase', 'normalized', 'both', or 'illegal'.
-
-    'legal'      -- the term, letters-only, is a single unbroken word in
-                     the list exactly as typed.
-    'phrase'     -- legal as SEPARATE words: two or more words (split on
-                     spaces, hyphens, slashes) and every one is in the list.
-    'normalized' -- legal JOINED into one word: only legal after removing
-                     spaces, hyphens, apostrophes, and accents.
-    'both'       -- passes both the separate-words and the joined test.
-    'illegal'    -- not in the list either way.
-    """
-    stripped_raw = term.strip()
-    if re.fullmatch(r"[A-Za-z]+", stripped_raw) and stripped_raw.upper() in scrabble_set:
-        return "legal"
-
-    pieces = re.split(r"[\s\-\u2013\u2014/]+", strip_accents(stripped_raw))
-    words = [re.sub(r"[^A-Za-z]", "", p) for p in pieces if p]
-    is_phrase = len(words) >= 2 and all(w and w.upper() in scrabble_set for w in words)
-
-    joined = re.sub(r"[^A-Za-z]", "", strip_accents(stripped_raw))
-    is_joined = bool(joined) and joined.upper() in scrabble_set
-
-    if is_phrase and is_joined:
-        return "both"
-    if is_phrase:
-        return "phrase"
-    if is_joined:
-        return "normalized"
-    return "illegal"
-
-
-def main():
-    commits = get_all_commits()
-
-    # --- Every "word added" commit, newest first ---
-    # These are only candidates: a word can be added and then deleted later
-    # (we changed our mind), and the commit message for the add stays in the
-    # history forever. Below, once the current dictionary is loaded, adds
-    # whose word no longer exists are thrown out so they cannot show up as
-    # the most recent word or inflate the charts.
-    # Greedy on purpose: the term is everything up to the LAST quote on the
-    # line, so terms with apostrophes (like "ain't") are not cut short.
-    add_re = re.compile(r"with new term '(.+)'")
-    adds = []
-    for c in commits:
-        m = add_re.search(c["commit"]["message"])
-        if m:
-            ts = c["commit"]["author"]["date"]
-            adds.append({"date": to_central_date(ts), "term": m.group(1), "timestamp": ts})
-
-    # --- Latest file: entries, letter breakdown, word/definition extremes ---
-    filenames = get_dictionary_filenames()
-    latest_name = get_latest_filename(filenames)
-    content = fetch_dictionary_file(latest_name)
-
-    # The CORPUS block is just a comma-joined index and can't reliably be
-    # split back into terms -- a term that itself contains a comma (e.g.
-    # the idiom "If it ain't fixed, don't break it") is indistinguishable
-    # from two separate terms once it's been joined with ", ". So the
-    # term list comes from the DICTIONARY PROPER parse instead, which is
-    # delimited by "-----" lines and never splits inside a term.
-    raw_rows = extract_definitions(content)
-    all_terms = sorted(
-        {r["term"] for r in raw_rows if r["primary"]},
-        key=sort_key_ignore_punct,
-    )
-    total_entries = len(all_terms)
-
-    # --- Keep only adds whose word is still in the dictionary ---
-    current_terms = {r["term"].strip().lower() for r in raw_rows}
-
-    def still_in_dictionary(term):
-        t = term.strip().lower()
-        if t in current_terms or _clean_term(t).lower() in current_terms:
-            return True
-        # entries written as "a / b" are stored as separate terms
-        parts = [p.strip() for p in re.split(r"\s+/\s+", t) if p.strip()]
-        return len(parts) > 1 and all(p in current_terms for p in parts)
-
-    kept, dropped, seen = [], [], set()
-    for a in adds:  # newest first, so a re-added word counts once, at its newest add
-        key = a["term"].strip().lower()
-        if not still_in_dictionary(a["term"]):
-            dropped.append(a["term"])
-        elif key not in seen:
-            seen.add(key)
-            kept.append(a)
-    if dropped:
-        print(f"Ignored {len(dropped)} added word(s) no longer in the dictionary: {dropped}")
-
-    additions_by_day_all = Counter(a["date"] for a in kept)  # used for cumulative growth
-    additions_by_day = Counter(a["date"] for a in kept if a["date"] > BASELINE_DATE)
-    # oldest first, so "last N words" on the page really are the newest N
-    added_terms_timeline = [
-        {"date": a["date"], "term": a["term"]}
-        for a in reversed(kept) if a["date"] > BASELINE_DATE
-    ]
-    latest_word_term = kept[0]["term"] if kept else None
-    latest_word_timestamp = to_central_datetime_str(kept[0]["timestamp"]) if kept else None
-    additions_series = [
-        {"date": d, "count": n} for d, n in sorted(additions_by_day.items())
-    ]
-
-    # ONE prediction, made here. It goes into stats.json (the page shows this
-    # exact word) and into Zoogliography.txt. A failure while saving to the
-    # txt must never stop the stats from being built.
-    # Each alternate spelling ("a / b") is its own word for the guess.
-    spellings = split_spellings(all_terms)
-    zoog_main, zoog_extra, saved = fetch_zoog_state()
-    zoog_main = split_spellings(zoog_main)
-    # Avoid EVERYTHING in the Zoogliography: main list, predicted, nonsense, rejected.
-    zoog_words = zoog_main + split_spellings(zoog_extra)
-    # Rejected guesses are only dropped if identical to a real word or main-list zoog.
-    known_norm = {_norm_term(t) for t in [*spellings, *zoog_main] if _norm_term(t)}
-    seed_key = f"{total_entries}|{latest_word_term}"
-    rejected_words = []  # guesses thrown out for being too similar, saved to the Zoogliography
-    if saved and len(saved) == 3 and saved[0] == seed_key and (saved[1] or saved[2]):
-        # Same dictionary as the last run: keep the words already made for it.
-        predicted_word, predicted_nonsense_word = saved[1], saved[2]
-    else:
-        predicted_word = predict_next_word(
-            spellings, f"all|{seed_key}", avoid=zoog_words, rejected=rejected_words
-        )
-        # Nonsense: same idea, but only 2 letters of memory, so it is looser.
-        # It also keeps clear of the new normal word.
-        predicted_nonsense_word = predict_next_word(
-            spellings, f"nonsense|{seed_key}", order=2,
-            avoid=[*zoog_words, predicted_word] if predicted_word else zoog_words, rejected=rejected_words
-        )
-    try:
-        update_zoogliography(predicted_word, predicted_nonsense_word, rejected_words, known_norm, seed_key)
-    except Exception as e:
-        print(f"Zoogliography update failed: {e}", file=sys.stderr)
-
-    # --- Cumulative growth series, anchored to the real current total ---
-    # (see the long note in git history: the baseline is solved backward
-    # from today's real total so the chart always ends on Total Entries)
-    additions_since_baseline = sum(
-        n for d, n in additions_by_day_all.items() if d > BASELINE_DATE
-    )
-    effective_baseline = total_entries - additions_since_baseline
-
-    running_total = effective_baseline
-    cumulative_series = [{"date": BASELINE_DATE, "total": effective_baseline}]
-    for d, n in sorted(additions_by_day_all.items()):
-        if d <= BASELINE_DATE:
-            continue
-        running_total += n
-        cumulative_series.append({"date": d, "total": running_total})
-
-    def first_letter_key(term):
-        for ch in sort_key_ignore_punct(term):
-            if ch.isalpha():
-                return ch.upper()
-        return None
-
-    letter_counts = dict(sorted(Counter(
-        k for k in (first_letter_key(t) for t in all_terms) if k
-    ).items()))
-
-    def word_len(t):
-        return len(sort_key_ignore_punct(t).replace(", the", ""))
-
-    words_by_length_asc = sorted(all_terms, key=word_len)
-
-    # First match wins if the raw text has duplicate lines for the same term.
-    parsed_by_lower = {}
-    for r in raw_rows:
-        parsed_by_lower.setdefault(r["term"].lower(), r)
-
-    def build_row(t, e):
-        if not e or not e["sections"]:
-            return {"term": t, "pos": "(no pos)", "pos_list": ["(no pos)"], "tags": [],
-                    "definition": "(definition not parsed -- see raw file)",
-                    "senses": [], "pronunciation": "", "etymology": ""}
-        senses, pos_list, tags = [], [], []
-        for s in e["sections"]:
-            labels, stags = _split_pos(s["pos"])
-            senses.append({"pos": ", ".join(labels) or "(no pos)", "defs": s["defs"]})
-            for p in labels:
-                if p not in pos_list:
-                    pos_list.append(p)
-            for tg in stags:
-                if tg not in tags:
-                    tags.append(tg)
-        if not pos_list:
-            pos_list = ["(no pos)"]
-        lines = []
-        for s in senses:
-            if len(senses) > 1:
-                lines.append(f"[{s['pos']}]")
-            if len(s["defs"]) > 1:
-                lines += [f"{i}. {d['text']}" for i, d in enumerate(s["defs"], 1)]
-            else:
-                lines.append(s["defs"][0]["text"])
-        return {"term": t, "pos": " / ".join(pos_list), "pos_list": pos_list, "tags": tags,
-                "definition": "\n".join(lines), "senses": senses,
-                "pronunciation": e["pronunciation"], "etymology": e["etymology"]}
-
-    # A word with several parts of speech is ONE word in total_entries and
-    # letter_counts, but is counted under EACH of its parts of speech here.
-    rows = []
-    pos_counts = Counter()
-    for t in all_terms:
-        row = build_row(t, parsed_by_lower.get(t.lower()))
-        for p in row["pos_list"]:
-            pos_counts[p] += 1
-        rows.append(row)
-
-    definitions_by_length_asc = sorted(rows, key=lambda r: len(r["definition"]))
-
-    # --- Scrabble legality ---
-    scrabble_set = fetch_scrabble_words()
-    scrabble_statuses = {t: scrabble_status(t, scrabble_set) for t in all_terms}
-    scrabble_counts = Counter(scrabble_statuses.values())
-    for row in definitions_by_length_asc:
-        row["scrabble"] = scrabble_statuses.get(row["term"], "illegal")
-
-    stats = {
-        "latest_version": latest_name,
-        "latest_word_term": latest_word_term,
-        "predicted_word": predicted_word,
-        "predicted_nonsense_word": predicted_nonsense_word,
-        "latest_word_timestamp": latest_word_timestamp,
-        "latest_file_content": content,
-        "total_entries": total_entries,
-        "letter_counts": letter_counts,
-        "pos_counts": dict(pos_counts),
-        "additions_series": additions_series,
-        "cumulative_series": cumulative_series,
-        "added_terms_timeline": added_terms_timeline,
-        "words_by_length_asc": words_by_length_asc,
-        "definitions_by_length_asc": definitions_by_length_asc,
-        "scrabble_legal_count": scrabble_counts.get("legal", 0),
-        "scrabble_normalized_count": scrabble_counts.get("normalized", 0),
-        "scrabble_illegal_count": scrabble_counts.get("illegal", 0),
-        "scrabble_phrase_count": scrabble_counts.get("phrase", 0),
-        "scrabble_both_count": scrabble_counts.get("both", 0),
-        "scrabble_source_url": SCRABBLE_SOURCE_URL,
-        "scrabble_source_label": SCRABBLE_SOURCE_LABEL,
+            ticks: {
+              color: C.muted,
+              callback: (val) => monthYearLabel(val),
+            },
+            grid: { color: C.line },
+          },
+          y: { ticks: { color: C.muted }, grid: { color: C.line } },
+        },
+        plugins: {
+          legend: { align: 'start', labels: { color: C.text } },
+          tooltip: {
+            callbacks: {
+              title: (items) => dateLabel(items[0].parsed.x),
+              label: (item) => `${item.dataset.label}: ${Math.round(item.parsed.y)}`,
+            },
+          },
+        },
+      },
+    });
+  }
+
+  const scrabbleLegal = stats.scrabble_legal_count || 0;
+  const scrabbleNormalized = stats.scrabble_normalized_count || 0;
+  const scrabbleIllegal = stats.scrabble_illegal_count || 0;
+  const scrabblePhrase = stats.scrabble_phrase_count || 0;
+  const scrabbleBoth = stats.scrabble_both_count || 0;
+  const scrabbleTotal = scrabbleLegal + scrabbleNormalized + scrabbleIllegal + scrabblePhrase + scrabbleBoth;
+  const scrabbleLabels = ['Scrabble legal', 'Legal as separate words', 'Legal when joined into one word', 'Legal both ways', 'Not Scrabble legal'];
+  const scrabbleCategoryKeys = ['scrabble-legal', 'scrabble-phrase', 'scrabble-normalized', 'scrabble-both', 'scrabble-illegal'];
+  const scrabblePrefixes = ['scrabblelegal:', 'scrabblephrase:', 'scrabblenormalized:', 'scrabbleboth:', 'scrabbleillegal:'];
+
+  new Chart(document.getElementById('scrabbleChart'), {
+    type: 'pie',
+    data: {
+      labels: scrabbleLabels,
+      datasets: [{
+        data: [scrabbleLegal, scrabblePhrase, scrabbleNormalized, scrabbleBoth, scrabbleIllegal],
+        backgroundColor: ['#6ee7b7', '#a78bfa', '#fbbf24', '#38bdf8', '#f87171'].map(T),
+        borderColor: T('#171a21'),
+        borderWidth: 2,
+      }],
+    },
+    options: {
+      responsive: true,
+      onHover: (event, elements) => {
+        event.native.target.style.cursor = elements.length ? 'pointer' : 'default';
+      },
+      onClick: (event, elements) => {
+        if (!elements.length) return;
+        openSearchModal(scrabblePrefixes[elements[0].index]);
+      },
+      plugins: {
+        legend: {
+          position: 'bottom',
+          labels: { color: C.text, boxWidth: 12, font: { size: 11 } },
+          // Clicking a legend name opens that Scrabble category in the Wiktionary view.
+          onClick: (event, item) => {
+            window.location.href = 'wiktionary.html#c=' + encodeURIComponent(scrabbleCategoryKeys[item.index]);
+          },
+          onHover: (event) => { event.native.target.style.cursor = 'pointer'; },
+          onLeave: (event) => { event.native.target.style.cursor = 'default'; },
+        },
+        tooltip: {
+          callbacks: {
+            label: (item) => {
+              const pct = scrabbleTotal ? ((item.parsed / scrabbleTotal) * 100).toFixed(1) : '0.0';
+              return `${item.label}: ${item.parsed} (${pct}%)`;
+            },
+          },
+        },
+      },
+    },
+  });
+
+  if (stats.scrabble_source_url && !stats.scrabble_source_url.includes('REPLACE-ME')) {
+    const credit = document.getElementById('scrabbleCredit');
+    const a = document.createElement('a');
+    a.href = stats.scrabble_source_url;
+    a.target = '_blank';
+    a.rel = 'noopener';
+    a.style.color = 'var(--accent)';
+    a.textContent = stats.scrabble_source_label || 'Source';
+    credit.append('Word list source: ', a);
+  }
+
+  function clampMonths(v) {
+    v = parseInt(v, 10);
+    if (isNaN(v)) v = 6;
+    return Math.max(1, v);
+  }
+
+  const projMonthsInput = document.getElementById('projMonths');
+  buildGrowthChart(stats.cumulative_series, clampMonths(projMonthsInput.value));
+  projMonthsInput.addEventListener('input', () => {
+    buildGrowthChart(stats.cumulative_series, clampMonths(projMonthsInput.value));
+  });
+
+  // Up/down buttons for how many months back the projections are based on.
+  // Reaching the max switches back to "follow the max" so it keeps growing over time.
+  function stepLookback(delta) {
+    const current = lookbackMonths === null ? growthMaxMonths : lookbackMonths;
+    const next = Math.min(growthMaxMonths, Math.max(1, current + delta));
+    lookbackMonths = next >= growthMaxMonths ? null : next;
+    buildGrowthChart(stats.cumulative_series, clampMonths(projMonthsInput.value));
+  }
+  document.getElementById('lookbackUp').addEventListener('click', () => stepLookback(1));
+  document.getElementById('lookbackDown').addEventListener('click', () => stepLookback(-1));
+
+  // Additions over time -- fill in zero-count days so gaps are visible
+  // instead of the chart silently skipping days with no additions.
+  function fillDateGaps(series) {
+    if (series.length === 0) return series;
+    const byDate = new Map(series.map(p => [p.date, p.count]));
+    const start = new Date(series[0].date + 'T00:00:00Z');
+    const end = new Date(series[series.length - 1].date + 'T00:00:00Z');
+    const filled = [];
+    for (let d = new Date(start); d <= end; d.setUTCDate(d.getUTCDate() + 1)) {
+      const key = d.toISOString().slice(0, 10);
+      filled.push({ date: key, count: byDate.get(key) || 0 });
+    }
+    return filled;
+  }
+  const additionsFilled = fillDateGaps(stats.additions_series);
+
+  // Longest run of consecutive days with at least one word added.
+  function longestStreak(filled) {
+    let best = { len: 0, start: null, end: null };
+    let curStart = null;
+    let curLen = 0;
+    for (const day of filled) {
+      if (day.count > 0) {
+        if (curLen === 0) curStart = day.date;
+        curLen++;
+        if (curLen > best.len) best = { len: curLen, start: curStart, end: day.date };
+      } else {
+        curLen = 0;
+      }
+    }
+    return best;
+  }
+
+  function formatDateNice(iso) {
+    const d = new Date(iso + 'T00:00:00Z');
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
+  }
+
+  const streak = longestStreak(additionsFilled);
+  const streakEl = document.getElementById('longestStreak');
+  if (streak.len > 0) {
+    streakEl.textContent = `Longest streak of at least one word added: ${streak.len} day${streak.len === 1 ? '' : 's'} (${formatDateNice(streak.start)} – ${formatDateNice(streak.end)})`;
+  }
+
+  new Chart(document.getElementById('additionsChart'), {
+    type: 'bar',
+    data: {
+      labels: additionsFilled.map(p => p.date),
+      datasets: [{
+        label: 'New words added',
+        data: additionsFilled.map(p => p.count),
+        backgroundColor: C.accent,
+      }],
+    },
+    options: {
+      responsive: true,
+      interaction: { mode: 'x', intersect: false },
+      onHover: (event, elements, chart) => {
+        const els = chart.getElementsAtEventForMode(
+          event.native, 'x', { intersect: false }, false
+        );
+        const hasWords = els.length && additionsFilled[els[0].index].count > 0;
+        event.native.target.style.cursor = hasWords ? 'pointer' : 'default';
+      },
+      onClick: (event, elements, chart) => {
+        const els = chart.getElementsAtEventForMode(
+          event.native, 'x', { intersect: false }, false
+        );
+        if (!els.length) return;
+        const day = additionsFilled[els[0].index];
+        if (day.count === 0) return; // nothing added that day -- do nothing
+        openSearchModal(`date:${day.date}`);
+      },
+      scales: {
+        x: {
+          ticks: {
+            color: C.muted,
+            autoSkip: false,
+            maxRotation: 0,
+            minRotation: 0,
+            callback: function (value) {
+              const label = this.getLabelForValue(value); // 'YYYY-MM-DD'
+              if (!label || label.slice(8, 10) !== '01') return '';
+              const [y, m] = label.split('-');
+              const d = new Date(Date.UTC(+y, +m - 1, 1));
+              const month = d.toLocaleString('en-US', { month: 'short', timeZone: 'UTC' });
+              return `${month}. ${y}`;
+            },
+          },
+          grid: { color: C.line },
+        },
+        y: { ticks: { color: C.muted, precision: 0 }, grid: { color: C.line } },
+      },
+      plugins: { legend: { labels: { color: C.text } } },
+    },
+  });
+
+  // Letter breakdown -- either by first letter (exact, server-computed
+  // counts) or by first two letters (grouped client-side from the full
+  // term list, using the same leading-punctuation/"the"-prefix handling
+  // as the backend's sort key, so groupings line up with alphabetical
+  // placement).
+  function sortKeyIgnorePunctJs(term) {
+    let t = term.includes(' (') ? term.split(' (')[0] : term;
+    t = t.replace(/^[\s'"\-]+/, '');
+    if (/^the\s/i.test(t)) t = t.slice(4);
+    return t.toLowerCase();
+  }
+
+  function computeLetterGroups(terms, n, requireFullLength) {
+    const counts = {};
+    terms.forEach(t => {
+      const full = sortKeyIgnorePunctJs(t);
+      if (requireFullLength && full.length < n) return;
+      const key = full.slice(0, n).toUpperCase();
+      if (!key) return;
+      counts[key] = (counts[key] || 0) + 1;
+    });
+    return counts;
+  }
+
+  // Every standard letter combo of length n (A..Z for n=1, AA..ZZ for
+  // n=2), so the chart always shows the full alphabet grid -- real
+  // entries that group under punctuation (e.g. "A'", "A ") still show up
+  // too, just as bonus bars alongside it, rather than us inventing
+  // zero-count punctuation combos that don't actually occur in the data.
+  function fullLetterKeys(n) {
+    const total = Math.pow(26, n);
+    const keys = [];
+    for (let i = 0; i < total; i++) {
+      let rem = i;
+      let key = '';
+      for (let p = 0; p < n; p++) {
+        key = String.fromCharCode(65 + (rem % 26)) + key;
+        rem = Math.floor(rem / 26);
+      }
+      keys.push(key);
+    }
+    return keys;
+  }
+
+  let letterChartInstance = null;
+  function buildLetterChart(n) {
+    const grouped = computeLetterGroups(stats.words_by_length_asc, n, n >= 3);
+
+    let labels, counts;
+    if (n <= 2) {
+      const merged = {};
+      fullLetterKeys(n).forEach(k => { merged[k] = 0; });
+      Object.entries(grouped).forEach(([k, v]) => {
+        merged[k] = (merged[k] || 0) + v;
+      });
+      labels = Object.keys(merged).sort();
+      counts = labels.map(l => merged[l]);
+    } else {
+      // 26^n combos is far too many to zero-fill (17k+ at n=3 alone), so
+      // only the combos that actually occur get a bar -- no blank columns.
+      // Groups with just one entry are dropped too, since a lone bar of
+      // height 1 at this many possible combos is mostly noise.
+      labels = Object.keys(grouped).filter(k => grouped[k] > 1).sort();
+      counts = labels.map(l => grouped[l]);
     }
 
-    out_path = os.path.join(os.path.dirname(__file__), "..", "site", "stats.json")
-    with open(out_path, "w") as f:
-        json.dump(stats, f, indent=2)
+    document.getElementById('letterChartClickLabel').textContent =
+      n === 1 ? 'letter' : (n === 2 ? 'letter pair' : `${n}-letter group`);
 
-    # One plain word list per word length (lowercase), so the daily word game page
-    # only downloads the length it needs.
-    wordlist_dir = os.path.join(os.path.dirname(__file__), "..", "site", "wordlist")
-    os.makedirs(wordlist_dir, exist_ok=True)
-    words_by_len = {}
-    for w in scrabble_set:
-        if re.fullmatch(r"[A-Z]+", w) and 3 <= len(w) <= 15:
-            words_by_len.setdefault(len(w), []).append(w.lower())
-    for n, words in words_by_len.items():
-        with open(os.path.join(wordlist_dir, f"{n}.txt"), "w") as f:
-            f.write("\n".join(sorted(words)))
+    // Widen the scroll container only as far as the bar count actually
+    // needs -- 26 bars still fill the card at full width with no scroll,
+    // 676 bars get just enough width to stay readable and scroll instead
+    // of endlessly.
+    const inner = document.getElementById('letterChartInner');
+    const outerWidth = document.getElementById('letterChartOuter').clientWidth || 600;
+    const barWidth = n === 1 ? 0 : 20;
+    inner.style.width = Math.max(labels.length * barWidth, outerWidth) + 'px';
 
-    # which lengths exist, so the game only picks answers it can check guesses for
-    counts = {str(n): len(ws) for n, ws in sorted(words_by_len.items())}
-    with open(os.path.join(wordlist_dir, "index.json"), "w") as f:
-        json.dump({"counts": counts}, f)
-    print(f"Word lists written (length: words): {counts}")
+    if (letterChartInstance) letterChartInstance.destroy();
 
-    print(f"Wrote {out_path}: {total_entries} entries, latest={latest_name}")
+    letterChartInstance = new Chart(document.getElementById('letterChart'), {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [{
+          label: 'Entries',
+          data: counts,
+          backgroundColor: T('#7dd3fc'),
+        }],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: 'x', intersect: false },
+        onHover: (event, elements) => {
+          event.native.target.style.cursor = elements.length ? 'pointer' : 'default';
+        },
+        onClick: (event, elements) => {
+          if (!elements.length) return;
+          const key = labels[elements[0].index];
+          openSearchModal(`startswith:${key}`);
+        },
+        scales: {
+          x: {
+            ticks: n === 1
+              ? { color: C.muted }
+              : { color: C.muted, autoSkip: false, maxRotation: 90, minRotation: 90, font: { size: 9 } },
+            grid: { display: false },
+          },
+          y: { ticks: { color: C.muted, precision: 0 }, grid: { color: C.line } },
+        },
+        plugins: { legend: { display: false } },
+      },
+    });
+  }
 
+  const letterGroupModeSelect = document.getElementById('letterGroupMode');
+  buildLetterChart(parseInt(letterGroupModeSelect.value, 10));
+  letterGroupModeSelect.addEventListener('change', () => {
+    buildLetterChart(parseInt(letterGroupModeSelect.value, 10));
+  });
 
-if __name__ == "__main__":
-    try:
-        main()
-    except Exception as e:
-        print(f"ERROR: {e}", file=sys.stderr)
-        sys.exit(1)
+  // Entries/Definitions by letter or character count (bars with 0 are skipped)
+  let lengthChartInstance = null;
+  function buildLengthChart(what, mode) {
+    const texts = what === 'definitions'
+      ? (stats.definitions_by_length_asc || []).map(d => d.definition)
+      : stats.words_by_length_asc;
+    const lenCounts = {};
+    texts.forEach(t => {
+      const len = mode === 'character' ? t.length : (t.replace(/[^a-zA-Z0-9]/g, '').length || 1);
+      lenCounts[len] = (lenCounts[len] || 0) + 1;
+    });
+    const lenLabels = Object.keys(lenCounts).map(Number).sort((a, b) => a - b).map(String);
+    const lenData = lenLabels.map(l => lenCounts[l]);
+
+    if (lengthChartInstance) lengthChartInstance.destroy();
+    lengthChartInstance = new Chart(document.getElementById('lengthChart'), {
+      type: 'bar',
+      data: { labels: lenLabels, datasets: [{ label: what === 'definitions' ? 'Definitions' : 'Entries', data: lenData, backgroundColor: T('#7dd3fc') }] },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: 'x', intersect: false },
+        onHover: (event, elements) => {
+          event.native.target.style.cursor = elements.length ? 'pointer' : 'default';
+        },
+        onClick: (event, elements) => {
+          if (!elements.length) return;
+          openSearchModal(`length:${what}:${mode}:${lenLabels[elements[0].index]}`);
+        },
+        scales: {
+          x: { ticks: { color: C.muted, autoSkip: true }, grid: { display: false } },
+          y: { ticks: { color: C.muted, precision: 0 }, grid: { color: C.line } },
+        },
+        plugins: { legend: { display: false } },
+      },
+    });
+  }
+  const lenWhatSelect = document.getElementById('lenWhat');
+  const lenModeSelect = document.getElementById('lenMode');
+  const refreshLengthChart = () => buildLengthChart(lenWhatSelect.value, lenModeSelect.value);
+  refreshLengthChart();
+  lenWhatSelect.addEventListener('change', refreshLengthChart);
+  lenModeSelect.addEventListener('change', refreshLengthChart);
+
+  // Characters / words used in entries, definitions, or both (no empty bars)
+  let usedChartInstance = null;
+  function buildUsedChart(what, source, top) {
+    let texts = [];
+    if (source !== 'definitions') texts = texts.concat(stats.words_by_length_asc || []);
+    if (source !== 'entries') texts = texts.concat((stats.definitions_by_length_asc || []).map(d => d.definition));
+
+    const counts = {};
+    texts.forEach(t => {
+      const lower = String(t).toLowerCase();
+      if (what === 'characters') {
+        for (const ch of lower) counts[ch] = (counts[ch] || 0) + 1;
+      } else {
+        lower.split(/\s+/).forEach(w => {
+          const clean = w.replace(/^[^a-z0-9]+|[^a-z0-9]+$/g, '');
+          if (clean) counts[clean] = (counts[clean] || 0) + 1;
+        });
+      }
+    });
+
+    let entries = Object.entries(counts);
+    if (what === 'characters') {
+      entries.sort((a, b) => a[0].localeCompare(b[0]));
+    } else {
+      entries.sort((a, b) => b[1] - a[1]);
+      if (top === 'multi') entries = entries.filter(([, v]) => v > 1);
+      else entries = entries.slice(0, parseInt(top, 10));
+    }
+    const keys = entries.map(([k]) => k);
+    const labels = keys.map(k => (k === ' ' ? 'space' : k));
+    const data = entries.map(([, v]) => v);
+
+    const inner = document.getElementById('usedChartInner');
+    const outerWidth = document.getElementById('usedChartOuter').clientWidth || 600;
+    const barWidth = what === 'words' && top !== '30' ? 26 : 0;
+    inner.style.width = Math.max(labels.length * barWidth, outerWidth) + 'px';
+
+    if (usedChartInstance) usedChartInstance.destroy();
+    usedChartInstance = new Chart(document.getElementById('usedChart'), {
+      type: 'bar',
+      data: { labels, datasets: [{ label: 'Uses', data, backgroundColor: T('#7dd3fc') }] },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: 'x', intersect: false },
+        onHover: (event, elements) => {
+          event.native.target.style.cursor = elements.length ? 'pointer' : 'default';
+        },
+        onClick: (event, elements) => {
+          if (!elements.length) return;
+          openSearchModal(`used:${what}:${source}:${keys[elements[0].index]}`);
+        },
+        scales: {
+          x: {
+            ticks: what === 'words'
+              ? { color: C.muted, autoSkip: false, maxRotation: 90, minRotation: 90, font: { size: 10 } }
+              : { color: C.muted, autoSkip: false },
+            grid: { display: false },
+          },
+          y: { ticks: { color: C.muted, precision: 0 }, grid: { color: C.line } },
+        },
+        plugins: { legend: { display: false } },
+      },
+    });
+  }
+  const usedWhatSelect = document.getElementById('usedWhat');
+  const usedSourceSelect = document.getElementById('usedSource');
+  const usedTopSelect = document.getElementById('usedTop');
+  const refreshUsedChart = () => {
+    usedTopSelect.style.display = usedWhatSelect.value === 'words' ? '' : 'none';
+    buildUsedChart(usedWhatSelect.value, usedSourceSelect.value, usedTopSelect.value);
+  };
+  refreshUsedChart();
+  usedWhatSelect.addEventListener('change', refreshUsedChart);
+  usedSourceSelect.addEventListener('change', refreshUsedChart);
+  usedTopSelect.addEventListener('change', refreshUsedChart);
+
+  // Parts of speech (posEntries/posLabels/posColors already declared earlier)
+  new Chart(document.getElementById('posChart'), {
+    type: 'pie',
+    data: {
+      labels: posLabels,
+      datasets: [{
+        data: posEntries.map(([, count]) => count),
+        backgroundColor: posLabels.map((_, i) => T(posColors[i % posColors.length])),
+        borderColor: T('#171a21'),
+        borderWidth: 2,
+      }],
+    },
+    options: {
+      responsive: true,
+      onHover: (event, elements) => {
+        event.native.target.style.cursor = elements.length ? 'pointer' : 'default';
+      },
+      onClick: (event, elements) => {
+        if (!elements.length) return;
+        const label = posLabels[elements[0].index];
+        const value = label === '(no pos)' ? '(no pos)' : label;
+        openSearchModal(`pos:${value}`);
+      },
+      plugins: {
+        legend: {
+          position: 'bottom',
+          labels: { color: C.text, boxWidth: 12, font: { size: 11 } },
+          // Clicking a legend name opens that part of speech's category in the Wiktionary view.
+          onClick: (event, item) => {
+            const label = posLabels[item.index];
+            if (label === '(no pos)') openSearchModal('pos:(no pos)');
+            else window.location.href = 'wiktionary.html#c=' + encodeURIComponent('pos:' + label);
+          },
+          onHover: (event) => { event.native.target.style.cursor = 'pointer'; },
+          onLeave: (event) => { event.native.target.style.cursor = 'default'; },
+        },
+      },
+    },
+  });
+
+  // Word cloud -- pixel-mask collision (real glyph ink, not bounding
+  // boxes) combined with skyline placement, wrapped in a rebuildable
+  // function so the controls (order, sizing mode, min/max size) can
+  // regenerate it without a page reload.
+  const cloudTermPosMap = new Map();
+  (stats.definitions_by_length_asc || []).forEach(d => {
+    if (!cloudTermPosMap.has(d.term)) cloudTermPosMap.set(d.term, (d.pos_list && d.pos_list[0]) || d.pos || '(no pos)');
+  });
+  function cloudColorForPos(pos) {
+    const idx = posLabels.indexOf(pos || '(no pos)');
+    return T(posColors[(idx === -1 ? posLabels.length : idx) % posColors.length]);
+  }
+
+  const allCloudTerms = stats.words_by_length_asc || [];
+  function cloudVisualLength(term) {
+    return term.replace(/[^a-zA-Z0-9]/g, '').length || 1;
+  }
+  const cloudSortedLens = allCloudTerms.map(cloudVisualLength).slice().sort((a, b) => a - b);
+  function cloudPercentile(p) {
+    if (!cloudSortedLens.length) return 1;
+    const idx = Math.min(cloudSortedLens.length - 1, Math.floor(p * cloudSortedLens.length));
+    return cloudSortedLens[idx];
+  }
+  const cloudLenFloor = cloudPercentile(0.02);
+  const cloudLenCeil = Math.max(cloudLenFloor + 1, cloudPercentile(0.85));
+
+  const cloudCanvas = document.getElementById('wordCloudCanvas');
+  const cloudCtx = cloudCanvas.getContext('2d');
+  const cloudDpr = window.devicePixelRatio || 1;
+  const CLOUD_FONT_STACK = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+
+  const cloudMaskCanvas = document.createElement('canvas');
+  const cloudMaskCtx = cloudMaskCanvas.getContext('2d');
+  const CLOUD_GRID = 2; // px per collision cell
+  const CLOUD_BUFFER_CELLS = 1; // dilate the occupied set by this many cells so words never touch
+
+  function buildCloudMask(term, size) {
+    cloudMaskCtx.font = `bold ${size}px ${CLOUD_FONT_STACK}`;
+    const metrics = cloudMaskCtx.measureText(term);
+    const padding = 2;
+    const w = Math.max(1, Math.ceil(metrics.width) + padding * 2);
+    const h = Math.max(1, Math.ceil(size * 1.3) + padding * 2);
+    cloudMaskCanvas.width = w;
+    cloudMaskCanvas.height = h;
+    cloudMaskCtx.clearRect(0, 0, w, h);
+    cloudMaskCtx.font = `bold ${size}px ${CLOUD_FONT_STACK}`;
+    cloudMaskCtx.fillStyle = '#fff';
+    cloudMaskCtx.textAlign = 'left';
+    cloudMaskCtx.textBaseline = 'top';
+    cloudMaskCtx.fillText(term, padding, padding);
+    const data = cloudMaskCtx.getImageData(0, 0, w, h).data;
+
+    const gridCols = Math.ceil(w / CLOUD_GRID);
+    const gridRows = Math.ceil(h / CLOUD_GRID);
+    const cells = [];
+    const colMaxDepth = new Array(gridCols).fill(-1);
+    for (let gj = 0; gj < gridRows; gj++) {
+      for (let gi = 0; gi < gridCols; gi++) {
+        let hasInk = false;
+        const px0 = gi * CLOUD_GRID, px1 = Math.min(w, px0 + CLOUD_GRID);
+        const py0 = gj * CLOUD_GRID, py1 = Math.min(h, py0 + CLOUD_GRID);
+        for (let py = py0; py < py1 && !hasInk; py++) {
+          for (let px = px0; px < px1 && !hasInk; px++) {
+            if (data[(py * w + px) * 4 + 3] > 40) hasInk = true;
+          }
+        }
+        if (hasInk) {
+          cells.push([gi, gj]);
+          if (gj > colMaxDepth[gi]) colMaxDepth[gi] = gj;
+        }
+      }
+    }
+    // A dilated version of the cell list, used only when marking cells
+    // occupied (not for the incoming word's own placement test) -- this
+    // is what guarantees a real gap between words instead of them
+    // touching edge-to-edge.
+    const dilated = new Set();
+    cells.forEach(([gi, gj]) => {
+      for (let dj = -CLOUD_BUFFER_CELLS; dj <= CLOUD_BUFFER_CELLS; dj++) {
+        for (let di = -CLOUD_BUFFER_CELLS; di <= CLOUD_BUFFER_CELLS; di++) {
+          dilated.add((gi + di) + '_' + (gj + dj));
+        }
+      }
+    });
+    return { w, h, cells, gridCols, colMaxDepth, dilatedKeys: [...dilated] };
+  }
+
+  function buildWordCloud() {
+    const mixedOrder = document.getElementById('cloudMixedOrder').checked;
+    const randomSize = document.getElementById('cloudRandomSize').checked;
+    const minSize = Math.max(3, parseFloat(document.getElementById('cloudMinSize').value) || 9);
+    const maxSize = Math.max(minSize + 1, parseFloat(document.getElementById('cloudMaxSize').value) || 38);
+
+    // A couple px of safety margin against layout-measurement rounding,
+    // so nothing sits flush against (or past) the true right edge.
+    const cssWidth = (cloudCanvas.parentElement.clientWidth || 1200) - 4;
+
+    function baseSizeForLength(len) {
+      const clipped = Math.max(cloudLenFloor, Math.min(cloudLenCeil, len));
+      const t = (clipped - cloudLenFloor) / (cloudLenCeil - cloudLenFloor);
+      return Math.max(minSize, Math.min(maxSize, maxSize - t * (maxSize - minSize)));
+    }
+
+    const sizeCache = new Map();
+    function sizeForTerm(term) {
+      if (sizeCache.has(term)) return sizeCache.get(term);
+      let size = randomSize
+        ? minSize + Math.random() * (maxSize - minSize)
+        : baseSizeForLength(cloudVisualLength(term));
+      cloudMaskCtx.font = `bold ${size}px ${CLOUD_FONT_STACK}`;
+      const w = cloudMaskCtx.measureText(term).width;
+      const maxAllowedWidth = cssWidth * 0.94;
+      if (w > maxAllowedWidth) size = Math.max(6, size * (maxAllowedWidth / w));
+      sizeCache.set(term, size);
+      return size;
+    }
+
+    let cloudOrder;
+    if (mixedOrder) {
+      cloudOrder = allCloudTerms.slice();
+      for (let i = cloudOrder.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [cloudOrder[i], cloudOrder[j]] = [cloudOrder[j], cloudOrder[i]];
+      }
+    } else {
+      cloudOrder = allCloudTerms.slice().sort((a, b) => sizeForTerm(b) - sizeForTerm(a));
+    }
+
+    const occupied = new Set();
+    function cellKey(gi, gj) { return gi + '_' + gj; }
+    function collidesAt(mask, gLeft, gTop) {
+      for (let k = 0; k < mask.cells.length; k++) {
+        if (occupied.has(cellKey(gLeft + mask.cells[k][0], gTop + mask.cells[k][1]))) return true;
+      }
+      return false;
+    }
+
+    const gridColsTotal = Math.max(1, Math.floor(cssWidth / CLOUD_GRID));
+    const skyline = new Array(gridColsTotal).fill(0);
+
+    const placedBoxes = [];
+    let dropped = 0;
+    let maxY = 0;
+
+    cloudOrder.forEach(term => {
+      const pos = cloudTermPosMap.get(term) || '(no pos)';
+      const size = sizeForTerm(term);
+      const mask = buildCloudMask(term, size);
+      if (mask.gridCols > gridColsTotal) { dropped++; return; }
+
+      let bestGLeft = 0;
+      let bestHeight = Infinity;
+      for (let gLeft = 0; gLeft <= gridColsTotal - mask.gridCols; gLeft++) {
+        let maxH = 0;
+        for (let gi = 0; gi < mask.gridCols; gi++) {
+          const h = skyline[gLeft + gi];
+          if (h > maxH) maxH = h;
+        }
+        if (maxH < bestHeight) {
+          bestHeight = maxH;
+          bestGLeft = gLeft;
+        }
+      }
+
+      let gTop = bestHeight;
+      let guard = 4000;
+      while (gTop > 0 && !collidesAt(mask, bestGLeft, gTop - 1) && guard-- > 0) {
+        gTop--;
+      }
+      guard = 4000;
+      while (collidesAt(mask, bestGLeft, gTop) && guard-- > 0) {
+        gTop++;
+      }
+
+      mask.dilatedKeys.forEach(key => {
+        const [gi, gj] = key.split('_').map(Number);
+        occupied.add(cellKey(bestGLeft + gi, gTop + gj));
+      });
+      for (let gi = 0; gi < mask.gridCols; gi++) {
+        if (mask.colMaxDepth[gi] >= 0) {
+          const newHeight = gTop + mask.colMaxDepth[gi] + 1 + CLOUD_BUFFER_CELLS;
+          if (newHeight > skyline[bestGLeft + gi]) skyline[bestGLeft + gi] = newHeight;
+        }
+      }
+
+      const left = bestGLeft * CLOUD_GRID;
+      const top = gTop * CLOUD_GRID;
+      maxY = Math.max(maxY, top + mask.h);
+      placedBoxes.push({
+        term, size, color: cloudColorForPos(pos),
+        x: left + mask.w / 2,
+        y: top + mask.h / 2,
+      });
+    });
+
+    const cssHeight = Math.max(100, maxY + 20);
+
+    cloudCanvas.style.width = cssWidth + 'px';
+    cloudCanvas.style.height = cssHeight + 'px';
+    cloudCanvas.width = Math.round(cssWidth * cloudDpr);
+    cloudCanvas.height = Math.round(cssHeight * cloudDpr);
+    cloudCtx.setTransform(1, 0, 0, 1, 0, 0);
+    cloudCtx.scale(cloudDpr, cloudDpr);
+    cloudCtx.clearRect(0, 0, cssWidth, cssHeight);
+    cloudCtx.textAlign = 'center';
+    cloudCtx.textBaseline = 'middle';
+    placedBoxes.forEach(p => {
+      cloudCtx.font = `bold ${p.size}px ${CLOUD_FONT_STACK}`;
+      cloudCtx.fillStyle = p.color;
+      cloudCtx.fillText(p.term, p.x, p.y);
+    });
+
+    cloudCanvas.onclick = (e) => {
+      const rect = cloudCanvas.getBoundingClientRect();
+      const scaleX = cssWidth / rect.width;
+      const scaleY = cssHeight / rect.height;
+      const clickX = (e.clientX - rect.left) * scaleX;
+      const clickY = (e.clientY - rect.top) * scaleY;
+      for (let i = placedBoxes.length - 1; i >= 0; i--) {
+        const p = placedBoxes[i];
+        cloudCtx.font = `bold ${p.size}px ${CLOUD_FONT_STACK}`;
+        const tw = cloudCtx.measureText(p.term).width;
+        const th = p.size * 1.3;
+        if (Math.abs(clickX - p.x) * 2 < tw + 6 && Math.abs(clickY - p.y) * 2 < th + 4) {
+          openSearchModal(p.term);
+          return;
+        }
+      }
+    };
+
+    const wordCloudCaption = document.getElementById('wordCloudCaption');
+    if (dropped > 0) {
+      wordCloudCaption.innerHTML =
+        `Showing ${placedBoxes.length} of ${allCloudTerms.length} words, colored by part of speech. ` +
+        `Click a word to look it up, or <a href="#" id="wordCloudSeeAll" style="color:var(--accent);">see all ${allCloudTerms.length} in the searchable dictionary</a>.`;
+      const seeAllLink = document.getElementById('wordCloudSeeAll');
+      if (seeAllLink) {
+        seeAllLink.addEventListener('click', (e) => {
+          e.preventDefault();
+          openSearchModal('');
+        });
+      }
+    } else {
+      wordCloudCaption.textContent = 'Every word in the dictionary, colored by part of speech. Click one to look it up.';
+    }
+  }
+
+  buildWordCloud();
+  document.getElementById('cloudRebuild').addEventListener('click', buildWordCloud);
+  document.getElementById('cloudMixedOrder').addEventListener('change', buildWordCloud);
+  document.getElementById('cloudRandomSize').addEventListener('change', buildWordCloud);
+
+  const fillList = (id, items, render) => {
+    const el = document.getElementById(id);
+    el.innerHTML = items.map(i => `<li>${render(i)}</li>`).join('');
+  };
+
+  function clampN(v) {
+    v = parseInt(v, 10);
+    if (isNaN(v)) v = 5;
+    return Math.max(1, v);
+  }
+
+  // " / " (spaces both sides) separates alternate spellings, so every spelling
+  // is its own entry; a slash without those spaces is part of the word.
+  const wordVariants = [];
+  stats.words_by_length_asc.forEach(term => {
+    const seen = new Set();
+    let parts = term.split(/\s+\/\s+/).map(v => v.trim()).filter(v => v && !seen.has(v.toLowerCase()) && seen.add(v.toLowerCase()));
+    if (!parts.length) parts = [term];
+    parts.forEach(text => {
+      const base = text.split(' (')[0].trim();
+      const len = [...base.replace(/^[ '\-"]+/, '').replace(/^the /i, '')].length;
+      wordVariants.push({ text, term, len, single: !/\s/.test(base) });
+    });
+  });
+  wordVariants.sort((a, b) => a.len - b.len);
+
+  function renderWords() {
+    const n = clampN(document.getElementById('nWords').value);
+    const longest = document.getElementById('wordsMode').value === 'longest';
+    const singleOnly = document.getElementById('wordsScope').value === 'single';
+    const all = singleOnly ? wordVariants.filter(w => w.single) : wordVariants;
+    fillList('wordsList', longest ? all.slice(-n).reverse() : all.slice(0, n),
+      w => `<span class="def-term" data-term="${escapeHtml(w.term)}">${escapeHtml(w.text)}</span>`);
+  }
+  function renderDefs() {
+    const n = clampN(document.getElementById('nDefs').value);
+    const longest = document.getElementById('defsMode').value === 'longest';
+    const all = stats.definitions_by_length_asc;
+    fillList('defsList', longest ? all.slice(-n).reverse() : all.slice(0, n),
+      d => `<span class="def-term" data-term="${escapeHtml(d.term)}">${escapeHtml(d.term)}</span> — <span class="def-text">${escapeHtml(d.definition)}</span>`);
+  }
+
+  // Clicking a term in either list opens the searchable dictionary for it.
+  ['wordsList', 'defsList'].forEach(id => {
+    document.getElementById(id).addEventListener('click', (e) => {
+      const el = e.target.closest('[data-term]');
+      if (el) openSearchModal(el.dataset.term);
+    });
+  });
+
+  // Fun facts, worked out from the spelling of every entry.
+  (function renderFunFacts() {
+    const box = document.getElementById('funFacts');
+    if (!box) return;
+    const terms = [...new Set(stats.words_by_length_asc || [])];
+    // " / " (spaces both sides) separates different spellings of one word, so each spelling is checked on its own.
+    // l = its letters (accents stripped, digits/spaces/punctuation skipped), idx = where each letter sits in the text.
+    const allVars = terms.flatMap(term => {
+      const seen = new Set();
+      let parts = term.split(/\s+\/\s+/).map(v => v.trim()).filter(v => v && !seen.has(v.toLowerCase()) && seen.add(v.toLowerCase()));
+      if (!parts.length) parts = [term];
+      return parts.map(t => {
+        const l = [], idx = [];
+        [...t].forEach((ch, i) => {
+          [...ch.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase()].forEach(b => { if (/\p{L}/u.test(b)) { l.push(b); idx.push(i); } });
+        });
+        return { t, term, l, idx, s: l.join('') };
+      });
+    });
+    const info = allVars.filter(x => x.l.length);
+    const isV = (ch) => 'aeiou'.includes(ch);
+    const shortestFirst = (a, b) => a.l.length - b.l.length || a.t.localeCompare(b.t);
+    const longestFirst = (a, b) => b.l.length - a.l.length || a.t.localeCompare(b.t);
+    const byTextLen = (a, b) => a.t.length - b.t.length || a.t.localeCompare(b.t);
+    const tally = (arr) => arr.reduce((m, c) => { m[c] = (m[c] || 0) + 1; return m; }, {});
+    const runMax = (arr, ok) => { let best = 0, cur = 0; arr.forEach(c => { cur = ok(c) ? cur + 1 : 0; if (cur > best) best = cur; }); return best; };
+    const ALPHA = [...'abcdefghijklmnopqrstuvwxyz'];
+
+    // Highlighters: given a spelling, return which letter positions to colour.
+    const vowelHl = x => x.l.map((c, i) => isV(c) ? i : -1).filter(i => i >= 0);
+    const runHl = (ok) => x => {
+      let best = 0, bestEnd = -1, cur = 0;
+      x.l.forEach((c, i) => { cur = ok(c) ? cur + 1 : 0; if (cur > best) { best = cur; bestEnd = i; } });
+      return Array.from({ length: best }, (_, k) => bestEnd - best + 1 + k);
+    };
+    const subHl = (sub) => x => {
+      const r = [];
+      let i = x.s.indexOf(sub);
+      while (i >= 0) { for (let k = 0; k < sub.length; k++) r.push(i + k); i = x.s.indexOf(sub, i + 1); }
+      return r;
+    };
+    const topLetter = (x) => {
+      const t = tally(x.l);
+      const m = Math.max(...Object.values(t));
+      return [Object.keys(t).find(k => t[k] === m), m];
+    };
+
+    const facts = [];
+    // Joins the spellings of the same term into one item: { term, xs: [spellings] }.
+    const toItems = (group) => {
+      const m = new Map();
+      group.forEach(x => { if (!m.has(x.term)) m.set(x.term, { term: x.term, xs: [] }); m.get(x.term).xs.push(x); });
+      return [...m.values()];
+    };
+    const listFact = (title, arr, note, runners = [], opts = {}) => {
+      if (!arr.length) return;
+      const entries = Array.isArray(arr[0]) ? arr.map(toItems) : toItems(arr).map(it => [it]);
+      const have = new Set(entries.flat().map(it => it.term));
+      const runnersUp = [];
+      if (entries.length <= 2) {
+        runners.map(r => r.x ? r : { x: r }).forEach(r => {
+          if (runnersUp.length >= 2 || have.has(r.x.term)) return;
+          have.add(r.x.term);
+          runnersUp.push({ item: { term: r.x.term, xs: [r.x] }, n: r.n || '' });
+        });
+      }
+      facts.push({ title, note, entries, runners: runnersUp, hl: opts.hl, tag: opts.tag });
+    };
+    const statFact = (title, text) => facts.push({ title, text });
+    const topFact = (title, score, noteFn, filter = () => true, opts = {}) => {
+      const scored = info.filter(filter).map(x => ({ x, v: score(x) }));
+      if (!scored.length) return;
+      const best = Math.max(...scored.map(s => s.v));
+      const group = scored.filter(s => s.v === best).map(s => s.x).sort(shortestFirst);
+      const runners = scored.filter(s => s.v < best)
+        .sort((a, b) => b.v - a.v || shortestFirst(a.x, b.x))
+        .slice(0, 12).map(s => ({ x: s.x, n: opts.val ? opts.val(s.v) : '' }));
+      listFact(title, group, noteFn(best), runners, opts);
+    };
+    const rowFact = (title, letters, minLen, note) =>
+      listFact(title, info.filter(x => x.l.length >= minLen && x.l.every(c => letters.includes(c))).sort(shortestFirst), note,
+        info.filter(x => x.l.length >= 3 && x.l.every(c => letters.includes(c))).sort(longestFirst));
+
+    listFact('Palindromes', info.filter(x => x.l.length >= 3 && x.s === [...x.s].reverse().join('')).sort(shortestFirst), 'Read the same backwards (3+ letters)');
+    listFact('All five vowels', info.filter(x => [...'aeiou'].every(v => x.l.includes(v))).sort(shortestFirst), 'Contain a, e, i, o and u', [], { hl: vowelHl });
+    topFact('Longest with no repeated letters', x => x.l.length, n => `${n} letters, every one different`, x => new Set(x.l).size === x.l.length, { val: n => `${n} letters` });
+    listFact('No repeated letters', info.filter(x => x.l.length >= 7 && new Set(x.l).size === x.l.length).sort(shortestFirst), '7+ letters, every one different');
+    topFact('Most different letters', x => new Set(x.l).size, n => `${n} different letters`, undefined, { val: n => `${n} different` });
+    topFact('Most of the same letter', x => Math.max(...Object.values(tally(x.l))), n => 'One letter repeated the most', undefined, {
+      hl: x => { const c = topLetter(x)[0]; return x.l.map((ch, i) => ch === c ? i : -1).filter(i => i >= 0); },
+      tag: x => { const [c, m] = topLetter(x); return `“${c}” ×${m.toLocaleString()}`; },
+    });
+    listFact('No vowels', info.filter(x => x.l.length >= 2 && !x.l.some(isV)).sort(shortestFirst), 'No a, e, i, o or u');
+    listFact('Only one kind of vowel', info.filter(x => x.l.length >= 7 && new Set(x.l.filter(isV)).size === 1).sort(shortestFirst), '7+ letters, a single vowel used', [], { hl: vowelHl });
+    topFact('Longest run of consonants', x => runMax(x.l, c => !isV(c)), n => `${n} in a row`, undefined, { hl: runHl(c => !isV(c)), val: n => `${n} in a row` });
+    topFact('Longest run of vowels', x => runMax(x.l, isV), n => `${n} in a row`, undefined, { hl: runHl(isV), val: n => `${n} in a row` });
+    listFact('Consonant, vowel, consonant, vowel…', info.filter(x => x.l.length >= 6 && x.l.every((c, i) => i === 0 || isV(c) !== isV(x.l[i - 1]))).sort(shortestFirst), '6+ letters, strictly alternating', [], { hl: vowelHl });
+    listFact('Starts and ends with the same letter', info.filter(x => x.l.length >= 3 && x.l[0] === x.l[x.l.length - 1]).sort(shortestFirst), undefined, [], { hl: x => [0, x.l.length - 1] });
+    listFact('Letters in alphabetical order', info.filter(x => x.l.length >= 4 && x.l.every((c, i) => i === 0 || x.l[i - 1] <= c)).sort(shortestFirst), '4+ letters, A to Z',
+      info.filter(x => x.l.length >= 3 && x.l.every((c, i) => i === 0 || x.l[i - 1] <= c)).sort(longestFirst));
+    listFact('Letters in reverse alphabetical order', info.filter(x => x.l.length >= 4 && x.l.every((c, i) => i === 0 || x.l[i - 1] >= c)).sort(shortestFirst), '4+ letters, Z to A',
+      info.filter(x => x.l.length >= 3 && x.l.every((c, i) => i === 0 || x.l[i - 1] >= c)).sort(longestFirst));
+    listFact('Two different double letters', info.filter(x => new Set(x.l.filter((c, i) => i > 0 && c === x.l[i - 1])).size >= 2).sort(shortestFirst), 'Like “bookkeeper”', [], {
+      hl: x => x.l.flatMap((c, i) => i > 0 && c === x.l[i - 1] ? [i - 1, i] : []),
+    });
+    const V = { a:1,e:1,i:1,o:1,u:1,l:1,n:1,s:1,t:1,r:1,d:2,g:2,b:3,c:3,m:3,p:3,f:4,h:4,v:4,w:4,y:4,k:5,j:8,x:8,q:10,z:10 };
+    topFact('Highest Scrabble score', x => x.l.reduce((sum, c) => sum + (V[c] || 0), 0), n => `${n} points, 15 letters or fewer`, x => x.l.length <= 15, {
+      hl: x => x.l.map((c, i) => (V[c] || 0) >= 8 ? i : -1).filter(i => i >= 0),
+      val: n => `${n} points`,
+    });
+    rowFact('Top keyboard row only', 'qwertyuiop', 3, 'Typed using only Q to P');
+    rowFact('Home row only', 'asdfghjkl', 3, 'Typed using only A to L');
+    rowFact('Bottom keyboard row only', 'zxcvbnm', 3, 'Typed using only Z to M');
+    rowFact('Left hand only', 'qwertasdfgzxcvb', 5, 'Typed with just your left hand');
+    rowFact('Right hand only', 'yuiophjklnm', 5, 'Typed with just your right hand');
+    const groups = {};
+    info.filter(x => x.l.length >= 3).forEach(x => { const k = [...x.l].sort().join(''); (groups[k] = groups[k] || []).push(x); });
+    listFact('Anagrams', Object.values(groups)
+      .filter(g => new Set(g.map(x => x.term)).size > 1 && new Set(g.map(x => x.t.toLowerCase())).size > 1)
+      .sort((a, b) => a[0].l.length - b[0].l.length), 'Same letters, different word');
+    ['uni', 'cycl'].forEach(sub => listFact(`Contains “${sub}”`, info.filter(x => x.s.includes(sub)).sort(shortestFirst), undefined, [], { hl: subHl(sub) }));
+    listFact('Phrases (with spaces)', allVars.filter(x => /\s/.test(x.t)).sort(byTextLen));
+    listFact('Hyphenated', allVars.filter(x => x.t.includes('-')).sort(byTextLen));
+    listFact('With apostrophes', allVars.filter(x => /['’]/.test(x.t)).sort(byTextLen));
+
+    // Whole-dictionary stats use each term's first spelling so alternates aren't counted twice.
+    const firstSeen = new Set();
+    const primaries = info.filter(x => !firstSeen.has(x.term) && firstSeen.add(x.term));
+    const all = tally(primaries.flatMap(x => x.l));
+    const used = ALPHA.filter(c => all[c]);
+    if (used.length) {
+      const common = [...used].sort((a, b) => all[b] - all[a])[0];
+      const rare = [...used].sort((a, b) => all[a] - all[b])[0];
+      statFact('Most common letter', `“${common}” appears ${all[common].toLocaleString()} times`);
+      statFact('Rarest letter', `“${rare}” appears only ${all[rare].toLocaleString()} time${all[rare] === 1 ? '' : 's'}`);
+      const missing = ALPHA.filter(c => !all[c]);
+      if (missing.length) statFact('Letters never used', missing.join(', '));
+      const starts = new Set(primaries.map(x => x.l[0]));
+      const noStart = ALPHA.filter(c => !starts.has(c));
+      if (noStart.length) statFact('Letters that never start a word', noStart.join(', '));
+      const lens = primaries.map(x => x.l.length).sort((a, b) => a - b);
+      const lenTally = tally(lens);
+      const modeLen = Object.keys(lenTally).sort((a, b) => lenTally[b] - lenTally[a])[0];
+      statFact('Word length', `Average ${(lens.reduce((a, b) => a + b, 0) / lens.length).toFixed(1)} letters, median ${lens[Math.floor(lens.length / 2)]}, most common ${modeLen}`);
+      statFact('Total letters', `${lens.reduce((a, b) => a + b, 0).toLocaleString()} letters across ${lens.length.toLocaleString()} entries`);
+    }
+
+    // Anything that applies to more than 50 entries isn't special, so drop it.
+    for (let i = facts.length - 1; i >= 0; i--) {
+      if (facts[i].entries && facts[i].entries.length > 50) facts.splice(i, 1);
+    }
+    // Remember each category's words so clicking its title can search them.
+    facts.forEach(f => {
+      if (f.entries) funSets.set(f.title.toLowerCase(), new Set(f.entries.flat().map(it => it.term.toLowerCase())));
+    });
+
+    // Fun facts that have a matching automatic category in wiktionary.html (same names, lowercase).
+    const FUN_CATEGORY_TITLES = new Set([
+      'palindromes', 'all five vowels', 'no repeated letters', 'no vowels', 'only one kind of vowel',
+      'consonant, vowel, consonant, vowel…', 'starts and ends with the same letter',
+      'letters in alphabetical order', 'letters in reverse alphabetical order', 'two different double letters',
+      'top keyboard row only', 'home row only', 'bottom keyboard row only', 'left hand only', 'right hand only',
+      'contains “uni”', 'contains “cycl”', 'phrases (with spaces)', 'hyphenated', 'with apostrophes',
+    ]);
+    const MAX = 6;
+    const attr = (t) => escapeHtml(t).replace(/"/g, '&quot;');
+    // One spelling: long ones are cut short, and the letters of interest are coloured.
+    const spellingHtml = (x, f) => {
+      const chars = [...x.t];
+      const hi = f && f.hl ? new Set(f.hl(x).map(i => x.idx[i])) : null;
+      let html = '', open = false;
+      chars.slice(0, 40).forEach((ch, i) => {
+        const on = !!(hi && hi.has(i));
+        if (on && !open) html += '<span class="fun-hl">';
+        if (!on && open) html += '</span>';
+        open = on;
+        html += escapeHtml(ch);
+      });
+      if (open) html += '</span>';
+      if (chars.length > 40) html += '…';
+      return html;
+    };
+    // One clickable term (clicking searches its full entry, including any other spellings).
+    const chip = (item, f) => {
+      const html = item.xs.map(x => spellingHtml(x, f)).join(' / ');
+      const needsTip = item.term.length > 16 || item.xs.length > 1 || item.xs[0].t !== item.term;
+      const tip = item.term.length > 200 ? item.term.slice(0, 200) + '…' : item.term;
+      return `<span class="fun-term" data-term="${attr(item.term)}"${needsTip ? ` title="${attr(tip)}"` : ''}>${html}</span>`;
+    };
+    const tagHtml = (item, f) => f.tag
+      ? `<span class="fun-note">${item.xs.map(x => escapeHtml(f.tag(x))).join(' / ')}</span>`
+      : '';
+    function itemHtml(f) {
+      const head = `<div class="fun-title"><span${f.entries ? ` class="fun-title-link" data-fun="${attr(f.title.toLowerCase())}"` : ''}>${escapeHtml(f.title)}</span>${f.entries ? `<span class="fun-count">${f.entries.length.toLocaleString()}</span>` : ''}</div>`;
+      const note = f.note ? `<div class="fun-note">${escapeHtml(f.note)}</div>` : '';
+      if (!f.entries) return head + `<div class="fun-text">${escapeHtml(f.text)}</div>`;
+      const shown = f.open ? f.entries : f.entries.slice(0, MAX);
+      const list = shown.map(g => `<span class="fun-entry">${g.map(it => chip(it, f) + tagHtml(it, f)).join('<span class="fun-note"> ⇄ </span>')}</span>`).join('');
+      const more = f.entries.length > MAX ? `<span class="fun-more">${f.open ? 'show less' : `+${f.entries.length - MAX} more`}</span>` : '';
+      const runs = f.runners && f.runners.length
+        ? `<div class="fun-note" style="margin-top:8px;">Runner-up${f.runners.length > 1 ? 's' : ''}</div><div class="fun-list" style="margin-top:2px;">${f.runners.map(r => `<span class="fun-entry">${chip(r.item, f)}${tagHtml(r.item, f) || (r.n ? `<span class="fun-note">${escapeHtml(r.n)}</span>` : '')}</span>`).join('')}</div>`
+        : '';
+      return head + note + `<div class="fun-list">${list}${more}</div>` + runs;
+    }
+    box.innerHTML = facts.map((f, i) => `<div class="fun-item" data-f="${i}">${itemHtml(f)}</div>`).join('');
+    box.addEventListener('click', (e) => {
+      const term = e.target.closest('[data-term]');
+      if (term) { openSearchModal(term.dataset.term); return; }
+      const titleLink = e.target.closest('[data-fun]');
+      if (titleLink) {
+        // Fun facts that also exist as an automatic category open that category in the Wiktionary view.
+        if (FUN_CATEGORY_TITLES.has(titleLink.dataset.fun)) { window.location.href = 'wiktionary.html#c=' + encodeURIComponent('fun:' + titleLink.dataset.fun); return; }
+        openSearchModal('fun:' + titleLink.dataset.fun);
+        return;
+      }
+      if (e.target.closest('.fun-more')) {
+        const item = e.target.closest('.fun-item');
+        const f = facts[Number(item.dataset.f)];
+        f.open = !f.open;
+        item.innerHTML = itemHtml(f);
+      }
+    });
+  })();
+
+  renderWords();
+  renderDefs();
+  ['nWords', 'wordsMode', 'wordsScope'].forEach(id => {
+    document.getElementById(id).addEventListener(id === 'nWords' ? 'input' : 'change', renderWords);
+  });
+  ['nDefs', 'defsMode'].forEach(id => {
+    document.getElementById(id).addEventListener(id === 'nDefs' ? 'input' : 'change', renderDefs);
+  });
+}
+
+main();
+</script>
+</body>
+</html>

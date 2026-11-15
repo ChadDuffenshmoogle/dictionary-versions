@@ -844,6 +844,17 @@ Chart.register({
   },
 });
 
+// Lets the browser draw what is ready so far before the next heavy part runs.
+// (A hidden tab never draws, so a short timer keeps the page moving anyway.)
+function paint() {
+  return new Promise(resolve => {
+    let done = false;
+    const go = () => { if (!done) { done = true; resolve(); } };
+    requestAnimationFrame(() => setTimeout(go, 0));
+    setTimeout(go, 60);
+  });
+}
+
 async function main() {
   let stats;
   try {
@@ -865,6 +876,7 @@ async function main() {
   document.getElementById('totalEntries').textContent = stats.total_entries;
   document.getElementById('latestWord').textContent = stats.latest_word_term || '—';
   document.getElementById('latestWordTime').textContent = stats.latest_word_timestamp || '';
+  await paint(); // the top cards show right away
 
   // Next predicted word: a letter-by-letter (order-3 Markov) guess built
   // from every existing entry. A seeded random generator keeps the guess
@@ -1504,6 +1516,7 @@ async function main() {
 
   const fileModalOverlay = document.getElementById('fileModalOverlay');
   const fileModalTitle = document.getElementById('fileModalTitle');
+  await paint(); // let the browser show what is ready so far
   fileModalTitle.textContent = (stats.latest_version || 'Current Dictionary File').replace('.txt', '');
   fileModalTitle.href = stats.latest_version
     ? `https://github.com/ChadDuffenshmoogle/dictionary-versions/blob/main/${encodeURIComponent(stats.latest_version)}`
@@ -1693,6 +1706,7 @@ async function main() {
 
   const funSets = new Map();
   const termsByDate = new Map();
+  await paint(); // let the browser show what is ready so far
   (stats.added_terms_timeline || []).forEach(({ date, term }) => {
     if (!termsByDate.has(date)) termsByDate.set(date, new Set());
     termsByDate.get(date).add(term.toLowerCase());
@@ -2088,6 +2102,7 @@ async function main() {
   const scrabbleCategoryKeys = ['scrabble-legal', 'scrabble-phrase', 'scrabble-normalized', 'scrabble-both', 'scrabble-illegal'];
   const scrabblePrefixes = ['scrabblelegal:', 'scrabblephrase:', 'scrabblenormalized:', 'scrabbleboth:', 'scrabbleillegal:'];
 
+  await paint(); // let the browser show what is ready so far
   new Chart(document.getElementById('scrabbleChart'), {
     type: 'pie',
     data: {
@@ -2149,6 +2164,7 @@ async function main() {
   }
 
   const projMonthsInput = document.getElementById('projMonths');
+  await paint(); // let the browser show what is ready so far
   buildGrowthChart(stats.cumulative_series, clampMonths(projMonthsInput.value));
   projMonthsInput.addEventListener('input', () => {
     buildGrowthChart(stats.cumulative_series, clampMonths(projMonthsInput.value));
@@ -2205,6 +2221,7 @@ async function main() {
 
   const streak = longestStreak(additionsFilled);
   const streakEl = document.getElementById('longestStreak');
+  await paint(); // let the browser show what is ready so far
   if (streak.len > 0) {
     streakEl.textContent = `Longest streak of at least one word added: ${streak.len} day${streak.len === 1 ? '' : 's'} (${formatDateNice(streak.start)} – ${formatDateNice(streak.end)})`;
   }
@@ -2379,6 +2396,7 @@ async function main() {
   }
 
   const letterGroupModeSelect = document.getElementById('letterGroupMode');
+  await paint(); // let the browser show what is ready so far
   buildLetterChart(parseInt(letterGroupModeSelect.value, 10));
   letterGroupModeSelect.addEventListener('change', () => {
     buildLetterChart(parseInt(letterGroupModeSelect.value, 10));
@@ -2424,6 +2442,7 @@ async function main() {
   const lenWhatSelect = document.getElementById('lenWhat');
   const lenModeSelect = document.getElementById('lenMode');
   const refreshLengthChart = () => buildLengthChart(lenWhatSelect.value, lenModeSelect.value);
+  await paint(); // let the browser show what is ready so far
   refreshLengthChart();
   lenWhatSelect.addEventListener('change', refreshLengthChart);
   lenModeSelect.addEventListener('change', refreshLengthChart);
@@ -2500,12 +2519,14 @@ async function main() {
     usedTopSelect.style.display = usedWhatSelect.value === 'words' ? '' : 'none';
     buildUsedChart(usedWhatSelect.value, usedSourceSelect.value, usedTopSelect.value);
   };
+  await paint(); // let the browser show what is ready so far
   refreshUsedChart();
   usedWhatSelect.addEventListener('change', refreshUsedChart);
   usedSourceSelect.addEventListener('change', refreshUsedChart);
   usedTopSelect.addEventListener('change', refreshUsedChart);
 
   // Parts of speech (posEntries/posLabels/posColors already declared earlier)
+  await paint(); // let the browser show what is ready so far
   new Chart(document.getElementById('posChart'), {
     type: 'pie',
     data: {
@@ -2792,6 +2813,7 @@ async function main() {
     }
   }
 
+  await paint(); // let the browser show what is ready so far
   buildWordCloud();
   document.getElementById('cloudRebuild').addEventListener('click', buildWordCloud);
   document.getElementById('cloudMixedOrder').addEventListener('change', buildWordCloud);
@@ -2848,6 +2870,7 @@ async function main() {
   });
 
   // Fun facts, worked out from the spelling of every entry.
+  await paint(); // let the browser show what is ready so far
   (function renderFunFacts() {
     const box = document.getElementById('funFacts');
     if (!box) return;
@@ -3071,6 +3094,7 @@ async function main() {
     });
   })();
 
+  await paint(); // let the browser show what is ready so far
   renderWords();
   renderDefs();
   ['nWords', 'wordsMode', 'wordsScope'].forEach(id => {

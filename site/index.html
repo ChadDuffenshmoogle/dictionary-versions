@@ -1487,9 +1487,6 @@ async function main() {
     }, 0));
   }
   predictLater();
-  // Give the prediction a head start (at most 2.5 seconds) before the heavy charts are built.
-  await Promise.race([firstPrediction, new Promise(r => setTimeout(r, 2500))]);
-  await paint();
   predictModeBtn.addEventListener('click', () => {
     predictMode = predictMode === 'normal' ? 'nonsense' : 'normal';
     predictModeBtn.textContent = PREDICT_MODES[predictMode].label;
@@ -1524,7 +1521,6 @@ async function main() {
 
   const fileModalOverlay = document.getElementById('fileModalOverlay');
   const fileModalTitle = document.getElementById('fileModalTitle');
-  await paint(); // let the browser show what is ready so far
   fileModalTitle.textContent = (stats.latest_version || 'Current Dictionary File').replace('.txt', '');
   fileModalTitle.href = stats.latest_version
     ? `https://github.com/ChadDuffenshmoogle/dictionary-versions/blob/main/${encodeURIComponent(stats.latest_version)}`
@@ -1714,7 +1710,10 @@ async function main() {
 
   const funSets = new Map();
   const termsByDate = new Map();
-  await paint(); // let the browser show what is ready so far
+  // Everything the prediction needs is defined by now. Give it a head start
+  // (at most 2.5 seconds) before the heavy charts are built.
+  await Promise.race([firstPrediction, new Promise(r => setTimeout(r, 2500))]);
+  await paint();
   (stats.added_terms_timeline || []).forEach(({ date, term }) => {
     if (!termsByDate.has(date)) termsByDate.set(date, new Set());
     termsByDate.get(date).add(term.toLowerCase());

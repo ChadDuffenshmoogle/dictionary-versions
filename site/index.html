@@ -461,7 +461,7 @@
 
     <div class="card">
       <h2 style="display:flex; align-items:center;">Next Predicted Word
-        <span class="tip" tabindex="0">?<span class="tip-text">Made-up guess from the spelling patterns in the entries. The tool counts which letter usually follows each group of letters (for example, what often comes after "tio"), then builds a new word one letter at a time by picking likely next letters. It only keeps words that are not already in the dictionary or the Zoogliography (main list, predicted, nonsense and rejected) or too close to one. Anything too close is added to the rejected list and it keeps generating until it finds a new one. And the guess changes only when a new word is added. The definition is built the same way, one word at a time, from which words usually follow each group of words, and it may not copy an existing definition. Normal looks 4 letters back for the word and 2 words back for the definition. Nonsense looks only 2 letters and 1 word back, so the result is looser and stranger.</span></span>
+        <span class="tip" tabindex="0">?<span class="tip-text">Made-up guess from the spelling patterns in the entries. The tool counts which letter usually follows each group of letters (for example, what often comes after "tio"), then builds a new word one letter at a time by picking likely next letters. It only keeps words that are not already in the dictionary or the Zoogliography (main list, predicted, nonsense and rejected) or too close to one. Anything too close is added to the rejected list and it keeps generating until it finds a new one. If every try with the full letter memory is rejected, it retries with one letter fewer, and if that fails too it says the chains are exhausted. And the guess changes only when a new word is added. The definition is built the same way, one word at a time, from which words usually follow each group of words, and it may not copy an existing definition. Normal looks 4 letters back for the word and 2 words back for the definition. Nonsense looks only 2 letters and 1 word back, so the result is looser and stranger.</span></span>
         <button id="predictModeBtn" class="mode-btn" type="button">Normal</button>
       </h2>
       <div class="hover-src">
@@ -862,6 +862,7 @@ async function main() {
     const parts = t.split(/\s+\/\s+/).map(v => v.trim()).filter(v => v && !seen.has(v.toLowerCase()) && seen.add(v.toLowerCase()));
     return parts.length ? parts : [t];
   });
+  let predictRun = 0; // newest prediction number, so late definitions can be dropped
   function predictNextWord(opts, silent) {
     const { limit, order: ORDER, dorder: DORDER } = opts;
     const useAll = !limit;
@@ -936,9 +937,10 @@ async function main() {
       return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
     };
 
+    let ctxOrder = ORDER; // how many letters back the chain may look right now
     function pickNext(word) {
       const padded = START.repeat(ORDER) + word;
-      for (let o = ORDER; o >= 1; o--) {
+      for (let o = ctxOrder; o >= 1; o--) {
         const options = table[padded.slice(padded.length - o)];
         if (!options) continue;
         const entries = Object.entries(options);
@@ -954,85 +956,37 @@ async function main() {
 
     let result = '';
     const tried = new Set();
-    for (let attempt = 0; attempt < 5000 && !result; attempt++) {
-      let word = '';
-      while (word.length < 24) {
-        const ch = pickNext(word);
-        if (ch === END) break;
-        word += ch;
+    // First try with the full letter memory (4). If every try is rejected,
+    // try again with one letter fewer (3). After that the chains are used up.
+    for (let ctx = ORDER; ctx >= Math.max(1, ORDER - 1) && !result; ctx--) {
+      ctxOrder = ctx;
+      for (let attempt = 0; attempt < 5000 && !result; attempt++) {
+        let word = '';
+        while (word.length < 24) {
+          const ch = pickNext(word);
+          if (ch === END) break;
+          word += ch;
+        }
+        const clean = word.trim();
+        if (clean.length < 4 || clean.length >= 24) continue;
+        const key = norm(clean);
+        if (tried.has(key)) continue;
+        tried.add(key);
+        if (!tooSimilar(clean)) result = clean;
+        else sessionRejected.add(clean); // too close to something: rejected, try again
       }
-      const clean = word.trim();
-      if (clean.length < 4 || clean.length >= 24) continue;
-      const key = norm(clean);
-      if (tried.has(key)) continue;
-      tried.add(key);
-      if (!tooSimilar(clean)) result = clean;
-      else sessionRejected.add(clean); // too close to something: rejected, try again
     }
     // For "All words", use the one word made by generate_stats.py so the
     // card and Zoogliography.txt always show the same word.
     // The nonsense card likewise uses the word saved in stats.json.
-    if (useAll && ORDER === 4 && stats.predicted_word && !tooSimilar(stats.predicted_word)) result = stats.predicted_word;
-    else if (useAll && ORDER === 2 && stats.predicted_nonsense_word && !tooSimilar(stats.predicted_nonsense_word)) result = stats.predicted_nonsense_word;
+    if (useAll && ORDER === 4 && stats.predicted_word && !tooSimilar(stats.predicted_word)) { result = stats.predicted_word; ctxOrder = ORDER; }
+    else if (useAll && ORDER === 2 && stats.predicted_nonsense_word && !tooSimilar(stats.predicted_nonsense_word)) { result = stats.predicted_nonsense_word; ctxOrder = ORDER; }
     sessionPredicted[ORDER] = result;
     if (silent) return result; // only the word was wanted, no card update
-    document.getElementById('predictedWord').textContent = result || '—';
+    const runId = ++predictRun;
+    if (result) document.getElementById('predictedWord').textContent = result;
+    else document.getElementById('predictedWord').innerHTML = '<span style="font-size:0.9rem; color:var(--muted);">Those Markov chains have been exhausted for the current entry list.</span>';
     refreshZoogModal();
-    // Predicted definition: same idea, but one word at a time, using the
-    // two previous words as context (falls back to one word).
-    const termSet = new Set(terms.map(t => t.toLowerCase()));
-    const defs = (stats.definitions_by_length_asc || [])
-      .filter(d => useAll || splitSpellings([d.term]).some(v => termSet.has(v.toLowerCase())))
-      .map(d => ({ term: d.term, tokens: d.definition.match(/[\p{L}\p{N}]+(?:['’\-][\p{L}\p{N}]+)*|[^\s\p{L}\p{N}]/gu) || [] }));
-    const DSTART = '\u0002', DEND = '\u0003';
-    const dTable = {};
-    defs.forEach(({ tokens: words }) => {
-      const seq = [...Array(DORDER).fill(DSTART), ...words, DEND];
-      for (let i = DORDER; i < seq.length; i++) {
-        for (let o = 1; o <= DORDER; o++) {
-          const k = seq.slice(i - o, i).join('\u0001');
-          (dTable[k] = dTable[k] || {})[seq[i]] = ((dTable[k] || {})[seq[i]] || 0) + 1;
-        }
-      }
-    });
-    function pickNextDefWord(history) {
-      for (let o = DORDER; o >= 1; o--) {
-        const options = dTable[history.slice(history.length - o).join('\u0001')];
-        if (!options) continue;
-        const entries = Object.entries(options);
-        const total = entries.reduce((s, [, c]) => s + c, 0);
-        let r = rand() * total;
-        for (const [w, c] of entries) {
-          r -= c;
-          if (r <= 0) return w;
-        }
-      }
-      return DEND;
-    }
-    // Put the tokens back together with normal spacing: no space before
-    // , . ; : ! ? ) ] } or after ( [ {, quotes hug the words inside them.
-    // wrap(token, index) lets the caller add markup around each token.
-    function joinTokens(tokens, wrap) {
-      let text = '';
-      const quoteOpen = {};
-      let prev = '';
-      tokens.forEach((tok, idx) => {
-        let space = idx ? ' ' : '';
-        if (/^[,.;:!?)\]}%…]$/.test(tok)) space = '';
-        else if (/^[(\[{]$/.test(prev)) space = '';
-        if (/^["'“”‘’]$/.test(tok)) {
-          const closing = !!quoteOpen[tok];
-          quoteOpen[tok] = !closing;
-          if (closing) space = '';
-          prev = closing ? '' : '(';
-        } else {
-          prev = tok;
-        }
-        text += space + wrap(tok, idx);
-      });
-      return text;
-    }
-
     // Hover panels: show which existing entries each piece came from.
     const PALETTE = ['#6ee7b7', '#7dd3fc', '#fbbf24', '#f472b6', '#a78bfa', '#fb923c'].map(T);
     const swatch = (i) => `background:${PALETTE[i % PALETTE.length]}; color:${ink(PALETTE[i % PALETTE.length])}; border-radius:3px; padding:0 2px;`;
@@ -1054,7 +1008,7 @@ async function main() {
       for (let p = 0; p < word.length; p++) {
         const pp = p + ORDER;
         let found = null;
-        for (let o = ORDER; o >= 1 && !found; o--) {
+        for (let o = ctxOrder; o >= 1 && !found; o--) {
           const gram = paddedWord.slice(pp - o, pp + 1);
           const hits = [];
           paddedTerms.forEach((pt, k) => {
@@ -1141,6 +1095,67 @@ async function main() {
       panel.dataset.copy = wordLines.join('\n');
       panel.innerHTML = COPY_BTN + `<div style="font-size:1rem; line-height:2;">${formula}</div>${blocks}`
         + (anyPlain ? mutedNote('Dashed letters matched no entry and were picked by chance.') : '');
+    }
+
+    renderWordSources(result);
+    document.getElementById('predictedDefinition').textContent = '…';
+    document.getElementById('predictedDefinitionSrc').innerHTML = '';
+    // The definition loads after the word has been shown.
+    setTimeout(() => {
+      if (runId !== predictRun) return; // a newer prediction replaced this one
+    // Predicted definition: same idea, but one word at a time, using the
+    // two previous words as context (falls back to one word).
+    const termSet = new Set(terms.map(t => t.toLowerCase()));
+    const defs = (stats.definitions_by_length_asc || [])
+      .filter(d => useAll || splitSpellings([d.term]).some(v => termSet.has(v.toLowerCase())))
+      .map(d => ({ term: d.term, tokens: d.definition.match(/[\p{L}\p{N}]+(?:['’\-][\p{L}\p{N}]+)*|[^\s\p{L}\p{N}]/gu) || [] }));
+    const DSTART = '\u0002', DEND = '\u0003';
+    const dTable = {};
+    defs.forEach(({ tokens: words }) => {
+      const seq = [...Array(DORDER).fill(DSTART), ...words, DEND];
+      for (let i = DORDER; i < seq.length; i++) {
+        for (let o = 1; o <= DORDER; o++) {
+          const k = seq.slice(i - o, i).join('\u0001');
+          (dTable[k] = dTable[k] || {})[seq[i]] = ((dTable[k] || {})[seq[i]] || 0) + 1;
+        }
+      }
+    });
+    function pickNextDefWord(history) {
+      for (let o = DORDER; o >= 1; o--) {
+        const options = dTable[history.slice(history.length - o).join('\u0001')];
+        if (!options) continue;
+        const entries = Object.entries(options);
+        const total = entries.reduce((s, [, c]) => s + c, 0);
+        let r = rand() * total;
+        for (const [w, c] of entries) {
+          r -= c;
+          if (r <= 0) return w;
+        }
+      }
+      return DEND;
+    }
+    // Put the tokens back together with normal spacing: no space before
+    // , . ; : ! ? ) ] } or after ( [ {, quotes hug the words inside them.
+    // wrap(token, index) lets the caller add markup around each token.
+    function joinTokens(tokens, wrap) {
+      let text = '';
+      const quoteOpen = {};
+      let prev = '';
+      tokens.forEach((tok, idx) => {
+        let space = idx ? ' ' : '';
+        if (/^[,.;:!?)\]}%…]$/.test(tok)) space = '';
+        else if (/^[(\[{]$/.test(prev)) space = '';
+        if (/^["'“”‘’]$/.test(tok)) {
+          const closing = !!quoteOpen[tok];
+          quoteOpen[tok] = !closing;
+          if (closing) space = '';
+          prev = closing ? '' : '(';
+        } else {
+          prev = tok;
+        }
+        text += space + wrap(tok, idx);
+      });
+      return text;
     }
 
     function renderDefinitionSources(tokens) {
@@ -1303,8 +1318,8 @@ async function main() {
       if (out.length >= 4 && out.length < 25 && !defTooSimilar(out)) { definition = joinTokens(out, t => t); definitionTokens = out; }
     }
     document.getElementById('predictedDefinition').textContent = definition;
-    renderWordSources(result);
     renderDefinitionSources(definitionTokens);
+    }, 0);
   }
   // Normal matches the saved word in stats.json / Zoogliography.txt
   // (4 letters of memory, made by generate_stats.py).

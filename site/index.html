@@ -385,7 +385,7 @@
   .zoog-toolbar { display:flex; align-items:center; gap:12px; flex-wrap:wrap; padding:10px 18px; border-bottom:1px solid var(--line); }
   #zoogFilter { flex:1 1 180px; min-width:0; padding:7px 10px; border-radius:8px; border:1px solid var(--line); background:var(--panel); color:var(--text); font-size:0.85rem; }
   .zoog-total { color:var(--muted); font-size:0.8rem; }
-  .zoog-jump { background:none; border:none; padding:0; color:var(--muted); font:inherit; cursor:pointer; text-decoration:underline dotted; text-underline-offset:3px; }
+  .zoog-jump { background:none; border:none; padding:0; color:var(--muted); font:inherit; cursor:pointer; }
   .zoog-jump:hover { color:var(--text); }
   #zoogModalContent { flex:1 1 auto; min-height:0; overflow:auto; padding:16px 18px; color:var(--text); font-size:0.9rem; }
   .zoog-section { margin-bottom:20px; }
@@ -397,6 +397,7 @@
   .zoog-chips { display:flex; flex-direction:column; gap:5px; }
   .zoog-chip { background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:6px 12px; font-size:1rem; overflow-wrap:anywhere; }
   .zoog-chip.rej { color:var(--muted); border-style:dashed; }
+  .zoog-chip.new { background:var(--line); }
   .zoog-empty { color:var(--muted); font-size:0.8rem; font-style:italic; }
   /* zoogliography: looks like an old bibliography page */
   .nav-zoog {
@@ -1511,12 +1512,18 @@ async function main() {
   // "ZOOGLIOGRAPHY - <date>" heading line is kept as the title, not as a zoog.
   const isZoogTitle = (l) => /^zoogliography\s*[-\u2013\u2014]/i.test(l);
   function parseZoog(text) {
-    const out = { title: '', main: [], next: [], nonsense: [], rejected: [] };
+    const out = { title: '', main: [], next: [], nonsense: [], rejected: [], latestRejected: [] };
     let cur = 'main';
     (text || '').split('\n').forEach(raw => {
       const l = raw.trim();
       if (!l) return;
       if (l.startsWith('---')) {
+        const sm = l.match(/^--- Seed: (\[.*\]) ---$/);
+        if (sm) {
+          // generate_stats.py lists the rejected guesses added for the newest entry in slot 4.
+          try { const arr = JSON.parse(sm[1]); if (Array.isArray(arr[3])) out.latestRejected = arr[3].map(w => String(w).toLowerCase()); } catch (e) {}
+          return;
+        }
         if (/^--- Predicted Next Word/i.test(l)) cur = 'next';
         else if (/^--- Predicted Nonsense/i.test(l)) cur = 'nonsense';
         else if (/^--- Rejected/i.test(l)) cur = 'rejected';
@@ -1545,7 +1552,7 @@ async function main() {
     const section = (sec) => {
       const all = z[sec.key], shown = keep(all);
       const chips = shown.length
-        ? `<div class="zoog-chips">${shown.map(w => `<span class="zoog-chip ${sec.chip}">${escapeHtml(w)}</span>`).join('')}</div>`
+        ? `<div class="zoog-chips">${shown.map(w => `<span class="zoog-chip ${sec.chip}${sec.key === 'rejected' && z.latestRejected.includes(w.toLowerCase()) ? ' new' : ''}">${escapeHtml(w)}</span>`).join('')}</div>`
         : `<div class="zoog-empty">${q ? 'No matches.' : 'None yet.'}</div>`;
       return `<div class="zoog-section" id="${sec.id}"><div class="zoog-h ${sec.cls}">${sec.title}<span class="zoog-n">${q ? shown.length + ' of ' + all.length : all.length}</span></div>${chips}</div>`;
     };

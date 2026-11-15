@@ -193,6 +193,7 @@ Elphaphiliptic
 Elphaphilopoiesis
 empossitude
 equent grillswitcheddar
+er the La Borgotterzone
 ex-expatriangus burg
 eyeangle Coneball
 falacticut that
@@ -639,6 +640,7 @@ ve traverig
 vigmalt
 Wajuible
 Walas ofly
+wassaud
 wo cung
 worcher
 wraica Boodobonty
@@ -654,6 +656,6 @@ zonyuni
 zoostrainio
 
 --- Rejected Predictions (too similar to an existing word) ---
-aerkeley, aerostated, aerquinultimater are of, alcolant, amiacablesquip, anolineus, aquavacheggle, baceggchefrent, bacontuer, blaskeawnce, Boing, bomba, break a leg, breale, brogger, carpe, case cake, cette, ched, chemuff, Chrishting, cobble, contasesquipedanti, copious, cranger, croiseggchecrois, culvstardnyunbun, cunicycle, Cyborg, D. Pough, dast, debrorg, derpatronomy, despepperer, ditar, dull cheeburber, duximateur, ecorous, Elpharice, fang, fiction, foobrepploozonioccior, goosh kaspoocy, grorkirkenuine, hardcore, heedy, It's pop the Cunicular, J. C. D. P'Dough, J. C. D. Pough, JCmander, kaboompault year, legster, longworm, luncharade, Mesies, messagespific, Monopolyjamorous, nauschecroismore, onsign, orgbera, over civcop, parcheeburg, patic, pourtfolm, protozooglio, q'de, scravenge, shoobatidoobie doubt, sificated, skill issue, sobrescalient, socrong, sound, sounds, spaghetti, spaghettiquettiqueer, spleering away, sproinks, Spweem SheckleSandwich, squares, stic, string, stund, the bridge, the dead, the dead horses, the room, thiever cake, thrishting, Thup, to kill issue, train, treache, Unlunchine, versquip, zeldopolyplug
+aerkeley, aerostated, aerquinultimater are of, alcolant, amiacablesquip, anolineus, aquavacheggle, baceggchefrent, bacontuer, befungerswärme, blaskeawnce, Boing, bomba, break a leg, breale, brogger, carpe, case cake, cette, ched, chemuff, Chrishting, cobble, contasesquipedanti, copious, cranger, croiseggchecrois, culvstardnyunbun, cunicycle, Cyborg, D. Pough, dast, debrorg, derpatronomy, despepperer, ditar, dull cheeburber, duximateur, ecorous, Elpharice, fang, fiction, foobrepploozonioccior, goosh kaspoocy, grorkirkenuine, hardcore, heedy, It's pop the Cunicular, J. C. D. P'Dough, J. C. D. Pough, JCmander, kaboompault year, legster, longworm, luncharade, Mesies, messagespific, Monopolyjamorous, nauschecroismore, onsign, orgbera, over civcop, parcheeburg, patic, pourtfolm, protozooglio, q'de, scravenge, shoobatidoobie doubt, sificated, skill issue, sobrescalient, socrong, sound, sounds, spaghetti, spaghettiquettiqueer, spleering away, sproinks, Spweem SheckleSandwich, squares, stic, string, stund, the bridge, the dead, the dead horses, the room, thiever cake, thrishting, Thup, to kill issue, train, treache, Unlunchine, versquip, zeldopolyplug
 
---- Seed: ["1404|sven wordle!", "bles", "arteigity", ["onsign", "sificated"]] ---
+--- Seed: ["1405|movie juice", "er the La Borgotterzone", "wassaud", ["befungerswärme"]] ---

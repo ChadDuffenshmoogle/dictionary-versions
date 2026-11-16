@@ -288,6 +288,7 @@ pertainty
 philian
 pistancers
 pistands
+pmential renroc
 pogocycling
 pogocyclopedia
 Portile
@@ -398,6 +399,7 @@ zoogemiclor/kemiklor
 'zzle
 -ity
 a Coniuannicle
+ad friotterst Thung
 affeggche
 aforrood-les
 aftost
@@ -675,4 +677,4 @@ zoostrainio
 --- Rejected Predictions (too similar to an existing word) ---
 able, adia, aerkeley, aerostated, aerquinultimater are of, alcolant, amiacablesquip, anolineus, aquavacheggle, baceggchefrent, bacontuer, befungerswärme, blaskeawnce, Boing, bomba, break a leg, breale, brogger, carpe, case cake, cette, ched, chemuff, Chrishting, chusettaphilosophe, cobble, contasesquipedanti, copious, cranger, croiseggchecrois, culvstardnyunbun, cunicycle, Cyborg, Cyril, D. Pough, dast, dead horse bush, debrorg, derpatronomy, despepperer, ditar, dull cheeburber, duximateur, ecorous, Elpharice, fang, fiction, foobrepploozonioccior, goosh kaspoocy, grorkirkenuine, hardcore, heedy, hingle, ip'n'dip, It's pop the Cunicular, J. C. D. P'Dough, J. C. D. Pough, JCmander, kaboompault year, Katter, legster, libernum, lism, longworm, luncharade, Mesies, messagespific, Monopolyjamorous, nauschecroismore, of-age, onsign, ordle!, orgbera, over civcop, parcheeburg, patic, Perpoundem fordle, pourtfolm, protozooglio, q'de, reak peace, scravenge, shock, shoobatidoobie doubt, sificated, skill issue, sobrescalient, socrong, sound, sounds, spaghetti, spaghettiquettiqueer, spleering away, sproinks, Spweem SheckleSandwich, squares, stic, string, stund, the bridge, the dead, the dead horses, the room, thiever cake, thrishting, Thup, to kill issue, touffe, train, treache, umpkincorns-on-the-cord, Unlunchine, Vers, versquip, zeldopolyplug
 
---- Seed: ["1412|Googlechatblatt Paradox", "Island balangerswärme", "lturgbeadebacertake", ["Cyril", "chusettaphilosophe", "of-age", "adia", "Perpoundem fordle"]] ---
+--- Seed: ["1414|antibridged", "pmential renroc", "ad friotterst Thung", []] ---

@@ -230,6 +230,7 @@ I will two bird delives
 I'mpreside
 I'mpress cast is cake
 I'mpressert
+illswitchen
 impreside
 in of which manoeuvre!
 in the pot car
@@ -643,6 +644,7 @@ sunag
 supary
 suplamuff
 Swel
+swer stitual rovs
 swixt
 tato of torserig
 th Dakirdn't Agacent
@@ -683,6 +685,6 @@ zonyuni
 zoostrainio
 
 --- Rejected Predictions (too similar to an existing word) ---
-able, ad horses, adia, aerkeley, aerostated, aerquinultimater are of, alcolant, amiacablesquip, anolineus, aquavacheggle, baceggchefrent, bacontuer, befungerswärme, blaskeawnce, Boing, bomba, break a leg, breale, brogger, C. D'Poba'Denucks, carpe, case cake, cette, ched, chemuff, Chrishting, chusettaphilosophe, cobble, contasesquipedanti, copious, cranger, croiseggchecrois, culvstardnyunbun, cunicycle, Cyborg, Cyril, d horse dead horse, d-sounding, D. Pough, dast, dead horse bush, debrorg, derpatronomy, despepperer, ditar, dull cheeburber, duximateur, e Spweemster, ecorous, Elpharice, fang, fiction, foobrepploozonioccior, geese", gglegum, goosh kaspoocy, grorkirkenuine, hardcore, heedy, hingle, ip'n'dip, It's pop the Cunicular, J. C. D. P'Dough, J. C. D. Pough, JCmander, kaboompault year, Katter, leering, legster, libernum, lism, longworm, luncharade, make Great America Mass, Mesies, messagespific, Monopolyjamorous, my decapote, nauschecroismore, nillain, ntial, of-age, onsign, ordle!, orgbera, over civcop, parcheeburg, patic, Perpoundem fordle, pistandary alcolade, pourtfolm, protozooglio, q'de, r the La Borbrhombus, reak peace, rgborg, rlize, scravenge, shock, shoobatidoobie doubt, sificated, skill issue, sobrescalient, socrong, sound, sounds, spaghetti, spaghettiquettiqueer, spleering away, spose-it-tion, sproinks, Spweem SheckleSandwich, squares, stic, string, stund, the bridge, the dead, the dead horses, the room, thiever cake, thrishting, Thup, tion, to kill issue, touffe, train, treache, umpkincorns-on-the-cord, Unlunchine, Vers, versquip, w Jersey Florida Oregon, zeldopolyplug
+able, ad horses, adia, aerkeley, aerostated, aerquinultimater are of, alcolant, amiacablesquip, anolineus, aquavacheggle, baceggchefrent, bacontuer, befungerswärme, blaskeawnce, Boing, bomba, break a leg, breale, brogger, C. D'Poba'Denucks, carpe, case cake, cette, ched, chemuff, Chrishting, chusettaphilosophe, cobble, contasesquipedanti, copious, cranger, croiseggchecrois, culvstardnyunbun, cunicycle, Cyborg, Cyril, d horse dead horse, d-sounding, D. Pough, dast, dead horse bush, debrorg, derpatronomy, despepperer, ditar, dull cheeburber, duximateur, e Spweemster, ecorous, Elpharice, fang, fiction, foobrepploozonioccior, geese", gglegum, goosh kaspoocy, grorkirkenuine, h on, hardcore, heedy, hingle, ip'n'dip, It's pop the Cunicular, J. C. D. P'Dough, J. C. D. Pough, JCmander, kaboompault year, Katter, leering, legster, libernum, lism, longworm, loose, luncharade, make Great America Mass, Mesies, messagespific, Monopolyjamorous, my decapote, nauschecroismore, nillain, ntial, of-age, onsign, ordle!, orgbera, over civcop, parcheeburg, patic, Perpoundem fordle, pistandary alcolade, pourtfolm, protozooglio, q'de, r the La Borbrhombus, reak peace, rgborg, rlize, scravenge, shock, shoobatidoobie doubt, sificated, skill issue, sobrescalient, socrong, sound, sounds, spaghetti, spaghettiquettiqueer, spleering away, spose-it-tion, sproinks, Spweem SheckleSandwich, squares, stic, string, stund, the bridge, the dead, the dead horses, the room, thiever cake, thrishting, Thup, tion, to kill issue, touffe, train, treache, umpkincorns-on-the-cord, Unlunchine, Vers, versquip, w Jersey Florida Oregon, zeldopolyplug
 
---- Seed: ["1417|B.A.M.F", "glopedian Joe", "and fre", ["make Great America Mass", "leering", "d horse dead horse", "r the La Borbrhombus", "d-sounding", "w Jersey Florida Oregon", "C. D'Poba'Denucks", "ntial", "nillain", "geese\"", "tion", "e Spweemster", "spose-it-tion", "pistandary alcolade", "ad horses", "rlize", "gglegum", "my decapote"]] ---
+--- Seed: ["1418|B.T.W", "illswitchen", "swer stitual rovs", ["loose", "h on"]] ---

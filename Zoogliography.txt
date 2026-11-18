@@ -375,6 +375,7 @@ the pound-sound
 the pounding
 the stack on a twinkie
 The Unicycle
+ther at Fredder
 to kill a funeral
 to kill two bird in the
 trenultimissippi
@@ -540,6 +541,7 @@ growa Nooda
 gryouse chrobor
 H. byoe
 he La thesausessein'
+heemetisiontound hor
 Hihites
 hion
 hird hoom for
@@ -697,6 +699,6 @@ zonyuni
 zoostrainio
 
 --- Rejected Predictions (too similar to an existing word) ---
-able, ad horses, adia, aerkeley, aerostated, aerquinultimater are of, alcolant, amiacablesquip, anolineus, aquavacheggle, baceggchefrent, bacontuer, befungerswärme, blaskeawnce, Boing, bomba, borge, break a leg, breale, brogger, C. D'Poba'Denucks, carpe, case cake, cette, ched, chemuff, china, Chrishting, chusettaphilosophe, cobble, contasesquipedanti, copious, cranger, croiseggchecrois, ctarmoon, culvstardnyunbun, cunicycle, Cyborg, Cyril, d horse dead horse, d-sounding, D. Pough, dast, dead horse bush, debrorg, derpatronomy, despepperer, ditar, dophypad kid, dull cheeburber, duximateur, dwich, e Spweemster, ecorous, ectic, Elpharice, essuous, fang, fiction, foobrepploozonioccior, garignatured servitude, geese", gglegum, goosh kaspoocy, grorkirkenuine, h on, hardcore, heedy, hingle, inely, ip'n'dip, iscyz, It's pop the Cunicular, J. C. D. P'Dough, J. C. D. Pough, JCmander, kaboompault year, Katter, leering, legster, libernum, lism, longworm, loose, luncharade, make Great America Mass, Massalted, Mesies, messagespific, Monopolyjamorous, my decapote, nauschecroismore, neball, nillain, nteur, ntial, of-age, on a twinkie, onsign, ordle!, orgbera, over civcop, owave, parcheeburg, patic, Perpoundem fordle, pistandary alcolade, Poughba, pourtfolm, protozooglio, q'de, queusilla, r the La Borbrhombus, reak peace, rgborg, rlize, rrible, scravenge, shock, shoobatidoobie doubt, sificated, skill issue, sobrescalient, socrong, sound, sounds, spaghetti, spaghettiquettiqueer, spleering away, spose-it-tion, sproinks, Spweem SheckleSandwich, squares, stic, string, stund, the bridge, the dead, the dead horses, the room, thiever cake, Threego Threego and bal, thrishting, Thup, tion, to kill issue, touffe, train, treache, umpkincorns-on-the-cord, uncharcaner, Unlunchine, upiary, Vers, versquip, w Jersey Florida Oregon, worg, zeldopolyplug
+able, ad horses, adia, aerkeley, aerosta, aerostated, aerquinultimater are of, alcolant, amiacablesquip, anolineus, aquavacheggle, baceggchefrent, bacontuer, bbler, befungerswärme, blaskeawnce, Boing, bomba, borge, break a leg, breale, brogger, C. D'Poba'Denucks, carpe, case cake, cette, ched, chemuff, china, Chrishting, chusettaphilosophe, cobble, contasesquipedanti, copious, cranger, croiseggchecrois, ctarmoon, culvstardnyunbun, cunicycle, Cyborg, Cyril, d horse dead horse, d-sounding, D. Pough, dast, dead horse bush, debrorg, del major, derpatronomy, despepperer, ditar, dophypad kid, dull cheeburber, duximateur, dwich, e Spweemster, ecorous, ectic, Elpharice, er sound the land, essuous, fang, fiction, foobrepploozonioccior, garignatured servitude, geese", gglegum, goosh kaspoocy, grorkirkenuine, h on, hardcore, heedy, hingle, inely, ip'n'dip, iscyz, It's pop the Cunicular, J. C. D. P'Dough, J. C. D. Pough, JCmander, kaboompault year, Katter, leering, leeringle Conner, legster, libernum, lism, longworm, loose, luncharade, make Great America Mass, Massalted, Mesies, messagespific, Monopolyjamorous, my decapote, nauschecroismore, neball, nillain, ning of tens of tens, nteur, ntial, of-age, on a twinkie, onsign, ordle!, orgbera, over civcop, owave, parcheeburg, patic, Perpoundem fordle, pistandary alcolade, Poughba, pourtfolm, protozooglio, q'de, queusilla, r the La Borbrhombus, reak peace, rgborg, rlize, rrible, scravenge, shock, shoobatidoobie doubt, sificated, skill issue, sobrescalient, socrong, sound, sounds, spaghetti, spaghettiquettiqueer, spleering away, spose-it-tion, sproinks, Spweem SheckleSandwich, squares, stic, stradamus, string, stumous, stund, the bridge, the dead, the dead horses, the room, thiever cake, Threego Threego and bal, thrishting, Thup, tion, to kill issue, touffe, train, treache, umpkincorns-on-the-cord, uncharcaner, Unlunchine, upiary, Vers, versquip, w Jersey Florida Oregon, worg, zeldopolyplug
 
---- Seed: ["1424|tacoyaki", "the die on a tooth for", ". Denskasous", ["inely", "owave", "uncharcaner", "upiary", "essuous", "iscyz", "dophypad kid"]] ---
+--- Seed: ["1425|hearsy", "ther at Fredder", "heemetisiontound hor", ["del major", "leeringle Conner", "stradamus", "stumous", "ning of tens of tens", "aerosta", "er sound the land", "bbler"]] ---

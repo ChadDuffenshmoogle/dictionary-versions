@@ -149,6 +149,7 @@ cinnabeat Again
 cinnamunchable
 cinnamunchin'
 Clabberg
+clopediacre
 Clossworde!
 convening
 corn
@@ -592,6 +593,7 @@ oreggaillane-che fuble
 oushies
 p'pmpt
 Pary Wyons elire
+pensio
 penti
 pery Fah
 pewortfoomby
@@ -703,4 +705,4 @@ zoostrainio
 --- Rejected Predictions (too similar to an existing word) ---
 able, ad horses, adia, aerkeley, aerosta, aerostated, aerquinultimater are of, alcolant, amiacablesquip, anolineus, aquavacheggle, aseine, baceggchefrent, bacontuer, bbler, befungerswärme, blaskeawnce, Boing, bomba, borge, break a leg, breale, brogger, C. D'Poba'Denucks, carpe, case cake, cette, ched, chemuff, china, Chrishting, chusettaphilosophe, cobble, contasesquipedanti, copious, cranger, croiseggchecrois, ctarmoon, culvstardnyunbun, cunicycle, Cyborg, Cyril, d Cyclexicalism, d horse dead horse, d-sounding, D. Pough, dast, dead horse bush, debrorg, del major, derpatronomy, despepperer, ditar, dophypad kid, dull cheeburber, duximateur, dwich, e Spweemster, ecorous, ectic, Elpharice, er sound the land, essuous, fang, fiction, foobrepploozonioccior, garignatured servitude, geese", gglegum, goosh kaspoocy, grorkirkenuine, h on, hardcore, heedy, hingle, imate, inely, ip'n'dip, iscyz, It's pop the Cunicular, J. C. D. P'Dough, J. C. D. Pough, JCmander, kaboompault year, Katter, leering, leeringle Conner, legster, libernum, lism, longworm, loose, luncharade, make Great America Mass, Massalted, Mesies, messagespific, Monopolyjamorous, my decapote, nauschecroismore, neball, nillain, ning of tens of tens, nteur, ntial, of-age, on a twinkie, onsign, ordle!, orgbera, over civcop, owave, parcheeburg, patic, Perpoundem fordle, pistandary alcolade, Poughba, pourtfolm, protozooglio, q'de, queusilla, r the La Borbrhombus, reak peace, rgborg, rlize, rrible, scravenge, shock, shoobatidoobie doubt, sificated, skill issue, sobrescalient, socrong, sound, sounds, spaghetti, spaghettiquettiqueer, spleering away, spose-it-tion, sproinks, Spweem SheckleSandwich, squares, stic, stradamus, string, stumous, stund, the bridge, the dead, the dead horses, the room, thiever cake, Threego Threego and bal, thrishting, Thup, tion, to kill issue, touffe, train, treache, umpkincorns-on-the-cord, uncharcaner, Unlunchine, upiary, usquonteur, Vers, versquip, w Jersey Florida Oregon, worg, zeldopolyplug
 
---- Seed: ["1427|humous", "mfortherology", "und horgillimet", ["imate", "usquonteur", "aseine", "d Cyclexicalism"]] ---
+--- Seed: ["1427|prehumous", "clopediacre", "pensio", []] ---

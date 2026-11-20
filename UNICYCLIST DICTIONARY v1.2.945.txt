@@ -1907,7 +1907,7 @@ manely (adv.) - in a way involving or relating to stylish hair
 manubriate (v.) - to handle, to touch with the hands
 
 ---------------------------------------------
-manucode (v.) - to code by hand rather then with an AI
+manucode / scribecode (v.) - to code by hand rather then with an AI
 - Example: "Microsoft was scandalized after they caught the developer manucoding instead of relying on Copilot."
 ---------------------------------------------
 

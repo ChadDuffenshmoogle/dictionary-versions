@@ -1,3 +1,9 @@
+# Related files (what this file needs for certain things):
+# - UNICYCLIST DICTIONARY v*.txt (repo "dictionary-versions", written by the bot's dictionary_manager.py): the latest version is read for entry counts and word stats.
+# - Zoogliography.txt (same repo, edited by the bot's zoog: / dezoog: commands in main.py and dictionary_manager.py): read for the zoog list, and the predicted, nonsense, and rejected sections are written back here (autozoogs and rejected autozoogs are made in this file).
+# - 178,691 Scrabble Legal Words.txt (same repo): the Scrabble word list used for legal-word checks and the daily word game lists.
+# - site/stats.json and site/wordlist/ (one folder up from this script): output files read by the stats page and the word game page.
+# - GitHub Actions workflow (not uploaded): runs this script and provides GITHUB_TOKEN and ZOOG_WRITE_TOKEN.
 """
 Generates site/stats.json for the UNICYCLIST DICTIONARY stats page.
 

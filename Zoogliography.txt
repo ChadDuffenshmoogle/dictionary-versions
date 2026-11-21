@@ -265,6 +265,7 @@ K. K. Psided quor
 kaboomph one dead horse
 kaboosificated
 kermesquipedale
+key dead horse
 Lake Great Again
 Lake Great Americated
 lexicolantea
@@ -749,10 +750,11 @@ Yaphil
 ying
 zee-chente
 zeematerys pron
+Zilion
 zonyuni
 zoostrainio
 
 --- Rejected Predictions (too similar to an existing word) ---
 't look a dead horse, -chine, -coupon, -rot, able, acontue, ad horses, adia, aerkeley, aerosta, aerostated, aerquinultimater are of, alcolant, amiacablesquip, anolineus, aquavacheggle, aseine, atic, ault yearm, baceggchefrent, bacontuer, bbler, befungerswärme, blaskeawnce, Boing, bomba, borge, break a leg, breale, brogger, C. D'Poba'Denucks, cal Joe, carpe, case cake, ceggchebag, cette, ched, cheeburger, chemuff, china, choost of the royal Wii, Chrishting, chusettaphilosophe, cobble, contasesquipedanti, copious, cranger, croiseggchecrois, ctarmoon, culvstardnyunbun, cunicycle, Cyborg, Cyril, d Cyclexicalism, d horse dead horse, d-sounding, D. Pough, dast, dead horse bush, debrorg, del major, derpatronomy, despepperer, ding, ditar, dophypad kid, drink, dull cheeburber, duximateur, dwich, e Alaskewnce, e certangle Conner, e Spweemster, echeese, ecorous, ectic, eese, Elpharice, eppered chee, er cake, er civilic, er sound the land, ering, essuous, ewnce, f tens of nones, fang, fiction, foobrepploozonioccior, garignatured servitude, geese", gglegum, goosh kaspoocy, grorkirkenuine, h on, hardcore, he Forgort, heebun, heedy, hingle, horse never, imate, inely, ip'n'dip, iscyz, It's pop the Cunicular, itic, J. C. D. P'Dough, J. C. D. Pough, JCmander, kaboompault year, Katter, labama Northy, leering, leeringle Conner, legster, libernum, lism, lomobile, longworm, loose, ltimate, luncharade, make Great America Mass, Massalted, Mesies, messagespific, Monopolyjamorous, mpkincorns-on-the-cord, my decapote, nal apprecessor, nauschecroismore, neball, nillain, ning of tens of tens, Not Chee!, nteur, ntial, ntuer, ocessor, of tens, of-age, ologist, on a twinkie, onsign, or lives, ordle!, orgbera, ostwards, over civcop, owave, parcheeburg, patic, Perpoundem fordle, pistandary alcolade, Poughba, pourtfolm, pressenge, protozooglio, Pside, q'de, qchikchecrois, quarius, queusilla, r the La Borbrhombus, raint, reak peace, repear, rexologist, rgborg, riery, rlize, rollinow cawyatt, rrible, rschbeased, sault year, scravenge, seggchebisc, shock, shoobatidoobie doubt, sificated, skill issue, sobrescalient, socrong, sound, sounds, spaghetti, spaghettiquettiqueer, spleering away, spose-it-tion, sproinks, Spweem SheckleSandwich, squares, stic, stradamus, string, stumous, stund, the bridge, the dead, the dead horses, the room, thiever cake, Threego Threego and bal, thrishting, Thup, ti bear, tion, titodezoog, to kill issue, tombplacebogus, touffe, train, treache, uavamole, ucher, udley's Law, umpkincorns-on-the-cord, uncharcaner, unchartmonger, unforcine, Unlunchine, upiary, usquonteur, utle, Vers, versquip, w Jersey Florida Oregon, wagianto, worg, xicon, Y.O.S., yorick, zeldopolyplug
 
---- Seed: ["1453|grarm", "ncriminal boss", "n Wiiss", ["f tens of nones", "ault yearm"]] ---
+--- Seed: ["1454|autozorf", "key dead horse", "Zilion", []] ---

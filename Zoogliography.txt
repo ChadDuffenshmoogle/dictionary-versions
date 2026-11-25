@@ -826,6 +826,327 @@ zonyuni
 zoostrainio
 
 --- Rejected Predictions (too similar to an existing word) ---
-'t look a dead horse, -chine, -coupon, -rot, . Pough, able, acontue, ad horses, adia, aerkeley, aerosta, aerostated, aerquinultimater are of, alcoholism, alcolant, amatchee, ameggchebag, amiacablesquip, angles, anolineus, aquavacheggle, ard knife, aseine, atic, atle, ault yearm, baceggchefrent, bacontuer, bbler, befungerswärme, blaskeawnce, Boing, bomba, borge, break a leg, breale, brogger, C. D'Poba'Denucks, cal Joe, carpe, case cake, ceggchebag, cette, ch of sand, ched, cheeburger, chemuff, china, choost of the royal Wii, Chrishting, chusettaphilosophe, cifer, cluzzle, co by, cobble, contasesquipedanti, copious, cranger, croiseggchecrois, ctarmoon, culvstardnyunbun, cunicycle, Cyborg, Cyril, d Cyclexicalism, d horse dead horse, d knife, d procrastinating, d-sounding, D. Pough, Dakota New Jersey Flori, dast, dead horse bush, debrorg, del major, derpatronomy, despepperer, ding, ditar, dobowl, dophypad kid, doura, drink, dugger, dull cheeburber, duximateur, dwich, e Alaskewnce, e certangle Conner, e Spweemster, e-pers, eace, easonablesquirk, eball, echatblatt, echeese, ecorous, ectic, edIndecorous, eese, ega-golf, Elpharice, en fries, eous, eppered chee, er cake, er civilic, er sound the land, ering, es ce, essuous, ewnce, f tens of nones, fang, ffective, fiction, foobrepploozonioccior, frame-advances, garignatured servitude, geese", gglegum, goosh kaspoocy, grorkirkenuine, guation, h on, hardcore, he DuS', he Forgort, heart, heea penappapppen, heebun, heedy, hemiclor, hesauseggchebisc, hingle, horse never, hsque, ie juice, ightenment, imate, inely, ip'n'dip, irambus, is Banorg, iscyz, Island, It's pop the Cunicular, itic, J. C. D. P'Dough, J. C. D. Pough, JCmander, kaboompault year, Katter, king, labama Northy, leering, leeringle Conner, legster, libernum, lism, lives, lomobile, longworm, loose, lopedianchor, ltimate, luncharade, ma Massalted, make Great America Mass, Make Great Amerito bake, Massalted, Mesies, messagespific, messagespified, Monopolyjamorous, mpkincorns-on-the-cord, my decapote, n one, nal apprecessor, nauschecroismore, neball, New Mexicontuer, nillain, ning of tens of tens, Not Chee!, nteur, ntial, ntuer, ocessor, of tens, of-age, ogdra effectic, oking, ologist, on a twinkie, onkrolling in the DuS', onsign, oozles, or lives, ordieding theetricegg, ordle!, orgbera, orthdoors, osomatosomatiche, ostwards, over civcop, owave, parcheeburg, pardy, patic, peace, Perpoundem fordle, pistandary alcolade, ponymous, poochingo, Poughba, pourtfolm, pressenge, protozooglio, Pside, q'de, qchikchecrois, quarius, queusilla, quiri, r the La Borbrhombus, raint, rating, rcovergize, rdastinator, reak peace, reakfast-for-dinner, repear, rexologist, rgborg, riery, rip'n'dip, rlize, rollinow cawyatt, rorg, rrible, rschbeased, rtile, rxiscyz, s ous, sault year, sBorgborg, scravenge, seggchebisc, shippi, shock, shoobatidoobie doubt, sificated, skill issue, sobrescalient, socrong, sound, sounds, South, spaghetti, spaghettiquettiqueer, spleering away, spose-it-tion, sproinks, Spweem SheckleSandwich, squares, stic, stradamus, string, stumous, stund, tabon, ter at Fredder, the bridge, the dead, the dead horses, the room, thiever cake, Threego Threego and bal, thrishting, Thup, ti bear, tion, titodezoog, to kill issue, tombplacebogus, tone, touffe, tradamus, train, treache, tund, uavamole, ucher, udley's Law, uflect, ullingmart, umpkincorns-on-the-cord, uncharcaner, unchartmonger, unforcine, unge, Unlunchine, uorrel, uotin' time, upiary, urkwee, usized, usquonteur, utle, Vers, versquip, w Jersey Florida Oregon, wagianto, with one, worg, xical Joe, xicon, Y.O.S., ylvania, yorick, zeldopolyplug
+'t look a dead horse | Don't look a dead horse in the mouth
+-chine | wachine
+-coupon | anti-coupon
+-rot | B.O.T
+. Pough | C. D. Pough
+able | arle
+acontue | racontue
+ad horses | death by 1000 dead horses
+adia | adida
+aerkeley | aerkey
+aerosta | aerostatic
+aerostated | aerostatic
+aerquinultimater are of | quinultimate
+alcoholism | secondary alcoholism
+alcolant | alcolade
+amatchee
+ameggchebag | baceggchebag
+amiacablesquip | amiacable
+angles | eyeangles
+anolineus | anoline
+aquavacheggle | aquavache
+ard knife | anti beard knife
+aseine | caseine
+atic | aic
+atle | arle
+ault yearm | sault years
+baceggchefrent | sauseggchefrent
+bacontuer | racontuer
+bbler | gibbler
+befungerswärme | hungerswärme
+blaskeawnce | askeawnce
+Boing | Boingby
+bomba | Boomba
+borge | worge
+break a leg | don't break a leg
+breale | breal
+brogger | brogler
+C. D'Poba'Denucks | H. S. C. D'Poba'Denucks
+cal Joe | Radical Joe
+carpe | carper
+case cake | pillowcase cake
+ceggchebag | eggchebag
+cette | et cetter
+ch of sand
+ched | chee
+cheeburger | cheeburber
+chemuff | dubchemuff
+china | deus ex wachina
+choost of the royal Wii | the royal Wii
+Chrishting | inchrishting
+chusettaphilosophe | philosophe
+cifer | polief occifer
+cluzzle | clossword cluzzle
+co by
+cobble | cobblerstone
+contasesquipedanti | sesquip
+copious | copiously hoosted
+cranger | crangent
+croiseggchecrois | croiseggchesaus
+ctarmoon | nectarmoon
+culvstardnyunbun | culvstard
+cunicycle | cunicule
+Cyborg | cyberg
+Cyril | Cybril
+d Cyclexicalism | cyclexicalism
+d horse dead horse
+d knife | anti beard knife
+d procrastinating | procrast-inator
+d-sounding | sound-sounding
+D. Pough | C. D. Pough
+Dakota New Jersey Flori | jerse
+dast | dasty
+dead horse bush | beat around the dead horse bush
+debrorg | Icebrorg
+del major | duel major
+derpatronomy | derpatronic
+despepperer | despepperizer
+ding
+ditar | ditarozitortrigmanimospagemacavatappililitititininininini
+dobowl | Qdobowl
+dophypad kid | edophypad kid
+doura | Qdoura
+drink | you can lead a dead horse to water, but you can't make it drink, or live
+dugger | skulldugger
+dull cheeburber | cheeburber
+duximateur | duximate
+dwich | McKnuckleSandwich
+e Alaskewnce | askewnce
+e certangle Conner
+e Spweemster | Spweemster
+e-pers
+eace | eice
+easonablesquirk | squirk
+eball | Rorctangle Coneball
+echatblatt | Googlechatblatt
+echeese | "The mouse who chooses the trap has no right to complain of the cheese"
+ecorous | Indecorous
+ectic | New York Texas Mississippi North Carolina Connecticut Tennessee New Mexico Minnesota New Hampshire Hawaii Iowa Alaska Kansas South Carolina Louisiana Ohio Georgia Nevada Utah Wyoming Colorado Oklahoma Maine Alabama North Dakota Kentucky Illinois Vermont Michigan Wisconsin Delaware Washington South Dakota Pennsylvania Massachusetts Maryland Rhode Island Montana Indiana Missouri West Virginia Virginia New Jersey Florida Oregon Idaho Arizona Arkansas California Nebraska Toast
+edIndecorous | Indecorous
+eese | feese
+ega-golf | mega-golf
+Elpharice | alpharice
+en fries
+eous | ROUS
+eppered chee | speppered cheeburgmaterpicktchupstardnyunbun
+er cake | comforter cake
+er civilic | undercover civilicop
+er sound the land
+ering | duffering
+es ce | eice
+essuous | distressuous
+ewnce | askewnce
+f tens of nones | tens of ones
+fang | bang
+ffective | effective annelism
+fiction | fictionalism
+foobrepploozonioccior | brepp
+frame-advances | frame-advancer
+garignatured servitude
+geese" | feese
+gglegum | bugglegum
+goosh kaspoocy | spoocy
+grorkirkenuine | grork
+guation | ambiguation page
+h on | xon
+hardcore | hardcore Frisbee
+he DuS' | the DuS'
+he Forgort | forgort
+heart | from the top of my heart
+heea penappapppen | penpinappapppen
+heebun | burgcheebun
+heedy | heedy howdy heimlich manoeuvre!
+hemiclor | chemiclor
+hesauseggchebisc | sauseggchebisc
+hingle | chchingles
+horse never | a watched dead horse never lives
+hsque | Bethsque
+ie juice | movie juice
+ightenment | brainlightenment
+imate | duximate
+inely | lowrorkirkenuinely
+ip'n'dip | prescrip'n'dip
+irambus | enirambus
+is Banorg | Louis Banorg
+iscyz | bidvefowghijaklimnaptioquerxiscyz
+Island | New York Texas Mississippi North Carolina Connecticut Tennessee New Mexico Minnesota New Hampshire Hawaii Iowa Alaska Kansas South Carolina Louisiana Ohio Georgia Nevada Utah Wyoming Colorado Oklahoma Maine Alabama North Dakota Kentucky Illinois Vermont Michigan Wisconsin Delaware Washington South Dakota Pennsylvania Massachusetts Maryland Rhode Island Montana Indiana Missouri West Virginia Virginia New Jersey Florida Oregon Idaho Arizona Arkansas California Nebraska Toast
+It's pop the Cunicular | cunicular
+itic
+J. C. D. P'Dough | C. D. Pough
+J. C. D. Pough | C. D. Pough
+JCmander | mander
+kaboompault year | kaboompa
+Katter | Kit Katter
+king
+labama Northy
+leering | spleering
+leeringle Conner
+legster | legsterity
+libernum | hibernum
+lism | lim
+lives | a watched dead horse never lives
+lomobile | allomobile
+longworm | longwormism
+loose | waterloose
+lopedianchor | medianchor
+ltimate | heptultimate
+luncharade | rancharade
+ma Massalted | assalted
+make Great America Mass | Make Great America Again
+Make Great Amerito bake
+Massalted | assalted
+Mesies | Mesie
+messagespific | smessagespified
+messagespified | smessagespified
+Monopolyjamorous | polyjamorous
+mpkincorns-on-the-cord | ecord
+my decapote | ecapote
+n one | zone
+nal apprecessor
+nauschecroismore | croismore
+neball | Rorctangle Coneball
+New Mexicontuer
+nillain | dillain
+ning of tens of tens | tens of tens of tens
+Not Chee! | I Can't Believe It's Not Chee!
+nteur | neur
+ntial | supressential
+ntuer | racontuer
+ocessor | word processor
+of tens | tens of tens
+of-age | going-of-age
+ogdra effectic
+oking | food-looking
+ologist | aeologist
+on a twinkie
+onkrolling in the DuS' | the DuS'
+onsign | monsign
+oozles | anywhoozles
+or lives
+ordieding theetricegg | trice
+ordle! | Clordle
+orgbera | orgberg
+orthdoors | forthdoors
+osomatosomatiche | somatosomatic
+ostwards | utwards
+over civcop | overcover undercover civcopcivcop
+owave | meh-crowave
+parcheeburg | cheeburg
+pardy | triple jeopardy
+patic | patiche
+peace | wreak peace
+Perpoundem fordle
+pistandary alcolade | alcolade
+ponymous | pershlaponymous
+poochingo | counterpoint: spoochingo
+Poughba | D. P'Doughba
+pourtfolm | Shourtfolm
+pressenge | messenge
+protozooglio | protozoog
+Pside | K. K. Psider
+q'de | de
+qchikchecrois | bacturqchikchecrois
+quarius | Engiquarius
+queusilla | queusillanimous
+quiri | fdakquiri
+r the La Borbrhombus | J. C. La Borbrhombus
+raint | subsequent restraint
+rating | choperating
+rcovergize | overgize
+rdastinator | crastinator
+reak peace | wreak peace
+reakfast-for-dinner | breakfast-for-dinner
+repear | disrepear
+rexologist | aeologist
+rgborg | orgborg
+riery | dairiery
+rip'n'dip | prescrip'n'dip
+rlize | marlize
+rollinow cawyatt | cullinow cawyatt
+rorg | forg
+rrible | torrible
+rschbeased | perschbeased
+rtile | artile
+rxiscyz | bidvefowghijaklimnaptioquerxiscyz
+s ous | ROUS
+sault year | sault years
+sBorgborg | orgborg
+scravenge | scravenger
+seggchebisc | baceggchebisc
+shippi | Pandora's shipping container
+shock | auraculture shock
+shoobatidoobie doubt | shoobatidoob
+sificated
+skill issue | quill issue
+sobrescalient | sobrescalientes
+socrong | socrongles
+sound | sound-sounding
+sounds | sound-sounding
+South | New York Texas Mississippi North Carolina Connecticut Tennessee New Mexico Minnesota New Hampshire Hawaii Iowa Alaska Kansas South Carolina Louisiana Ohio Georgia Nevada Utah Wyoming Colorado Oklahoma Maine Alabama North Dakota Kentucky Illinois Vermont Michigan Wisconsin Delaware Washington South Dakota Pennsylvania Massachusetts Maryland Rhode Island Montana Indiana Missouri West Virginia Virginia New Jersey Florida Oregon Idaho Arizona Arkansas California Nebraska Toast
+spaghetti | spaghettiquette
+spaghettiquettiqueer | spaghettiquette
+spleering away | spleering
+spose-it-tion | dispose-it-tion
+sproinks | croinks
+Spweem SheckleSandwich | Spweem Sheckles
+squares | Cristian Bordabesquares
+stic | stice
+stradamus | Postradamus
+string | string chee
+stumous | perschlostumous
+stund | stchewstund
+tabon | mastabon
+ter at Fredder
+the bridge | water over the bridge
+the dead | the dead horse in the room
+the dead horses | straight from the dead horse's mouth
+the room | the dead horse in the room
+thiever cake | thiever
+Threego Threego and bal | Threego
+thrishting | inchrishting
+Thup | thop
+ti bear | anti beard knife
+tion
+titodezoog | de-zoog
+to kill issue
+tombplacebogus | placebogus
+tone | tobe
+touffe | stouffe
+tradamus | Postradamus
+train | contraindict
+treache | treach
+tund
+uavamole | guavamole
+ucher | brucher
+udley's Law | Thudley's Law
+uflect | manuflect
+ullingmart | Celingmart
+umpkincorns-on-the-cord | ecord
+uncharcaner | charcane
+unchartmonger | chartmonger
+unforcine | forcine
+unge
+Unlunchine | lunchin'
+uorrel | quorrel
+uotin' time | It's Quotin' time
+upiary | taupiary
+urkwee | Murkwee
+usized | Circusized
+usquonteur | Raquonteur
+utle | butle
+Vers
+versquip | sesquip
+w Jersey Florida Oregon | jerse
+wagianto | wagiant
+with one | to kill two birds with one dead horse
+worg | forg
+xical Joe
+xicon | Cyclexicon
+Y.O.S. | C.Y.O.S.
+ylvania | New York Texas Mississippi North Carolina Connecticut Tennessee New Mexico Minnesota New Hampshire Hawaii Iowa Alaska Kansas South Carolina Louisiana Ohio Georgia Nevada Utah Wyoming Colorado Oklahoma Maine Alabama North Dakota Kentucky Illinois Vermont Michigan Wisconsin Delaware Washington South Dakota Pennsylvania Massachusetts Maryland Rhode Island Montana Indiana Missouri West Virginia Virginia New Jersey Florida Oregon Idaho Arizona Arkansas California Nebraska Toast
+yorick | poor yorick
+zeldopolyplug | zeldopoly
 
 --- Seed: ["1486|chowm", "yclexico Minner", "of hoiceg", ["rip'n'dip", "with one", "cifer", "onkrolling in the DuS'", "echatblatt", "New Mexicontuer", "rtile", "he DuS'", "es ce"]] ---

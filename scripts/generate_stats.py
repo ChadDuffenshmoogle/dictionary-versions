@@ -875,12 +875,26 @@ def main():
     # Greedy on purpose: the term is everything up to the LAST quote on the
     # line, so terms with apostrophes (like "ain't") are not cut short.
     add_re = re.compile(r"with new term '(.+)'")
+    rename_re = re.compile(r"renamed '(.+)' to '(.+)'")  # written by the bot when a word is edited
     adds = []
+    renames = []  # (timestamp, old term, new term)
     for c in commits:
         m = add_re.search(c["commit"]["message"])
         if m:
             ts = c["commit"]["author"]["date"]
             adds.append({"date": to_central_date(ts), "term": m.group(1), "timestamp": ts})
+        rm = rename_re.search(c["commit"]["message"])
+        if rm:
+            renames.append((c["commit"]["author"]["date"], rm.group(1), rm.group(2)))
+
+    # A word renamed by an edit keeps the date it was first added, under its new name.
+    for a in adds:
+        cur_ts = a["timestamp"]
+        for _ in range(20):  # follow a chain of renames, oldest first
+            nxt = min((r for r in renames if r[0] > cur_ts and r[1].lower() == a["term"].lower()), default=None)
+            if not nxt:
+                break
+            a["term"], cur_ts = nxt[2], nxt[0]
 
     # --- Latest file: entries, letter breakdown, word/definition extremes ---
     filenames = get_dictionary_filenames()

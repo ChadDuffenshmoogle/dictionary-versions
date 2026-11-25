@@ -111,6 +111,7 @@ zug
 zummer
 
 --- Predicted Next Word ---
+-ironicle
 /gifs/grief-geomething
 a gun
 a watchen
@@ -542,6 +543,7 @@ chastiftob
 che Alannes
 che cive Camcharasi
 che ealb
+che Honic
 che Iowl
 chebefuntudist
 checitchify
@@ -938,6 +940,7 @@ ering | duffering
 es ce | eice
 essuous | distressuous
 ewnce | askewnce
+exicon | xicon
 f tens of nones | tens of ones
 fang | bang
 ffective | effective annelism
@@ -1028,6 +1031,7 @@ or lives
 ordieding theetricegg | trice
 ordle! | Clordle
 orgbera | orgberg
+oring | ering
 orthdoors | forthdoors
 osomatosomatiche | somatosomatic
 ostwards | utwards
@@ -1149,4 +1153,4 @@ ylvania | New York Texas Mississippi North Carolina Connecticut Tennessee New Me
 yorick | poor yorick
 zeldopolyplug | zeldopoly
 
---- Seed: ["1486|chowm", "yclexico Minner", "of hoiceg", ["rip'n'dip", "with one", "cifer", "onkrolling in the DuS'", "echatblatt", "New Mexicontuer", "rtile", "he DuS'", "es ce"]] ---
+--- Seed: ["1487|brochoup", "-ironicle", "che Honic", ["oring", "exicon"]] ---

@@ -398,6 +398,7 @@
   .zoog-chip { background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:6px 12px; font-size:1rem; overflow-wrap:anywhere; }
   .zoog-chip.rej { color:var(--muted); border-style:dashed; }
   .zoog-chip.new { background:var(--line); }
+  .zoog-why { color:var(--muted); font-size:.75rem; margin-left:8px; }
   .zoog-empty { color:var(--muted); font-size:0.8rem; font-style:italic; }
   /* zoogliography: looks like an old bibliography page */
   .nav-zoog {
@@ -923,7 +924,7 @@ async function main() {
       if (!l) return acc;
       if (l.startsWith('---')) { acc.rejected = /^--- Rejected/i.test(l); return acc; }
       if (/^zoogliography\s*[-\u2013\u2014]/i.test(l)) return acc; // the dated heading is not a zoog
-      if (acc.rejected) l.split(',').forEach(w => { if (w.trim()) acc.words.push(w.trim()); });
+      if (acc.rejected) splitRejectedLine(l).forEach(([w]) => acc.words.push(w));
       else acc.words.push(l);
       return acc;
     }, { words: [], rejected: false }).words;
@@ -1563,8 +1564,13 @@ async function main() {
   // Seed line (used only by generate_stats.py) is dropped here too, and the
   // "ZOOGLIOGRAPHY - <date>" heading line is kept as the title, not as a zoog.
   const isZoogTitle = (l) => /^zoogliography\s*[-\u2013\u2014]/i.test(l);
+  // A rejected line is "word | match" (new) or a comma-separated list of words (old).
+  function splitRejectedLine(l) {
+    if (l.includes(' | ')) { const i = l.indexOf(' | '); return [[l.slice(0, i).trim(), l.slice(i + 3).trim()]]; }
+    return l.split(',').map(w => w.trim()).filter(Boolean).map(w => [w, '']);
+  }
   function parseZoog(text) {
-    const out = { title: '', main: [], next: [], nonsense: [], rejected: [], latestRejected: [] };
+    const out = { title: '', main: [], next: [], nonsense: [], rejected: [], rejectedMatch: {}, latestRejected: [] };
     let cur = 'main';
     (text || '').split('\n').forEach(raw => {
       const l = raw.trim();
@@ -1582,7 +1588,7 @@ async function main() {
         return;
       }
       if (cur === 'main' && isZoogTitle(l)) { out.title = l; return; }
-      if (cur === 'rejected') l.split(',').forEach(w => { w = w.trim(); if (w) out.rejected.push(w); });
+      if (cur === 'rejected') splitRejectedLine(l).forEach(([w, m]) => { out.rejected.push(w); if (m) out.rejectedMatch[w.toLowerCase()] = m; });
       else out[cur].push(l);
     });
     return out;
@@ -1604,7 +1610,7 @@ async function main() {
     const section = (sec) => {
       const all = z[sec.key], shown = keep(all);
       const chips = shown.length
-        ? `<div class="zoog-chips">${shown.map(w => `<span class="zoog-chip ${sec.chip}${sec.key === 'rejected' && z.latestRejected.includes(w.toLowerCase()) ? ' new' : ''}">${escapeHtml(w)}</span>`).join('')}</div>`
+        ? `<div class="zoog-chips">${shown.map(w => `<span class="zoog-chip ${sec.chip}${sec.key === 'rejected' && z.latestRejected.includes(w.toLowerCase()) ? ' new' : ''}">${escapeHtml(w)}${sec.key === 'rejected' && z.rejectedMatch[w.toLowerCase()] ? `<span class="zoog-why" title="too similar to">${escapeHtml(z.rejectedMatch[w.toLowerCase()])}</span>` : ''}</span>`).join('')}</div>`
         : `<div class="zoog-empty">${q ? 'No matches.' : 'None yet.'}</div>`;
       return `<div class="zoog-section" id="${sec.id}"><div class="zoog-h ${sec.cls}">${sec.title}<span class="zoog-n">${q ? shown.length + ' of ' + all.length : all.length}</span></div>${chips}</div>`;
     };

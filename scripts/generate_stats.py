@@ -123,6 +123,16 @@ def _edit_distance(a, b):
     return prev[-1]
 
 
+def _is_close(w, e):
+    """The similarity rule for two already-cleaned words."""
+    if e == w:
+        return True
+    if len(w) >= 5 and len(e) >= 5 and (w in e or e in w):
+        return True
+    limit = max(1, int(0.25 * max(len(w), len(e))))
+    return abs(len(w) - len(e)) <= limit and _edit_distance(w, e) <= limit
+
+
 def too_similar(word, existing_norm):
     """True if the word is, or nearly is, something already in the dictionary:
     same once punctuation is ignored, one contains the other (5+ letters), or
@@ -130,15 +140,25 @@ def too_similar(word, existing_norm):
     w = _norm_term(word)
     if not w:
         return True
-    for e in existing_norm:
-        if e == w:
-            return True
-        if len(w) >= 5 and len(e) >= 5 and (w in e or e in w):
-            return True
-        limit = max(1, int(0.25 * max(len(w), len(e))))
-        if abs(len(w) - len(e)) <= limit and _edit_distance(w, e) <= limit:
-            return True
-    return False
+    return any(_is_close(w, e) for e in existing_norm)
+
+
+def _originals(terms):
+    """Cleaned spelling -> the spelling as written (the first one wins)."""
+    out = {}
+    for t in terms:
+        out.setdefault(_norm_term(t), t)
+    out.pop("", None)
+    return out
+
+
+def closest_match(word, originals):
+    """The existing word (as written) that `word` is closest to under the
+    similarity rule, or "" if none."""
+    w = _norm_term(word)
+    hits = [e for e in originals if _is_close(w, e)]
+    best = min(hits, key=lambda e: (_edit_distance(w, e), e), default="")
+    return originals.get(best, "")
 
 
 def parse_zoog_text(text):
@@ -161,8 +181,26 @@ def parse_zoog_text(text):
     old_normal, _, rest = rest.partition(ZOOG_NONSENSE_MARKER)
     old_nonsense, _, old_rejected = rest.partition(ZOOG_REJECTED_MARKER)
     extra = [l.strip() for l in (old_normal + "\n" + old_nonsense).splitlines() if l.strip() and not l.startswith("---")]
-    extra += [w.strip() for w in old_rejected.replace("\n", ",").split(",") if w.strip()]
+    extra += list(parse_rejected(old_rejected))
     return main, extra, seed
+
+
+def parse_rejected(section_text):
+    """The rejected section as {word: word it was too close to}. New lines look
+    like 'word | match'; old lines are one comma-separated list (no match)."""
+    out = {}
+    for l in section_text.splitlines():
+        l = l.strip()
+        if not l:
+            continue
+        if " | " in l:
+            w, _, m = l.partition(" | ")
+            out[w.strip()] = m.strip()
+        else:
+            for w in l.split(","):
+                if w.strip():
+                    out[w.strip()] = ""
+    return out
 
 
 def fetch_zoog_state():
@@ -190,6 +228,7 @@ def predict_next_word(terms, seed_text, order=4, avoid=(), rejected=None):
     already split into single spellings (see split_spellings)."""
     start, end = "\x02", "\x03"
     existing_norm = list({_norm_term(t) for t in [*terms, *avoid] if _norm_term(t)})
+    originals = _originals([*terms, *avoid])  # to show the match as it was written
     table = {}
     for t in terms:
         padded = start * order + t + end
@@ -234,11 +273,11 @@ def predict_next_word(terms, seed_text, order=4, avoid=(), rejected=None):
                 # Only near-misses are remembered; a word identical to an existing
                 # entry or zoog is just skipped, not listed as rejected.
                 if rejected is not None and _norm_term(word) not in existing_norm:
-                    rejected.append(word)  # remembered for the Zoogliography
+                    rejected[word] = closest_match(word, originals)  # remembered for the Zoogliography
     return ""
 
 
-def update_zoogliography(word, nonsense_word="", rejected=(), known_norm=(), seed_key="", latest_rejected=()):
+def update_zoogliography(word, nonsense_word="", rejected=None, known_norm=(), seed_key="", latest_rejected=(), match_for=None):
     """Add the new words to the two lists at the bottom of Zoogliography.txt
     (each kept A to Z): 'Predicted Next Word', then 'Predicted Nonsense Word'.
     Everything above the first marker is left untouched."""
@@ -272,15 +311,20 @@ def update_zoogliography(word, nonsense_word="", rejected=(), known_norm=(), see
             f"{base}\n\n{ZOOG_MARKER}\n{merged(old_normal, word)}"
             f"\n\n{ZOOG_NONSENSE_MARKER}\n{merged(old_nonsense, nonsense_word)}"
         )
-        # Rejected guesses: every earlier one plus new ones, A to Z, on one comma-separated line.
-        rejected_all = {w.strip() for w in old_rejected.replace("\n", ",").split(",") if w.strip()}
-        for w in rejected:
-            if w.lower() not in {r.lower() for r in rejected_all}:
-                rejected_all.add(w)
+        # Rejected guesses: every earlier one plus new ones, A to Z, one per line as "word | match".
+        rejected_all = parse_rejected(old_rejected)
+        have = {r.lower(): r for r in rejected_all}
+        for w, m in (rejected or {}).items():
+            if w.lower() not in have:
+                rejected_all[w] = m
         # Drop any that are identical to an existing word or zoog (old ones too).
-        rejected_all = {w for w in rejected_all if _norm_term(w) not in known_norm}
+        rejected_all = {w: m for w, m in rejected_all.items() if _norm_term(w) not in known_norm}
+        # Older ones saved without a match get one worked out now.
+        if match_for:
+            rejected_all = {w: m or match_for(w) for w, m in rejected_all.items()}
         if rejected_all:
-            new_text += f"\n\n{ZOOG_REJECTED_MARKER}\n" + ", ".join(sorted(rejected_all, key=str.lower))
+            lines = [f"{w} | {m}" if m else w for w, m in sorted(rejected_all.items(), key=lambda x: x[0].lower())]
+            new_text += f"\n\n{ZOOG_REJECTED_MARKER}\n" + "\n".join(lines)
         new_text += "\n\n--- Seed: " + json.dumps([seed_key, word, nonsense_word, list(latest_rejected)], ensure_ascii=False) + " ---"
         if new_text == text.rstrip("\n"):
             return  # already up to date
@@ -903,7 +947,7 @@ def main():
     # Rejected guesses are only dropped if identical to a real word or main-list zoog.
     known_norm = {_norm_term(t) for t in [*spellings, *zoog_main] if _norm_term(t)}
     seed_key = f"{total_entries}|{latest_word_term}"
-    rejected_words = []  # guesses thrown out for being too similar, saved to the Zoogliography
+    rejected_words = {}  # guesses thrown out for being too similar -> the word each was too close to
     # Rejected guesses added for the newest dictionary entry (the page shades these).
     latest_rejected = []
     if saved and len(saved) >= 3 and saved[0] == seed_key and (saved[1] or saved[2]):
@@ -923,7 +967,9 @@ def main():
     try:
         if rejected_words:
             latest_rejected = list(rejected_words)
-        update_zoogliography(predicted_word, predicted_nonsense_word, rejected_words, known_norm, seed_key, latest_rejected)
+        pool = _originals([*spellings, *zoog_main])
+        update_zoogliography(predicted_word, predicted_nonsense_word, rejected_words, known_norm, seed_key, latest_rejected,
+                             match_for=lambda w: closest_match(w, pool))
     except Exception as e:
         print(f"Zoogliography update failed: {e}", file=sys.stderr)
 

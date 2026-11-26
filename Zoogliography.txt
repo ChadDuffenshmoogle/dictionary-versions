@@ -119,6 +119,7 @@ zummer
 --- Predicted Next Word ---
 -ironicle
 /gifs/grief-geomething
+a fly with detriment
 a gun
 a watchen
 abus
@@ -799,6 +800,7 @@ Spwensaush
 sque wensactib
 squism
 squoutonnechee
+stact
 stalgity
 sual
 subilbentult yorcon
@@ -963,6 +965,7 @@ edIndecorous | Indecorous
 eese | feese
 ega-golf | mega-golf
 Elpharice | alpharice
+emportchântea | portchânteau
 en fries
 eous | ROUS
 eppered chee | speppered cheeburgmaterpicktchupstardnyunbun
@@ -1005,6 +1008,7 @@ horse never | a watched dead horse never lives
 hsque | Bethsque
 ie juice | movie juice
 ightenment | brainlightenment
+ilicover civcopcivcop | over civcop
 imate | duximate
 inely | lowrorkirkenuinely
 ip'n'dip | prescrip'n'dip
@@ -1016,9 +1020,11 @@ Island | New York Texas Mississippi North Carolina Connecticut Tennessee New Mex
 it ain't brealism | breal
 It's pop the Cunicular | cunicular
 itic
+itudinal apprecessor | the final apprecessor
 J. C. D. P'Dough | C. D. Pough
 J. C. D. Pough | C. D. Pough
 JCmander | mander
+k, or live | rink, or liver
 kaboompault year | kaboompa
 Katter | Kit Katter
 king
@@ -1122,6 +1128,7 @@ rorg | forg
 rrible | torrible
 rschbeased | perschbeased
 rtile | artile
+rus Banet | Torus Banet
 rxiscyz | bidvefowghijaklimnaptioquerxiscyz
 s inter | fifth-round McDonald's interview
 s ous | ROUS
@@ -1134,6 +1141,8 @@ shippi | Pandora's shipping container
 shock | auraculture shock
 shoobatidoobie doubt | shoobatidoob
 sificated
+singles | Raisingles
+sion | hion
 skill issue | quill issue
 sobrescalient | sobrescalientes
 socrong | socrongles
@@ -1207,4 +1216,4 @@ ylvania | New York Texas Mississippi North Carolina Connecticut Tennessee New Me
 yorick | poor yorick
 zeldopolyplug | zeldopoly
 
---- Seed: ["1499|Rovry", "abus", "slobeforte", ["opoly"]] ---
+--- Seed: ["1500|RVR", "a fly with detriment", "stact", ["ilicover civcopcivcop", "k, or live", "sion", "singles", "itudinal apprecessor", "rus Banet", "emportchântea"]] ---

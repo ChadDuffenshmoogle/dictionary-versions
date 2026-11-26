@@ -423,6 +423,7 @@ spillo
 spurello / keep Talking
 squarius
 squipedanticling
+ssissississitude
 stched
 Stevo-Speciation
 Sticky Illing
@@ -689,6 +690,7 @@ Kirdearth
 kito-zoone
 koyger
 L + gret
+leSabotoza
 lexicescrounche no
 lin' urertheme
 linuenimer cirti
@@ -868,6 +870,7 @@ zonyuni
 zoostrainio
 
 --- Rejected Predictions (too similar to an existing word) ---
+& que | q'de
 't look a dead horse | Don't look a dead horse in the mouth
 -chine | wachine
 -coupon | anti-coupon
@@ -991,6 +994,7 @@ f tens of nones | tens of ones
 fang | bang
 ffective | effective annelism
 fiction | fictionalism
+final | the final boss
 foobrepploozonioccior | brepp
 frame-advances | frame-advancer
 garignatured servitude
@@ -1199,6 +1203,7 @@ ucher | brucher
 udley's Law | Thudley's Law
 uflect | manuflect
 ullingmart | Celingmart
+umannealism | uncannealism
 umbis | shlumbis
 umpkincorns-on-the-cord | ecord
 uncharcaner | charcane
@@ -1225,6 +1230,7 @@ xicon | Cyclexicon
 Y.O.S. | C.Y.O.S.
 ylvania | New York Texas Mississippi North Carolina Connecticut Tennessee New Mexico Minnesota New Hampshire Hawaii Iowa Alaska Kansas South Carolina Louisiana Ohio Georgia Nevada Utah Wyoming Colorado Oklahoma Maine Alabama North Dakota Kentucky Illinois Vermont Michigan Wisconsin Delaware Washington South Dakota Pennsylvania Massachusetts Maryland Rhode Island Montana Indiana Missouri West Virginia Virginia New Jersey Florida Oregon Idaho Arizona Arkansas California Nebraska Toast
 yorick | poor yorick
+yrizzito | drizzito
 zeldopolyplug | zeldopoly
 
---- Seed: ["1504|spip", "earsomethington", "calmathmble", ["ivieve"]] ---
+--- Seed: ["1505|guacrebecheepictomolip", "ssissississitude", "leSabotoza", ["umannealism", "yrizzito", "final", "& que"]] ---

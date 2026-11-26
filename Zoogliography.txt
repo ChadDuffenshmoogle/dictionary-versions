@@ -290,6 +290,7 @@ key dead horse
 lage
 Lake Great Again
 Lake Great Americated
+ld's in the bed
 lexicolantea
 lexicontraverbous
 lliteraterate
@@ -610,6 +611,7 @@ eyes
 face
 Farightil
 fdhfjday
+ffwicappart
 fler
 Flift-perthabble
 Foroo
@@ -961,6 +963,7 @@ frame-advances | frame-advancer
 garignatured servitude
 geese" | feese
 gglegum | bugglegum
+ght from the chase | the chase
 goosh kaspoocy | spoocy
 grorkirkenuine | grork
 guation | ambiguation page
@@ -1031,6 +1034,8 @@ ntasesquess | sesque
 nteur | neur
 ntial | supressential
 ntuer | racontuer
+oach | coach
+obiography | biographe
 ocessor | word processor
 of tens | tens of tens
 of-age | going-of-age
@@ -1064,6 +1069,7 @@ pourtfolm | Shourtfolm
 pressenge | messenge
 protozooglio | protozoog
 Pside | K. K. Psider
+purello | spurello
 q'de | de
 qchikchecrois | bacturqchikchecrois
 quarius | Engiquarius
@@ -1137,12 +1143,14 @@ touffe | stouffe
 tradamus | Postradamus
 train | contraindict
 treache | treach
+trish | thrish
 tund
 uavamole | guavamole
 ucher | brucher
 udley's Law | Thudley's Law
 uflect | manuflect
 ullingmart | Celingmart
+umbis | shlumbis
 umpkincorns-on-the-cord | ecord
 uncharcaner | charcane
 unchartmonger | chartmonger
@@ -1169,4 +1177,4 @@ ylvania | New York Texas Mississippi North Carolina Connecticut Tennessee New Me
 yorick | poor yorick
 zeldopolyplug | zeldopoly
 
---- Seed: ["1489|griece", "ef occurencher", "yrorse bug", []] ---
+--- Seed: ["1490|Mean Joe", "ld's in the bed", "ffwicappart", ["oach", "obiography", "umbis", "purello", "ght from the chase", "trish"]] ---

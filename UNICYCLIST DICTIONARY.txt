@@ -1,4 +1,4 @@
-UNICYCLIST DICTIONARY v1504 - November 26, 2026 12:28 PM CDT
+UNICYCLIST DICTIONARY v1505 - November 26, 2026 02:33 PM CDT
 
 -----DICTIONARY PROPER-----
 
@@ -2900,6 +2900,8 @@ Spherical Cylindario (p.n.) - geometric version of Cyril (Derpatronic Bomb Defus
 spilk / sapilk (n.) - 1. spit + milk
 2. salt/pepper milk
 ---------------------------------------------
+
+spip (n.) - spinach dip
 
 ---------------------------------------------
 spish (adj.) - slang for suspicious, specifically when you feel too cringe saying 'sus'. The same fate will come for it too one day though.

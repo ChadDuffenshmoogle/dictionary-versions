@@ -372,29 +372,6 @@ def get_all_commits():
     return commits
 
 
-def get_dictionary_filenames():
-    """List every dictionary version file in the repo root."""
-    resp = api_get(f"{API_ROOT}/git/trees/{GITHUB_BRANCH}")
-    files = resp.json()["tree"]
-    names = [
-        f["path"] for f in files
-        if f["type"] == "blob"
-        and f["path"].startswith(FILE_PREFIX) and f["path"].endswith(FILE_EXTENSION)
-    ]
-    return names
-
-
-def parse_version_tuple(filename):
-    m = re.search(r"v\.?(\d+)\.(\d+)\.(\d+)", filename, re.IGNORECASE)
-    if not m:
-        return (0, 0, 0)
-    return tuple(int(x) for x in m.groups())
-
-
-def get_latest_filename(filenames):
-    return max(filenames, key=parse_version_tuple)
-
-
 def fetch_dictionary_file(filename):
     """Read the dictionary file through the API instead of raw.githubusercontent.com,
     whose cache can serve a version that is several minutes old."""

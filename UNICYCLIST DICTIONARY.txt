@@ -1,4 +1,4 @@
-UNICYCLIST DICTIONARY v1499 - November 26, 2026 12:15 AM CDT
+UNICYCLIST DICTIONARY v1500 - November 26, 2026 12:03 PM CDT
 
 -----DICTIONARY PROPER-----
 
@@ -2598,6 +2598,8 @@ Etymology: Rory Campbell
 ROUS (v.) - Rodents of unusual size. (I dont think they exist)
 
 rovian (adj.) - relating to irascible feathered creatures
+
+Rovry (p.n.) - virtual Rory
 
 ---------------------------------------------
 the royal Wii (n.)- a Nintendo Wii signifying unity, and thus is used for multiplayer often

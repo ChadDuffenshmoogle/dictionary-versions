@@ -1,5 +1,5 @@
 # Related files (what this file needs for certain things):
-# - UNICYCLIST DICTIONARY v*.txt (repo "dictionary-versions", written by the bot's dictionary_manager.py): the latest version is read for entry counts and word stats.
+# - UNICYCLIST DICTIONARY.txt (repo "dictionary-versions", one file updated by the bot's dictionary_manager.py, version vXXXX = word count): read for entry counts and word stats.
 # - Zoogliography.txt (same repo, edited by the bot's zoog: / dezoog: commands in main.py and dictionary_manager.py): read for the zoog list, and the predicted, nonsense, and rejected sections are written back here (autozoogs and rejected autozoogs are made in this file).
 # - 178,691 Scrabble Legal Words.txt (same repo): the Scrabble word list used for legal-word checks and the daily word game lists.
 # - site/stats.json and site/wordlist/ (one folder up from this script): output files read by the stats page and the word game page.
@@ -897,9 +897,10 @@ def main():
             a["term"], cur_ts = nxt[2], nxt[0]
 
     # --- Latest file: entries, letter breakdown, word/definition extremes ---
-    filenames = get_dictionary_filenames()
-    latest_name = get_latest_filename(filenames)
+    latest_name = f"{FILE_PREFIX}{FILE_EXTENSION}"
     content = fetch_dictionary_file(latest_name)
+    version_match = re.search(r"\s(v[\d.]+)\s", content.split("\n", 1)[0])
+    latest_label = f"{FILE_PREFIX} {version_match.group(1)}{FILE_EXTENSION}" if version_match else latest_name
 
     # The CORPUS block is just a comma-joined index and can't reliably be
     # split back into terms -- a term that itself contains a comma (e.g.
@@ -1072,7 +1073,7 @@ def main():
         row["scrabble"] = scrabble_statuses.get(row["term"], "illegal")
 
     stats = {
-        "latest_version": latest_name,
+        "latest_version": latest_label,
         "latest_word_term": latest_word_term,
         "predicted_word": predicted_word,
         "predicted_nonsense_word": predicted_nonsense_word,

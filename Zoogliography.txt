@@ -238,6 +238,7 @@ falacticut that
 fiction Joe
 filibernum
 food-look a dead horse
+foof
 forbontaverage bus
 freasonably penappage
 freement
@@ -646,6 +647,7 @@ hundes
 I casst
 I whom to chog
 I'mpronetrillanompreade
+ilbod
 inbeicarqisre?
 ing thlogerpinnakoy
 inin
@@ -850,6 +852,7 @@ angles | eyeangles
 anolineus | anoline
 aquavacheggle | aquavache
 ard knife | anti beard knife
+aroosan | Paroosan Caroost of Noop juice
 aseine | caseine
 atic | aic
 atle | arle
@@ -975,6 +978,7 @@ irambus | enirambus
 is Banorg | Louis Banorg
 iscyz | bidvefowghijaklimnaptioquerxiscyz
 Island | New York Texas Mississippi North Carolina Connecticut Tennessee New Mexico Minnesota New Hampshire Hawaii Iowa Alaska Kansas South Carolina Louisiana Ohio Georgia Nevada Utah Wyoming Colorado Oklahoma Maine Alabama North Dakota Kentucky Illinois Vermont Michigan Wisconsin Delaware Washington South Dakota Pennsylvania Massachusetts Maryland Rhode Island Montana Indiana Missouri West Virginia Virginia New Jersey Florida Oregon Idaho Arizona Arkansas California Nebraska Toast
+it ain't brealism | breal
 It's pop the Cunicular | cunicular
 itic
 J. C. D. P'Dough | C. D. Pough
@@ -1013,7 +1017,9 @@ neball | Rorctangle Coneball
 New Mexicontuer
 nillain | dillain
 ning of tens of tens | tens of tens of tens
+nivened | enknivened
 Not Chee! | I Can't Believe It's Not Chee!
+ntasesquess | sesque
 nteur | neur
 ntial | supressential
 ntuer | racontuer
@@ -1074,9 +1080,11 @@ rrible | torrible
 rschbeased | perschbeased
 rtile | artile
 rxiscyz | bidvefowghijaklimnaptioquerxiscyz
+s inter | fifth-round McDonald's interview
 s ous | ROUS
 sault year | sault years
 sBorgborg | orgborg
+scfila | tsscfila
 scravenge | scravenger
 seggchebisc | baceggchebisc
 shippi | Pandora's shipping container
@@ -1153,4 +1161,4 @@ ylvania | New York Texas Mississippi North Carolina Connecticut Tennessee New Me
 yorick | poor yorick
 zeldopolyplug | zeldopoly
 
---- Seed: ["1487|brochoup", "-ironicle", "che Honic", ["oring", "exicon"]] ---
+--- Seed: ["1489|grephew", "foof", "ilbod", ["nivened", "s inter", "scfila", "ntasesquess", "it ain't brealism", "aroosan"]] ---

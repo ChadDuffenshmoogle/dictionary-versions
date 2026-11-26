@@ -427,7 +427,7 @@ breadache (n.) - when the last bit of bread in the bag gets all deformed
 
 breadche (n.) - a sandwich consisting of bread with a chee (grilled cheese)
 
-Breaders (n.) - Brothers of the Bread server
+Breaders (p.n.) - Brothers of the Bread server
 
 breakfast-for-dinner (n.) - a dinner consisting of dishes traditionally considered 'breakfast food'. does not include late-night breakfasts, which are primarily served later.
 

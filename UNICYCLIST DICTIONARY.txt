@@ -1,4 +1,4 @@
-UNICYCLIST DICTIONARY v1505 - November 26, 2026 02:33 PM CDT
+UNICYCLIST DICTIONARY v1506 - November 26, 2026 02:47 PM CDT
 
 -----DICTIONARY PROPER-----
 
@@ -1552,6 +1552,8 @@ grork (n.) - ground pork
 grunions (n.) - green onions
 
 grurkey (n.) - ground turkey
+
+guacrebecheepictomolip (n.) - 7-layer dip, generally or specifically the guac-sour cream-beans-chee-pico-tomato-olive variation
 
 guavamole (n.) - a dip made of mashed guava, salt, and citrus juice (sorry, guava doesn't count as citrus. Find something else!)
 

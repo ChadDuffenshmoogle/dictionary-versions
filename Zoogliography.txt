@@ -223,6 +223,7 @@ elevellum
 Elphaphiliptic
 Elphaphilopoiesis
 empossitude
+enefit of gab
 enieviviever my decay
 ent-propen
 enters
@@ -598,6 +599,7 @@ encraicapoisguyge
 eniamer
 ens bunge
 entarooball al
+er's thre
 erpall
 erperscresquoter
 estichievertaling
@@ -854,6 +856,7 @@ angles | eyeangles
 anolineus | anoline
 aquavacheggle | aquavache
 ard knife | anti beard knife
+arignak | garignak
 aroosan | Paroosan Caroost of Noop juice
 aseine | caseine
 atic | aic
@@ -942,6 +945,7 @@ er cake | comforter cake
 er civilic | undercover civilicop
 er sound the land
 ering | duffering
+erior | serior
 es ce | eice
 essuous | distressuous
 ewnce | askewnce
@@ -1163,4 +1167,4 @@ ylvania | New York Texas Mississippi North Carolina Connecticut Tennessee New Me
 yorick | poor yorick
 zeldopolyplug | zeldopoly
 
---- Seed: ["1489|griece", "here's mous", "fdhfjday", []] ---
+--- Seed: ["1488|grephew", "enefit of gab", "er's thre", ["erior", "arignak"]] ---

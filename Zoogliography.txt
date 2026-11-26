@@ -474,6 +474,7 @@ walling
 water are Washing
 wateral
 wateraterloose
+wghijaklimnaption Joe
 who doesn't know way
 whoozler
 word proper noun
@@ -723,6 +724,7 @@ pensio
 penti
 pery Fah
 pewortfoomby
+phortic
 picanie
 pinlimnachette
 pionash
@@ -904,6 +906,7 @@ cifer | polief occifer
 cluzzle | clossword cluzzle
 co by
 cobble | cobblerstone
+concrasty | crasty
 contasesquipedanti | sesquip
 copious | copiously hoosted
 cranger | crangent
@@ -960,6 +963,7 @@ er sound the land
 ering | duffering
 erior | serior
 es ce | eice
+essis | any press is bad press
 essuous | distressuous
 ewnce | askewnce
 exicon | xicon
@@ -1014,6 +1018,7 @@ legster | legsterity
 libernum | hibernum
 lism | lim
 lives | a watched dead horse never lives
+lize | rlize
 lomobile | allomobile
 longworm | longwormism
 loose | waterloose
@@ -1036,6 +1041,7 @@ nal apprecessor
 nauschecroismore | croismore
 neball | Rorctangle Coneball
 New Mexicontuer
+nforch | forch
 nillain | dillain
 ning of tens of tens | tens of tens of tens
 nivened | enknivened
@@ -1188,4 +1194,4 @@ ylvania | New York Texas Mississippi North Carolina Connecticut Tennessee New Me
 yorick | poor yorick
 zeldopolyplug | zeldopoly
 
---- Seed: ["1494|Bayesian Joe", "rink, or liver", "yla Millippent cars", ["mula yawn"]] ---
+--- Seed: ["1495|Neurojoegenetive disease", "wghijaklimnaption Joe", "phortic", ["concrasty", "nforch", "lize", "essis"]] ---

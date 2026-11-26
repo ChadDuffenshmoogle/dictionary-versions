@@ -1,4 +1,4 @@
-UNICYCLIST DICTIONARY v1491 - November 25, 2026 10:55 PM CDT
+UNICYCLIST DICTIONARY v1492 - November 25, 2026 11:58 PM CDT
 
 -----DICTIONARY PROPER-----
 
@@ -1438,6 +1438,8 @@ gawgeous (adj.) - well-groomed
 gawgometry (n.) - the practice of measuring how beautiful the ambient environment is
 
 Genievivieve (p.n.) - feminine given name.
+
+Geothmetic Meandian Joe (n.) - A Joe combining the properties of Geometric Mean Joe, Arithmetic Mean Joe, and Median Joe.
 
 Gepardee (p.n.) - a streaming service where periodically the movie will pause, prompting the user to answer multiple quiz questions about what they have just watched. Getting the answer wrong will bill your subscription again, and lock you out for 3 days
 

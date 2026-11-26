@@ -1,4 +1,4 @@
-UNICYCLIST DICTIONARY v1502 - November 26, 2026 12:07 PM CDT
+UNICYCLIST DICTIONARY v1503 - November 26, 2026 12:09 PM CDT
 
 -----DICTIONARY PROPER-----
 
@@ -1602,6 +1602,8 @@ hamp (v.) - to hold clothing
 HandsLinkedIndeed (p.n.) - superplatform for job postings, containing every single available job that exists
 Etymology: Handshake + LinkedIn + Indeed
 ---------------------------------------------
+
+hanitize (v.) - to clean one's hands
 
 hardcore Frisbee (n.) - slang for the glass disc in a microwave
 

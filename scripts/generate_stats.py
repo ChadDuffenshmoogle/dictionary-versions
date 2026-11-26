@@ -870,7 +870,7 @@ def build_dictionary_pdf(rows, out_path, version_label):
         except Exception:
             continue
 
-    body = ParagraphStyle("body", fontName=font, fontSize=8.2, leading=9.4,
+    body = ParagraphStyle("body", fontName=font, fontSize=8.8, leading=10,
                           leftIndent=6, firstLineIndent=-6, spaceAfter=0.8)
     letter_style = ParagraphStyle("letter", fontName=bold, fontSize=15, leading=18, alignment=TA_CENTER,
                                   spaceBefore=8, spaceAfter=3, keepWithNext=1)

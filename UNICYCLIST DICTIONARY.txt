@@ -1,4 +1,4 @@
-UNICYCLIST DICTIONARY v1496 - November 26, 2026 12:09 AM CDT
+UNICYCLIST DICTIONARY v1497 - November 26, 2026 12:11 AM CDT
 
 -----DICTIONARY PROPER-----
 
@@ -147,6 +147,8 @@ anti-ironing board (n.) - another word for an oven mitt
 antifanity (n.) - respectful and edifying language
 
 antifound (adj.) - trivial or shallow
+
+Antijoeotics (n.) - Injected medication administered quickly to treat the sudden onset of Joe
 
 antitode (n.) - a substance that counteracts the effects of health supplements
 

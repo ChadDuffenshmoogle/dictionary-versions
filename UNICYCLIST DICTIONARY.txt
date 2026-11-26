@@ -1,4 +1,4 @@
-UNICYCLIST DICTIONARY v1506 - November 26, 2026 02:49 PM CDT
+UNICYCLIST DICTIONARY v1507 - November 26, 2026 03:05 PM CDT
 
 -----DICTIONARY PROPER-----
 
@@ -3481,6 +3481,8 @@ yeur (part.) - yes
 yihk (inter.) - an amicable greeting
 
 yincers (n.) - the hands of a Pittsburgh native
+
+yope (n.) - Yoplait yogurt
 
 you can lead a dead horse to water, but you can't make it drink, or live (expr.) - you can make something easier for someone, but they may decide not to do it (or it's impossible)
 

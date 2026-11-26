@@ -841,68 +841,170 @@ def scrabble_status(term, scrabble_set):
 
 
 def build_dictionary_pdf(rows, out_path, version_label):
-    """Writes a dense 3-column PDF of the whole dictionary (word, sound, part of speech, meanings)."""
+    """Writes the whole dictionary as a printed-book style PDF: a cover page, then three columns of
+    small serif type with a guide word in each top corner and a page number."""
     from xml.sax.saxutils import escape
     from reportlab.lib.pagesizes import letter
     from reportlab.lib.styles import ParagraphStyle
+    from reportlab.lib.enums import TA_CENTER
     from reportlab.lib import colors
     from reportlab.pdfbase import pdfmetrics
     from reportlab.pdfbase.ttfonts import TTFont
-    from reportlab.platypus import BaseDocTemplate, PageTemplate, Frame, Paragraph
+    from reportlab.pdfbase.pdfmetrics import stringWidth
+    from reportlab.platypus import BaseDocTemplate, PageTemplate, Frame, Paragraph, NextPageTemplate, PageBreak
 
-    # DejaVu Condensed is narrow and has lots of symbols; plain Helvetica is the backup.
-    font = "Helvetica"
-    try:
-        fdir = "/usr/share/fonts/truetype/dejavu/"
-        pdfmetrics.registerFont(TTFont("DJ", fdir + "DejaVuSansCondensed.ttf"))
-        pdfmetrics.registerFont(TTFont("DJ-B", fdir + "DejaVuSansCondensed-Bold.ttf"))
-        pdfmetrics.registerFont(TTFont("DJ-I", fdir + "DejaVuSansCondensed-Oblique.ttf"))
-        pdfmetrics.registerFontFamily("DJ", normal="DJ", bold="DJ-B", italic="DJ-I", boldItalic="DJ-B")
-        font = "DJ"
-    except Exception:
-        pass
+    # A serif font with plain, bold and italic looks, like a printed dictionary. The first one found
+    # is used; the built-in Times is the backup (it cannot show some special letters).
+    font, bold, italic = "Times-Roman", "Times-Bold", "Times-Italic"
+    candidates = [
+        ("/usr/share/fonts/truetype/liberation/LiberationSerif-", ["Regular", "Bold", "Italic", "BoldItalic"]),
+        ("/usr/share/fonts/truetype/dejavu/DejaVuSerif", ["", "-Bold", "-Italic", "-BoldItalic"]),
+    ]
+    for prefix, suffixes in candidates:
+        try:
+            for name, suffix in zip(["DictR", "DictB", "DictI", "DictBI"], suffixes):
+                pdfmetrics.registerFont(TTFont(name, f"{prefix}{suffix}.ttf"))
+            pdfmetrics.registerFontFamily("DictR", normal="DictR", bold="DictB", italic="DictI", boldItalic="DictBI")
+            font, bold, italic = "DictR", "DictB", "DictI"
+            break
+        except Exception:
+            continue
 
-    body = ParagraphStyle("body", fontName=font, fontSize=6, leading=6.8, spaceAfter=1.4)
-    letter_style = ParagraphStyle("letter", fontName=font, fontSize=9, leading=11, spaceBefore=3,
-                                  spaceAfter=2, backColor=colors.HexColor("#dddddd"), borderPadding=(1, 2, 1, 2))
+    body = ParagraphStyle("body", fontName=font, fontSize=7.2, leading=8.2,
+                          leftIndent=6, firstLineIndent=-6, spaceAfter=0.8)
+    letter_style = ParagraphStyle("letter", fontName=bold, fontSize=15, leading=18, alignment=TA_CENTER,
+                                  spaceBefore=8, spaceAfter=3, keepWithNext=1)
 
     def entry_markup(r):
         text = f"<b>{escape(r['term'])}</b>"
         if r.get("pronunciation"):
             text += " " + escape(r["pronunciation"])
+        parts = []
         for sec in r["sections"]:
             defs = [d["text"] for d in sec["defs"] if d["text"]]
             if not defs:
                 continue
             pos = f"<i>{escape(sec['pos'])}</i> " if sec["pos"] else ""
-            meaning = defs[0] if len(defs) == 1 else " ".join(f"({i}) {t}" for i, t in enumerate(defs, 1))
-            text += " " + pos + escape(meaning)
-        return text
+            if len(defs) == 1:
+                meaning = escape(defs[0])
+            else:
+                meaning = " ".join(f"<b>{i}</b> {escape(t)}" for i, t in enumerate(defs, 1))
+            parts.append(pos + meaning)
+        return text + " " + " &mdash; ".join(parts) if parts else text
 
     entries = sorted((r for r in rows if r["primary"]), key=lambda r: sort_key_ignore_punct(r["term"]))
 
-    margin, gap = 28, 10
     page_w, page_h = letter
-    col_w = (page_w - 2 * margin - 2 * gap) / 3
+    side, gap, bottom, top = 40, 14, 36, 50
+    col_w = (page_w - 2 * side - 2 * gap) / 3
 
-    def footer(canvas, doc):
-        canvas.setFont(font, 6)
-        canvas.drawCentredString(page_w / 2, 14, f"UNICYCLIST DICTIONARY {version_label}  -  page {doc.page}")
+    # ---- cover: burgundy with gold lettering and a double gold border ----
+    gold = colors.HexColor("#d9b95b")
+    cover_bg = colors.HexColor("#5e0f1d")
+    month_year = datetime.now(CENTRAL).strftime("%B %Y")
 
-    doc = BaseDocTemplate(out_path, pagesize=letter, leftMargin=margin, rightMargin=margin,
-                          topMargin=margin, bottomMargin=margin + 6, title="UNICYCLIST DICTIONARY")
-    frames = [Frame(margin + i * (col_w + gap), margin + 6, col_w, page_h - 2 * margin - 6,
-                    leftPadding=0, rightPadding=0, topPadding=0, bottomPadding=0) for i in range(3)]
-    doc.addPageTemplates([PageTemplate(id="cols", frames=frames, onPage=footer)])
+    def spaced(canvas, y, text, face, size, space):
+        w = stringWidth(text, face, size) + space * (len(text) - 1)
+        t = canvas.beginText(page_w / 2 - w / 2, y)
+        t.setFont(face, size)
+        t.setCharSpace(space)
+        t.textOut(text)
+        canvas.drawText(t)
 
-    story, current = [], None
+    def rule(canvas, y):
+        cx = page_w / 2
+        canvas.setLineWidth(1)
+        canvas.line(120, y, cx - 12, y)
+        canvas.line(cx + 12, y, page_w - 120, y)
+        p = canvas.beginPath()
+        p.moveTo(cx - 8, y)
+        p.lineTo(cx, y + 6)
+        p.lineTo(cx + 8, y)
+        p.lineTo(cx, y - 6)
+        p.close()
+        canvas.drawPath(p, fill=1, stroke=0)
+
+    def draw_cover(canvas, doc):
+        canvas.saveState()
+        canvas.setFillColor(cover_bg)
+        canvas.rect(0, 0, page_w, page_h, stroke=0, fill=1)
+        canvas.setStrokeColor(gold)
+        canvas.setFillColor(gold)
+        canvas.setLineWidth(3)
+        canvas.rect(28, 28, page_w - 56, page_h - 56, stroke=1, fill=0)
+        canvas.setLineWidth(1)
+        canvas.rect(38, 38, page_w - 76, page_h - 76, stroke=1, fill=0)
+        spaced(canvas, 660, "GILBERT'S", bold, 54, 4)
+        rule(canvas, 622)
+        spaced(canvas, 575, "UNABRIDGED", bold, 24, 8)
+        spaced(canvas, 520, "DICTIONARY", bold, 44, 5)
+        rule(canvas, 485)
+        canvas.setLineWidth(2)
+        canvas.circle(page_w / 2, 340, 72, stroke=1, fill=0)
+        canvas.setLineWidth(0.8)
+        canvas.circle(page_w / 2, 340, 66, stroke=1, fill=0)
+        canvas.setFont(bold, 78)
+        canvas.drawCentredString(page_w / 2, 313, "G")
+        canvas.setFont(italic, 14)
+        canvas.drawCentredString(page_w / 2, 215, f"Containing {len(entries):,} entries")
+        canvas.setFont(font, 11)
+        canvas.drawCentredString(page_w / 2, 192, f"Version {version_label}  -  {month_year}")
+        spaced(canvas, 90, "THE UNICYCLIST DICTIONARY", font, 10, 3)
+        canvas.restoreState()
+
+    # ---- inside pages: thin lines between columns, guide words and page number at the top ----
+    def draw_rules(canvas, doc):
+        canvas.saveState()
+        canvas.setLineWidth(0.3)
+        for i in (1, 2):
+            x = side + i * col_w + (i - 0.5) * gap
+            canvas.line(x, bottom, x, page_h - top)
+        canvas.restoreState()
+
+    def draw_header(canvas, doc):
+        terms = doc.page_terms.get(doc.page)
+        y = page_h - top + 14
+        canvas.saveState()
+        canvas.setFont(bold, 8.5)
+        if terms:
+            canvas.drawString(side, y, terms[0])
+            canvas.drawRightString(page_w - side, y, terms[-1])
+        canvas.setFont(font, 8.5)
+        canvas.drawCentredString(page_w / 2, y, str(doc.page - 1))
+        canvas.setLineWidth(0.4)
+        canvas.line(side, y - 4, page_w - side, y - 4)
+        canvas.restoreState()
+
+    class DictDoc(BaseDocTemplate):
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+            self.page_terms = {}   # page number -> the words on that page, in order
+
+        def afterFlowable(self, flowable):
+            term = getattr(flowable, "term", None)
+            if term:
+                self.page_terms.setdefault(self.page, []).append(term)
+
+    doc = DictDoc(out_path, pagesize=letter, title="Gilbert's Unabridged Dictionary", author="Gilbert")
+    cover_frame = Frame(0, 0, 10, 10)
+    col_frames = [Frame(side + i * (col_w + gap), bottom, col_w, page_h - top - bottom,
+                        leftPadding=0, rightPadding=0, topPadding=0, bottomPadding=0) for i in range(3)]
+    doc.addPageTemplates([
+        PageTemplate(id="cover", frames=[cover_frame], onPage=draw_cover),
+        PageTemplate(id="cols", frames=col_frames, onPage=draw_rules, onPageEnd=draw_header),
+    ])
+
+    story = [NextPageTemplate("cols"), PageBreak()]
+    current = None
     for r in entries:
         first = sort_key_ignore_punct(r["term"])[:1].upper()
         first = first if first.isalpha() else "#"
         if first != current:
             current = first
-            story.append(Paragraph(f"<b>{escape(first)}</b>", letter_style))
-        story.append(Paragraph(entry_markup(r), body))
+            story.append(Paragraph(escape(first), letter_style))
+        para = Paragraph(entry_markup(r), body)
+        para.term = r["term"]
+        story.append(para)
     doc.build(story)
 
 

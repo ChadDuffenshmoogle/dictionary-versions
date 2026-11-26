@@ -840,6 +840,72 @@ def scrabble_status(term, scrabble_set):
     return "illegal"
 
 
+def build_dictionary_pdf(rows, out_path, version_label):
+    """Writes a dense 3-column PDF of the whole dictionary (word, sound, part of speech, meanings)."""
+    from xml.sax.saxutils import escape
+    from reportlab.lib.pagesizes import letter
+    from reportlab.lib.styles import ParagraphStyle
+    from reportlab.lib import colors
+    from reportlab.pdfbase import pdfmetrics
+    from reportlab.pdfbase.ttfonts import TTFont
+    from reportlab.platypus import BaseDocTemplate, PageTemplate, Frame, Paragraph
+
+    # DejaVu Condensed is narrow and has lots of symbols; plain Helvetica is the backup.
+    font = "Helvetica"
+    try:
+        fdir = "/usr/share/fonts/truetype/dejavu/"
+        pdfmetrics.registerFont(TTFont("DJ", fdir + "DejaVuSansCondensed.ttf"))
+        pdfmetrics.registerFont(TTFont("DJ-B", fdir + "DejaVuSansCondensed-Bold.ttf"))
+        pdfmetrics.registerFont(TTFont("DJ-I", fdir + "DejaVuSansCondensed-Oblique.ttf"))
+        pdfmetrics.registerFontFamily("DJ", normal="DJ", bold="DJ-B", italic="DJ-I", boldItalic="DJ-B")
+        font = "DJ"
+    except Exception:
+        pass
+
+    body = ParagraphStyle("body", fontName=font, fontSize=6, leading=6.8, spaceAfter=1.4)
+    letter_style = ParagraphStyle("letter", fontName=font, fontSize=9, leading=11, spaceBefore=3,
+                                  spaceAfter=2, backColor=colors.HexColor("#dddddd"), borderPadding=(1, 2, 1, 2))
+
+    def entry_markup(r):
+        text = f"<b>{escape(r['term'])}</b>"
+        if r.get("pronunciation"):
+            text += " " + escape(r["pronunciation"])
+        for sec in r["sections"]:
+            defs = [d["text"] for d in sec["defs"] if d["text"]]
+            if not defs:
+                continue
+            pos = f"<i>{escape(sec['pos'])}</i> " if sec["pos"] else ""
+            meaning = defs[0] if len(defs) == 1 else " ".join(f"({i}) {t}" for i, t in enumerate(defs, 1))
+            text += " " + pos + escape(meaning)
+        return text
+
+    entries = sorted((r for r in rows if r["primary"]), key=lambda r: sort_key_ignore_punct(r["term"]))
+
+    margin, gap = 28, 10
+    page_w, page_h = letter
+    col_w = (page_w - 2 * margin - 2 * gap) / 3
+
+    def footer(canvas, doc):
+        canvas.setFont(font, 6)
+        canvas.drawCentredString(page_w / 2, 14, f"UNICYCLIST DICTIONARY {version_label}  -  page {doc.page}")
+
+    doc = BaseDocTemplate(out_path, pagesize=letter, leftMargin=margin, rightMargin=margin,
+                          topMargin=margin, bottomMargin=margin + 6, title="UNICYCLIST DICTIONARY")
+    frames = [Frame(margin + i * (col_w + gap), margin + 6, col_w, page_h - 2 * margin - 6,
+                    leftPadding=0, rightPadding=0, topPadding=0, bottomPadding=0) for i in range(3)]
+    doc.addPageTemplates([PageTemplate(id="cols", frames=frames, onPage=footer)])
+
+    story, current = [], None
+    for r in entries:
+        first = sort_key_ignore_punct(r["term"])[:1].upper()
+        first = first if first.isalpha() else "#"
+        if first != current:
+            current = first
+            story.append(Paragraph(f"<b>{escape(first)}</b>", letter_style))
+        story.append(Paragraph(entry_markup(r), body))
+    doc.build(story)
+
+
 def main():
     commits = get_all_commits()
 
@@ -1076,6 +1142,14 @@ def main():
     out_path = os.path.join(os.path.dirname(__file__), "..", "site", "stats.json")
     with open(out_path, "w") as f:
         json.dump(stats, f, indent=2)
+
+    # A dense PDF of the whole dictionary, linked from the bottom of the stats page.
+    # A failure here must never stop the stats from being built.
+    try:
+        build_dictionary_pdf(raw_rows, os.path.join(os.path.dirname(__file__), "..", "site", "dictionary.pdf"),
+                             latest_label.replace(FILE_PREFIX, "").replace(FILE_EXTENSION, "").strip())
+    except Exception as e:
+        print(f"Dictionary PDF failed: {e}", file=sys.stderr)
 
     # One plain word list per word length (lowercase), so the daily word game page
     # only downloads the length it needs.

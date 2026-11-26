@@ -280,6 +280,7 @@ I will two bird delives
 I'mpreside
 I'mpress cast is cake
 I'mpressert
+iche
 illswitchen
 impreside
 in of which manoeuvre!
@@ -671,6 +672,7 @@ I casst
 I whom to chog
 I'mpronetrillanompreade
 ilbod
+imatch
 inbeicarqisre?
 ing thlogerpinnakoy
 inin
@@ -993,6 +995,7 @@ goosh kaspoocy | spoocy
 grorkirkenuine | grork
 guation | ambiguation page
 h on | xon
+hanize | diaphotothanize
 hardcore | hardcore Frisbee
 he DuS' | the DuS'
 he Forgort | forgort
@@ -1216,4 +1219,4 @@ ylvania | New York Texas Mississippi North Carolina Connecticut Tennessee New Me
 yorick | poor yorick
 zeldopolyplug | zeldopoly
 
---- Seed: ["1500|RVR", "a fly with detriment", "stact", ["ilicover civcopcivcop", "k, or live", "sion", "singles", "itudinal apprecessor", "rus Banet", "emportchântea"]] ---
+--- Seed: ["1501|VRV", "iche", "imatch", ["hanize"]] ---

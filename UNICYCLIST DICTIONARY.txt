@@ -1,4 +1,4 @@
-UNICYCLIST DICTIONARY v1497 - November 26, 2026 12:11 AM CDT
+UNICYCLIST DICTIONARY v1498 - November 26, 2026 12:13 AM CDT
 
 -----DICTIONARY PROPER-----
 
@@ -2000,6 +2000,8 @@ McJagger (p.n.) - new McDonald's burger made with rock candy
 McKnuckleSandwich (p.n.) - part of a new line-up of McDonalds "Angry Meals", along with; Filet o' Fist; Oreo McFury; Chicken KickNuggets; McRib(s broken); Big Smac; Egg McRoughin'; Angry Meal; Quarter Pounder with Cheese
 
 McSlog (p.n.) - new McDonald's burger made of coagulated grill residue
+
+mdev Joe (n.) - Standard Deviation Joe when he uses the ping command
 
 Mean Joe (n.) - synonym for Average Joe
 

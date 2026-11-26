@@ -121,6 +121,7 @@ zummer
 /gifs/grief-geomething
 a gun
 a watchen
+abus
 agno
 ain of a kaboomph on it
 ain't care mouth
@@ -781,6 +782,7 @@ Skily corgmart
 skitiver
 skub
 skyrines
+slobeforte
 sniand quider
 snoseig
 songiquic
@@ -1071,6 +1073,7 @@ on a twinkie
 onkrolling in the DuS' | the DuS'
 onsign | monsign
 oozles | anywhoozles
+opoly | zeldopoly
 or lives
 ordieding theetricegg | trice
 ordle! | Clordle
@@ -1204,4 +1207,4 @@ ylvania | New York Texas Mississippi North Carolina Connecticut Tennessee New Me
 yorick | poor yorick
 zeldopolyplug | zeldopoly
 
---- Seed: ["1498|Gaussian Joe", "mouth Dakota Pennsylvan", "hunce", ["is bad procrasty", "hern Illinoying", "pad kid"]] ---
+--- Seed: ["1499|Rovry", "abus", "slobeforte", ["opoly"]] ---

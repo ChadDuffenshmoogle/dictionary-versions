@@ -427,6 +427,7 @@ supraesser
 supresilaries
 sweating bang
 t around McDonalism
+t know cawyatt
 Talbotter'zza
 tarade
 taraditu!
@@ -718,6 +719,7 @@ onesifs
 oreggaillane-che fuble
 orseggchee
 orty
+ostullipste
 oushies
 oussouterad fowl
 p'pmpt
@@ -1196,4 +1198,4 @@ ylvania | New York Texas Mississippi North Carolina Connecticut Tennessee New Me
 yorick | poor yorick
 zeldopolyplug | zeldopoly
 
---- Seed: ["1496|Antijoeotics", "r my decapitatizatio", "alligiquing-off gund", []] ---
+--- Seed: ["1497|mdev Joe", "t know cawyatt", "ostullipste", []] ---

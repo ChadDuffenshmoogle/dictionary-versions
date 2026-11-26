@@ -1,4 +1,4 @@
-UNICYCLIST DICTIONARY v1501 - November 26, 2026 12:06 PM CDT
+UNICYCLIST DICTIONARY v1502 - November 26, 2026 12:06 PM CDT
 
 -----DICTIONARY PROPER-----
 
@@ -3361,6 +3361,8 @@ v'you (v. + pron.) - contraction of "have you"
 volunte (v.) - to volunteer
 
 volunteerer (n.) - one who volunteers
+
+VRV (n.) - virtual reality vehicle
 
 wachine (n.) - a washing machine
 

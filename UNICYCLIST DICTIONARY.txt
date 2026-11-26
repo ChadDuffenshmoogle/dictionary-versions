@@ -1,4 +1,4 @@
-UNICYCLIST DICTIONARY v1500 - November 26, 2026 12:03 PM CDT
+UNICYCLIST DICTIONARY v1501 - November 26, 2026 12:06 PM CDT
 
 -----DICTIONARY PROPER-----
 
@@ -2611,6 +2611,8 @@ ruckmaking (n.) - being a famous person and doing a bunch of scandalous and ques
 ---------------------------------------------
 
 rustworthy (a.) - used to describe an old tool or vehicle that is not worth the cost of repairing or renewing the appearance of
+
+RVR (n.) - recreation virtual reality, such as Pikmin VR.
 
 ---------------------------------------------
 Etymology: learned borrowing from Latin

@@ -1,4 +1,4 @@
-UNICYCLIST DICTIONARY v1494 - November 26, 2026 12:06 AM CDT
+UNICYCLIST DICTIONARY v1495 - November 26, 2026 12:07 AM CDT
 
 -----DICTIONARY PROPER-----
 
@@ -316,6 +316,8 @@ barlineus (adj.) - along the line which passes through both Barsema Hall and Bar
 bartriangular (adj.) - within the geographical triangle formed when connecting the vertices of Barsema Hall, Barsema Alumni and Visitors Center, and the Barsema Hall of Champions in the Yordon Center
 
 baumkuchen (n.) - alt. of Baumkuchen (case-variant)
+
+Bayesian Joe (n.) - an Average Joe that changes his opinions when warranted by newly arisen evidence
 
 bayoeignet (n.) -  /bay-yo-nyay/ A bayonet with a beignet kebab'd onto it
 

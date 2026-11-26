@@ -870,7 +870,7 @@ def build_dictionary_pdf(rows, out_path, version_label):
         except Exception:
             continue
 
-    body = ParagraphStyle("body", fontName=font, fontSize=7.2, leading=8.2,
+    body = ParagraphStyle("body", fontName=font, fontSize=8.2, leading=9.4,
                           leftIndent=6, firstLineIndent=-6, spaceAfter=0.8)
     letter_style = ParagraphStyle("letter", fontName=bold, fontSize=15, leading=18, alignment=TA_CENTER,
                                   spaceBefore=8, spaceAfter=3, keepWithNext=1)
@@ -909,6 +909,7 @@ def build_dictionary_pdf(rows, out_path, version_label):
         t.setFont(face, size)
         t.setCharSpace(space)
         t.textOut(text)
+        t.setCharSpace(0)   # otherwise the spacing leaks into the text drawn after it
         canvas.drawText(t)
 
     def rule(canvas, y):

@@ -161,7 +161,7 @@
 //  - categories.json        site/categories.json in the repo. connections.html reads it for the daily puzzle; this page edits it.
 //  - picks.json             site/picks.json in the repo. Editor's Picks; holds dictionary words, so renames and deletes must reach it too.
 //  - stats.json             made by generate_stats.py. Used for the word list here and the valid words in connections.html.
-//  - UNICYCLIST DICTIONARY v1.2.N.txt   the real dictionary. The bot, generate_stats.py and this page all read or write it. Edits made straight on GitHub do NOT update categories.json or picks.json.
+//  - UNICYCLIST DICTIONARY.txt   the real dictionary (one file; its first line holds the version vXXXX = word count). The bot, generate_stats.py and this page all read or write it. Edits made straight on GitHub do NOT update categories.json or picks.json.
 //  - localStorage 'ghToken' the sign-in is shared by every edit on this page (words, categories, picks).
 //  - localStorage 'theme'   shared with connections.html and the other pages.
 //  - connections.html       linked from the menu; sends people back here with wiktionary.html#c= to add categories.
@@ -1277,7 +1277,6 @@ const OWNER = 'ChadDuffenshmoogle';
 const REPO = 'dictionary-versions';
 const BRANCH = 'main';
 const API = `https://api.github.com/repos/${OWNER}/${REPO}`;
-const NAME_PATTERN = /^UNICYCLIST DICTIONARY v1\.2\.(\d+)\.txt$/;
 const DIVIDER = /^-{20,}\s*$/;
 const DIV45 = '-'.repeat(45);
 
@@ -1310,7 +1309,7 @@ async function unlockToken(password) {
   }
 }
 
-function fileNameFor(number) { return `UNICYCLIST DICTIONARY v1.2.${number}.txt`; }
+function fileNameFor() { return 'UNICYCLIST DICTIONARY.txt'; }
 
 function ghHeaders(token, raw) {
   const h = { Accept: raw ? 'application/vnd.github.raw+json' : 'application/vnd.github+json' };
@@ -1329,15 +1328,13 @@ async function fetchLiveFile(token) {
   const treeRes = await fetch(`${API}/git/trees/${BRANCH}`, { headers: ghHeaders(token), cache: 'no-store' });
   if (!treeRes.ok) throw new Error('Could not list the repo files (' + treeRes.status + ').');
   const tree = (await treeRes.json()).tree;
-  let number = 0, sha = '';
-  tree.forEach(f => {
-    const m = NAME_PATTERN.exec(f.path);
-    if (m && parseInt(m[1], 10) > number) { number = parseInt(m[1], 10); sha = f.sha; }
-  });
-  if (!number) throw new Error('No dictionary file found in the repo.');
-  const res = await fetch(`${API}/contents/${encodeURIComponent(fileNameFor(number))}?ref=${BRANCH}`, { headers: ghHeaders(token, true), cache: 'no-store' });
-  if (!res.ok) throw new Error('Could not load v1.2.' + number + ' (' + res.status + ').');
-  return { number, sha, text: await res.text() };
+  const file = tree.find(f => f.path === fileNameFor());
+  if (!file) throw new Error('No dictionary file found in the repo.');
+  const res = await fetch(`${API}/contents/${encodeURIComponent(fileNameFor())}?ref=${BRANCH}`, { headers: ghHeaders(token, true), cache: 'no-store' });
+  if (!res.ok) throw new Error('Could not load the dictionary (' + res.status + ').');
+  const text = await res.text();
+  const vm = /\s(v[\d.]+)\s/.exec(text.split('\n', 1)[0]);
+  return { number: vm ? vm[1] : '', sha: file.sha, text };
 }
 
 // ---- reading the file the same way the bot and generate_stats.py do ----
@@ -1782,7 +1779,7 @@ async function openEditor(entry) {
       const oldTerm = entry.term;
       const number = await pushChange(
         (lines, u) => placeEntry(lines, u, inner, block, renamed ? newTerm : null),
-        n => renamed ? `Edit dictionary v1.2.${n}: rename '${oldTerm}' to '${newTerm}'` : `Edit dictionary v1.2.${n}: update '${oldTerm}'`
+        n => renamed ? `Edit dictionary ${n}: rename '${oldTerm}' to '${newTerm}'` : `Edit dictionary ${n}: update '${oldTerm}'`
       );
       if (renamed) { try { await syncCatsForWord(oldTerm, newTerm); } catch (err) { alert('The word was saved, but its custom categories could not be updated: ' + err.message); } }
       if (newModel) applyModelToEntry(entry, newModel);
@@ -1799,7 +1796,7 @@ async function openEditor(entry) {
     if (!confirm(`Are you sure you want to delete "${entry.term}" from the dictionary?`)) return;
     try {
       const oldTerm = entry.term;
-      await pushChange((lines, u) => removeEntry(lines, u), n => `Edit dictionary v1.2.${n}: remove '${oldTerm}'`);
+      await pushChange((lines, u) => removeEntry(lines, u), n => `Edit dictionary ${n}: remove '${oldTerm}'`);
       try { await syncCatsForWord(oldTerm, null); } catch (err) { alert('The word was deleted, but its custom categories could not be updated: ' + err.message); }
       entries = entries.filter(e => e !== entry);
       resortEntries();

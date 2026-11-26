@@ -1,4 +1,4 @@
-UNICYCLIST DICTIONARY v1498 - November 26, 2026 12:13 AM CDT
+UNICYCLIST DICTIONARY v1499 - November 26, 2026 12:15 AM CDT
 
 -----DICTIONARY PROPER-----
 
@@ -1434,6 +1434,8 @@ the gansö center (n.) - the Convo Center when the roof has bein claimed by the 
 garf (n.) - lasagna puke
 
 garignak (v.) - an utterance of ambiguity used to break the silence.
+
+Gaussian Joe (n.) - a normal guy; his traits and opinions are symmetrically distributed between the highest and lowest extremes. He is also a fan of bells.
 
 gaven (adj.) - unable to taste 
 

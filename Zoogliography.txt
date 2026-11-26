@@ -323,6 +323,7 @@ more
 mortem
 mortequididdle
 Mours falsettaphilipius
+mouth Dakota Pennsylvan
 Mozartriangulario
 Mozartriate
 mpkincomedia
@@ -661,6 +662,7 @@ hion
 hird hoom for
 hoobort's
 hoott
+hunce
 hundes
 I casst
 I whom to chog
@@ -993,6 +995,7 @@ heea penappapppen | penpinappapppen
 heebun | burgcheebun
 heedy | heedy howdy heimlich manoeuvre!
 hemiclor | chemiclor
+hern Illinoying | illinoying
 hesauseggchebisc | sauseggchebisc
 hingle | chchingles
 horse never | a watched dead horse never lives
@@ -1003,6 +1006,7 @@ imate | duximate
 inely | lowrorkirkenuinely
 ip'n'dip | prescrip'n'dip
 irambus | enirambus
+is bad procrasty | crasty
 is Banorg | Louis Banorg
 iscyz | bidvefowghijaklimnaptioquerxiscyz
 Island | New York Texas Mississippi North Carolina Connecticut Tennessee New Mexico Minnesota New Hampshire Hawaii Iowa Alaska Kansas South Carolina Louisiana Ohio Georgia Nevada Utah Wyoming Colorado Oklahoma Maine Alabama North Dakota Kentucky Illinois Vermont Michigan Wisconsin Delaware Washington South Dakota Pennsylvania Massachusetts Maryland Rhode Island Montana Indiana Missouri West Virginia Virginia New Jersey Florida Oregon Idaho Arizona Arkansas California Nebraska Toast
@@ -1076,6 +1080,7 @@ osomatosomatiche | somatosomatic
 ostwards | utwards
 over civcop | overcover undercover civcopcivcop
 owave | meh-crowave
+pad kid | dophypad kid
 parcheeburg | cheeburg
 pardy | triple jeopardy
 patic | patiche
@@ -1198,4 +1203,4 @@ ylvania | New York Texas Mississippi North Carolina Connecticut Tennessee New Me
 yorick | poor yorick
 zeldopolyplug | zeldopoly
 
---- Seed: ["1497|mdev Joe", "t know cawyatt", "ostullipste", []] ---
+--- Seed: ["1498|Gaussian Joe", "mouth Dakota Pennsylvan", "hunce", ["is bad procrasty", "hern Illinoying", "pad kid"]] ---

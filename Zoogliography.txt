@@ -123,6 +123,7 @@ a fly with detriment
 a gun
 a watchen
 abus
+ad horsitis
 agno
 ain of a kaboomph on it
 ain't care mouth
@@ -513,6 +514,7 @@ aing
 aitoo
 all maxxis
 alligiquing-off gund
+alquesqueurse
 an Peradia
 and fre
 ang annee
@@ -1127,6 +1129,7 @@ rexologist | aeologist
 rgborg | orgborg
 riery | dairiery
 rip'n'dip | prescrip'n'dip
+rkwee | urkwee
 rlize | marlize
 rollinow cawyatt | cullinow cawyatt
 rorg | forg
@@ -1221,4 +1224,4 @@ ylvania | New York Texas Mississippi North Carolina Connecticut Tennessee New Me
 yorick | poor yorick
 zeldopolyplug | zeldopoly
 
---- Seed: ["1502|hanitize", "s to compah", "oniothmant", []] ---
+--- Seed: ["1503|Cyvril", "ad horsitis", "alquesqueurse", ["rkwee"]] ---

@@ -1,4 +1,4 @@
-UNICYCLIST DICTIONARY v1503 - November 26, 2026 12:19 PM CDT
+UNICYCLIST DICTIONARY v1504 - November 26, 2026 12:28 PM CDT
 
 -----DICTIONARY PROPER-----
 
@@ -926,6 +926,8 @@ Cyrilindrical (p.n.) - Cryil if he were to transform into a can
 Cyrilism (n.) - a Cyril synonym, such as pershlaps, bacheggle, or kreeb
 
 Cyrorg (p.n.) - Robo Rory
+
+Cyvril (p.n.) - virtual <@418457364392312833>; Cyril in derpatronic form
 
 dairiery (n.) - a commercial establishment that sells dairy products, such as Oberweis
 

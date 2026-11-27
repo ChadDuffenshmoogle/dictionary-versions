@@ -319,6 +319,7 @@ make a gun
 Make it drink, or lives
 malenmajusclisyphus
 manubrizzal
+mbus plunum
 McKnucks
 Meather
 meatle
@@ -833,6 +834,7 @@ squism
 squoutonnechee
 stact
 stalgity
+stinder
 sual
 subilbentult yorcon
 Sulti Mexaxxin
@@ -924,6 +926,7 @@ aroosan | Paroosan Caroost of Noop juice
 aseine | caseine
 ashingle | hingle
 atic | aic
+atio | atic
 atle | arle
 ault yearm | sault years
 axxing | willmaxxing
@@ -980,6 +983,7 @@ debrorg | Icebrorg
 del major | duel major
 derpatronomy | derpatronic
 despepperer | despepperizer
+didn't ask? | who didn't ask?
 ding
 ditar | ditarozitortrigmanimospagemacavatappililitititininininini
 dobowl | Qdobowl
@@ -1006,6 +1010,7 @@ edIndecorous | Indecorous
 eese | feese
 ega-golf | mega-golf
 eggchecroissancer | eggchecrois
+eggcheeburgchevated | eggchesauseggchevated
 Elpharice | alpharice
 emportchântea | portchânteau
 en fries
@@ -1047,6 +1052,7 @@ heea penappapppen | penpinappapppen
 heebun | burgcheebun
 heedy | heedy howdy heimlich manoeuvre!
 hemiclor | chemiclor
+hemuff | chemuff
 hern Illinoying | illinoying
 hesauseggchebisc | sauseggchebisc
 hingle | chchingles
@@ -1059,6 +1065,7 @@ ightenment | brainlightenment
 ilicover civcopcivcop | over civcop
 illowonion | Hallowonion
 imate | duximate
+indario | Spherical Cylindario
 inely | lowrorkirkenuinely
 ip'n'dip | prescrip'n'dip
 irambus | enirambus
@@ -1126,6 +1133,7 @@ of tens | tens of tens
 of-age | going-of-age
 ogdra effectic
 ogpile | zoogpile
+oilale | pourtnoilale
 oking | food-looking
 ologist | aeologist
 on a twinkie
@@ -1253,6 +1261,7 @@ treache | treach
 trish | thrish
 tund
 uavamole | guavamole
+ubius | Ukkubius
 ucher | brucher
 udley's Law | Thudley's Law
 uflect | manuflect
@@ -1283,6 +1292,7 @@ worg | forg
 x wachinoup | chinoup
 xical Joe
 xicon | Cyclexicon
+xplose | explose
 Y.O.S. | C.Y.O.S.
 ylvania | New York Texas Mississippi North Carolina Connecticut Tennessee New Mexico Minnesota New Hampshire Hawaii Iowa Alaska Kansas South Carolina Louisiana Ohio Georgia Nevada Utah Wyoming Colorado Oklahoma Maine Alabama North Dakota Kentucky Illinois Vermont Michigan Wisconsin Delaware Washington South Dakota Pennsylvania Massachusetts Maryland Rhode Island Montana Indiana Missouri West Virginia Virginia New Jersey Florida Oregon Idaho Arizona Arkansas California Nebraska Toast
 yorick | poor yorick
@@ -1291,4 +1301,4 @@ zeldopolyplug | zeldopoly
 zono | bono
 zzbert caféte | Gilbert caféte
 
---- Seed: ["1517|Murr & Durr", "rbontalarm", "icounta", ["ooking"]] ---
+--- Seed: ["1518|jurisimprudence", "mbus plunum", "stinder", ["eggcheeburgchevated", "atio", "hemuff", "oilale", "indario", "ubius", "xplose", "didn't ask?"]] ---

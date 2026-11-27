@@ -1,4 +1,4 @@
-UNICYCLIST DICTIONARY v1520 - November 27, 2026 01:08 PM CDT
+UNICYCLIST DICTIONARY v1521 - November 27, 2026 02:11 PM CDT
 
 -----DICTIONARY PROPER-----
 
@@ -3477,6 +3477,11 @@ xon (n.) - someone who was once your son
 xoog (n.) - a former zoog that has since matured and earned a definition; an "ex-zoog"
 
 Yahtzeeconomy (n.) - the state of luck in a game of Yahtzee as it progresses
+
+---------------------------------------------
+yakish yaccish (adj.) - characteristic of or resembling a yak
+Pronunciation: / yackish /
+---------------------------------------------
 
 yakotaki (n.) - an octopus-flavored Taki
 

@@ -359,6 +359,7 @@ onions
 ople
 ord-blington
 orner sore shoes
+orus Banorg
 out of a kaboosific
 over twyxt
 pal cunnelism
@@ -767,6 +768,7 @@ pogia
 poinchewse
 polguygerlarld tatert
 ponsm
+porder
 pose a freni
 posetts
 preatin
@@ -1280,4 +1282,4 @@ zeldopolyplug | zeldopoly
 zono | bono
 zzbert caféte | Gilbert caféte
 
---- Seed: ["1514|Vigille & Tee", "rse is alive diseased", "ueuction", ["illowonion", "axxing", "over civcopcivcop", "ogpile"]] ---
+--- Seed: ["1515|Ince & O'Raight", "orus Banorg", "porder", []] ---

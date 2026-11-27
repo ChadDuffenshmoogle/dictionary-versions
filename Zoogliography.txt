@@ -191,6 +191,7 @@ cut Tennesser
 cycsmith a gun
 cyndrica Again
 Cyriling
+dead horse is aliverspi
 Declism
 deliveringitos
 delives
@@ -863,6 +864,7 @@ upmefuzza
 ut te
 ve traverig
 vigmalt
+vigrus
 vwas sculo
 Wajuible
 Walas ofly
@@ -891,6 +893,7 @@ zoostrainio
 -coupon | anti-coupon
 -rot | B.O.T
 . Pough | C. D. Pough
+A.M.F | B.A.M.F
 able | arle
 acontue | racontue
 ad horses | death by 1000 dead horses
@@ -1116,6 +1119,7 @@ on a twinkie
 onkrolling in the DuS' | the DuS'
 onsign | monsign
 ontraductor | contraductor
+oompa | kaboompa
 oople | Goople
 oozles | anywhoozles
 opoly | zeldopoly
@@ -1135,6 +1139,7 @@ pardy | triple jeopardy
 patic | patiche
 peace | wreak peace
 Perpoundem fordle
+phabrothe | brothe
 phoria | disphoria
 pistandary alcolade | alcolade
 ponymous | pershlaponymous
@@ -1181,6 +1186,7 @@ seggchebisc | baceggchebisc
 shippi | Pandora's shipping container
 shock | auraculture shock
 shoobatidoobie doubt | shoobatidoob
+sider | K. K. Psider
 sificated
 singles | Raisingles
 sion | hion
@@ -1206,6 +1212,7 @@ stund | stchewstund
 stunt double | publicity stunt double
 sure | sue
 tabon | mastabon
+tblatt | echatblatt
 ter at Fredder
 the bridge | water over the bridge
 the dead | the dead horse in the room
@@ -1267,4 +1274,4 @@ zeldopolyplug | zeldopoly
 zono | bono
 zzbert caféte | Gilbert caféte
 
---- Seed: ["1512|Dell & Quincy", "e pot callify", "ultheefrig", ["ontraductor", "f laughte", "stunt double", "zzbert caféte", "zono", "hris"]] ---
+--- Seed: ["1513|Durr & Scell", "dead horse is aliverspi", "vigrus", ["oompa", "phabrothe", "A.M.F", "tblatt", "sider"]] ---

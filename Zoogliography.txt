@@ -332,6 +332,7 @@ merito beatle
 methingo
 mfortherology
 millexiamateral
+Montaverbonkrolling
 more
 mortem
 mortequididdle
@@ -691,6 +692,7 @@ hird hoom for
 hoobirdn'dog
 hoobort's
 hoott
+hroklor cate
 hunce
 hundes
 I casst
@@ -946,6 +948,7 @@ break a leg | don't break a leg
 breale | breal
 brogger | brogler
 C. D'Poba'Denucks | H. S. C. D'Poba'Denucks
+cadian rythm | rorcadian rythm
 cal Joe | Radical Joe
 carpe | carper
 case cake | pillowcase cake
@@ -960,6 +963,7 @@ choost of the royal Wii | the royal Wii
 Chrishting | inchrishting
 chusettaphilosophe | philosophe
 cifer | polief occifer
+cilk | calk
 cluzzle | clossword cluzzle
 co by
 cobble | cobblerstone
@@ -1029,6 +1033,7 @@ erior | serior
 es ce | eice
 essis | any press is bad press
 essuous | distressuous
+etriment | detrimental
 ewa Lipa | Spewa Lipa
 ewnce | askewnce
 exicon | xicon
@@ -1068,6 +1073,7 @@ icha | iche
 ie juice | movie juice
 ightenment | brainlightenment
 ilicover civcopcivcop | over civcop
+ill die on it drink, or | drink
 illowonion | Hallowonion
 imate | duximate
 indario | Spherical Cylindario
@@ -1313,4 +1319,4 @@ zeldopolyplug | zeldopoly
 zono | bono
 zzbert caféte | Gilbert caféte
 
---- Seed: ["1518|jurisimprudence / jurimprudence", "u print", "rbreak thsmanda hord", ["aroosted", "penappapppen", "teef", "reache", "eckleSandwich", "o Hong Shoo!", "aboompa", "rity", "oncrastinator", "stein"]] ---
+--- Seed: ["1519|Inshur & Cefrod", "Montaverbonkrolling", "hroklor cate", ["etriment", "ill die on it drink, or", "cilk", "cadian rythm"]] ---

@@ -399,6 +399,7 @@ quinultimissience
 r my decapitatizatio
 raine Alabama Northy
 Raisingles
+rbontalarm
 rink, or liver
 rkegches
 rorcadian a dead horse
@@ -693,6 +694,7 @@ hundes
 I casst
 I whom to chog
 I'mpronetrillanompreade
+icounta
 ilbod
 imatch
 inbeicarqisre?
@@ -1130,6 +1132,7 @@ on a twinkie
 onkrolling in the DuS' | the DuS'
 onsign | monsign
 ontraductor | contraductor
+ooking | oking
 oompa | kaboompa
 oople | Goople
 oozles | anywhoozles
@@ -1288,4 +1291,4 @@ zeldopolyplug | zeldopoly
 zono | bono
 zzbert caféte | Gilbert caféte
 
---- Seed: ["1516|Finn & Shull", "-down", "azallaworg", ["nappapen out onestic", "ra's shippi", "e horse never civcop", "quill a funeral"]] ---
+--- Seed: ["1517|Murr & Durr", "rbontalarm", "icounta", ["ooking"]] ---

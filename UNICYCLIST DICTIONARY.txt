@@ -1,4 +1,4 @@
-UNICYCLIST DICTIONARY v1523 - November 27, 2026 03:48 PM CDT
+UNICYCLIST DICTIONARY v1524 - November 27, 2026 03:49 PM CDT
 
 -----DICTIONARY PROPER-----
 
@@ -2422,6 +2422,8 @@ Postradamus (n.) - 1. generic nickname for one who predicts events after they ha
 posttoled / postwarned (adj.) - told at an inconveniently late time, or even after the fact.
 
 the pot calling the horse dead (expr.) - criticizing someone for a fault that is painfully obvious already
+
+potatmaxxing (v.) - carb-loading
 
 pourtnoilale (n.) - a word containing a, e, i, o, and u
 

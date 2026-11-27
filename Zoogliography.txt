@@ -481,6 +481,7 @@ ts Marylander-in-chee
 tuna of my decapitates
 two robs dozen
 u candypumpkincorn
+u print
 ualaterator
 ultrap supraessenge
 ultrap supresilario
@@ -790,6 +791,7 @@ quorck
 Rad upic
 Raing temunitupingunx
 raver th th kah
+rbreak thsmanda hord
 ricar
 rievamble
 rof grish
@@ -905,6 +907,7 @@ zoostrainio
 . Pough | C. D. Pough
 A.M.F | B.A.M.F
 able | arle
+aboompa | kaboompa
 acontue | racontue
 ad horses | death by 1000 dead horses
 adia | adida
@@ -923,6 +926,7 @@ aquavacheggle | aquavache
 ard knife | anti beard knife
 arignak | garignak
 aroosan | Paroosan Caroost of Noop juice
+aroosted | hoosted
 aseine | caseine
 ashingle | hingle
 atic | aic
@@ -1004,6 +1008,7 @@ easonablesquirk | squirk
 eball | Rorctangle Coneball
 echatblatt | Googlechatblatt
 echeese | "The mouse who chooses the trap has no right to complain of the cheese"
+eckleSandwich | dwich
 ecorous | Indecorous
 ectic | New York Texas Mississippi North Carolina Connecticut Tennessee New Mexico Minnesota New Hampshire Hawaii Iowa Alaska Kansas South Carolina Louisiana Ohio Georgia Nevada Utah Wyoming Colorado Oklahoma Maine Alabama North Dakota Kentucky Illinois Vermont Michigan Wisconsin Delaware Washington South Dakota Pennsylvania Massachusetts Maryland Rhode Island Montana Indiana Missouri West Virginia Virginia New Jersey Florida Oregon Idaho Arizona Arkansas California Nebraska Toast
 edIndecorous | Indecorous
@@ -1126,6 +1131,7 @@ nteur | neur
 ntial | supressential
 ntuer | racontuer
 nuend | innuend
+o Hong Shoo! | Xiao Hong Shoo!
 oach | coach
 obiography | biographe
 ocessor | word processor
@@ -1137,6 +1143,7 @@ oilale | pourtnoilale
 oking | food-looking
 ologist | aeologist
 on a twinkie
+oncrastinator | concrastinator
 onkrolling in the DuS' | the DuS'
 onsign | monsign
 ontraductor | contraductor
@@ -1161,6 +1168,7 @@ parcheeburg | cheeburg
 pardy | triple jeopardy
 patic | patiche
 peace | wreak peace
+penappapppen | penpinappapppen
 Perpoundem fordle
 phabrothe | brothe
 phoria | disphoria
@@ -1185,6 +1193,7 @@ raint | subsequent restraint
 rating | choperating
 rcovergize | overgize
 rdastinator | crastinator
+reache | treache
 reak peace | wreak peace
 reakfast-for-dinner | breakfast-for-dinner
 repear | disrepear
@@ -1192,6 +1201,7 @@ rexologist | aeologist
 rgborg | orgborg
 riery | dairiery
 rip'n'dip | prescrip'n'dip
+rity | -ity
 rkwee | urkwee
 rlize | marlize
 rollinow cawyatt | cullinow cawyatt
@@ -1228,6 +1238,7 @@ spose-it-tion | dispose-it-tion
 sproinks | croinks
 Spweem SheckleSandwich | Spweem Sheckles
 squares | Cristian Bordabesquares
+stein | to be Frankenstein
 stic | stice
 stinator | crastinator
 stradamus | Postradamus
@@ -1238,6 +1249,7 @@ stunt double | publicity stunt double
 sure | sue
 tabon | mastabon
 tblatt | echatblatt
+teef | seef
 ter at Fredder
 the bridge | water over the bridge
 the dead | the dead horse in the room
@@ -1301,4 +1313,4 @@ zeldopolyplug | zeldopoly
 zono | bono
 zzbert caféte | Gilbert caféte
 
---- Seed: ["1518|jurisimprudence", "mbus plunum", "stinder", ["eggcheeburgchevated", "atio", "hemuff", "oilale", "indario", "ubius", "xplose", "didn't ask?"]] ---
+--- Seed: ["1518|jurisimprudence / jurimprudence", "u print", "rbreak thsmanda hord", ["aroosted", "penappapppen", "teef", "reache", "eckleSandwich", "o Hong Shoo!", "aboompa", "rity", "oncrastinator", "stein"]] ---

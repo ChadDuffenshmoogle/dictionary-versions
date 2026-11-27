@@ -1,4 +1,4 @@
-UNICYCLIST DICTIONARY v1518 - November 26, 2026 10:45 PM CDT
+UNICYCLIST DICTIONARY v1519 - November 26, 2026 11:02 PM CDT
 
 -----DICTIONARY PROPER-----
 
@@ -1821,6 +1821,8 @@ juice juice (n.) - a subscription to a juice delivery service
 juicebox (n.) - a fan or connoisseur of juices
 
 junior chee (n.) - a chee that has not been aged, like ricotta
+
+jurisimprudence (n.) - the philosophy and study of crime
 
 jécà vu (n.) - a phenomenon where J. C. does something it seems like he has done before
 

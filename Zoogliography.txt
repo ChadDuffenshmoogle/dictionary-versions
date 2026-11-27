@@ -125,6 +125,7 @@ a gun
 a watchen
 abus
 ad horsitis
+aduo
 agno
 ain of a kaboomph on it
 ain't care mouth
@@ -850,6 +851,7 @@ und horgillimet
 und Mong cing
 unde
 unioce
+upmefuzza
 ut te
 ve traverig
 vigmalt
@@ -1239,4 +1241,4 @@ yorick | poor yorick
 yrizzito | drizzito
 zeldopolyplug | zeldopoly
 
---- Seed: ["1507|sixty-seven-layer dip", "pot care?", "aeoprowat call Retitup", []] ---
+--- Seed: ["1508|Joe and Joe", "aduo", "upmefuzza", []] ---

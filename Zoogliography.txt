@@ -402,6 +402,7 @@ rkegches
 rorcadian a dead horse
 Rorctangentiality bias
 Rorctanglez
+rse is alive diseased
 ry bush
 s of sand
 s to compah
@@ -851,6 +852,7 @@ Tsart
 tten
 twilin't of mand tha
 ubialb
+ueuction
 uipp
 ukwuadezoob
 ul C.Y.O.S. Pensagnubcy
@@ -918,6 +920,7 @@ ashingle | hingle
 atic | aic
 atle | arle
 ault yearm | sault years
+axxing | willmaxxing
 baceggchefrent | sauseggchefrent
 bacontuer | racontuer
 bbler | gibbler
@@ -1047,6 +1050,7 @@ icha | iche
 ie juice | movie juice
 ightenment | brainlightenment
 ilicover civcopcivcop | over civcop
+illowonion | Hallowonion
 imate | duximate
 inely | lowrorkirkenuinely
 ip'n'dip | prescrip'n'dip
@@ -1113,6 +1117,7 @@ ocessor | word processor
 of tens | tens of tens
 of-age | going-of-age
 ogdra effectic
+ogpile | zoogpile
 oking | food-looking
 ologist | aeologist
 on a twinkie
@@ -1132,6 +1137,7 @@ orthdoors | forthdoors
 osomatosomatiche | somatosomatic
 ostwards | utwards
 over civcop | overcover undercover civcopcivcop
+over civcopcivcop | ilicover civcopcivcop
 owave | meh-crowave
 pad kid | dophypad kid
 parcheeburg | cheeburg
@@ -1274,4 +1280,4 @@ zeldopolyplug | zeldopoly
 zono | bono
 zzbert caféte | Gilbert caféte
 
---- Seed: ["1513|Durr & Scell", "dead horse is aliverspi", "vigrus", ["oompa", "phabrothe", "A.M.F", "tblatt", "sider"]] ---
+--- Seed: ["1514|Vigille & Tee", "rse is alive diseased", "ueuction", ["illowonion", "axxing", "over civcopcivcop", "ogpile"]] ---

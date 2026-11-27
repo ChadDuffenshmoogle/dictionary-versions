@@ -341,6 +341,7 @@ mouth Dakota Pennsylvan
 Mozartriangulario
 Mozartriate
 mpkincomedia
+na Louisian rythmia
 napervice
 naperview
 ncriminal boss
@@ -700,6 +701,7 @@ I casst
 I whom to chog
 I'mpronetrillanompreade
 icounta
+ight
 ilbod
 imatch
 inbeicarqisre?
@@ -1151,6 +1153,7 @@ ogpile | zoogpile
 oilale | pourtnoilale
 oking | food-looking
 ologist | aeologist
+ombus | dian Borbrhombus
 on a twinkie
 oncrastinator | concrastinator
 onkrolling in the DuS' | the DuS'
@@ -1322,4 +1325,4 @@ zeldopolyplug | zeldopoly
 zono | bono
 zzbert caféte | Gilbert caféte
 
---- Seed: ["1520|Inshur & Cefrod", "wire", "tarpluzzle", ["f on"]] ---
+--- Seed: ["1522|Braye, Kingin & Tring", "na Louisian rythmia", "ight", ["ombus"]] ---

@@ -118,6 +118,7 @@ zug
 zummer
 
 --- Predicted Next Word ---
+-down
 -ironicle
 /gifs/grief-geomething
 a fly with detriment
@@ -547,6 +548,7 @@ atherawget
 ausus
 avan ef mod
 Ayn Dassis of thebus
+azallaworg
 b. Kalism
 ba Utary
 backe wit fecapreesi
@@ -988,6 +990,7 @@ duximateur | duximate
 dwich | McKnuckleSandwich
 e Alaskewnce | askewnce
 e certangle Conner
+e horse never civcop | horse never
 e Spweemster | Spweemster
 e-pers
 eace | eice
@@ -1100,6 +1103,7 @@ mula yawn | formula yawn
 my decapote | ecapote
 n one | zone
 nal apprecessor
+nappapen out onestic | onest
 nauschecroismore | croismore
 neball | Rorctangle Coneball
 New Mexicontuer
@@ -1162,8 +1166,10 @@ q'de | de
 qchikchecrois | bacturqchikchecrois
 quarius | Engiquarius
 queusilla | queusillanimous
+quill a funeral | I will a funeral
 quiri | fdakquiri
 r the La Borbrhombus | J. C. La Borbrhombus
+ra's shippi | shippi
 raint | subsequent restraint
 rating | choperating
 rcovergize | overgize
@@ -1282,4 +1288,4 @@ zeldopolyplug | zeldopoly
 zono | bono
 zzbert caféte | Gilbert caféte
 
---- Seed: ["1515|Ince & O'Raight", "orus Banorg", "porder", []] ---
+--- Seed: ["1516|Finn & Shull", "-down", "azallaworg", ["nappapen out onestic", "ra's shippi", "e horse never civcop", "quill a funeral"]] ---

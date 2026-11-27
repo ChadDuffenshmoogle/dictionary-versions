@@ -357,6 +357,7 @@ onions
 ople
 ord-blington
 orner sore shoes
+out of a kaboosific
 over twyxt
 pal cunnelism
 pear
@@ -690,6 +691,7 @@ ilbod
 imatch
 inbeicarqisre?
 ing thlogerpinnakoy
+inglinsm
 inin
 ioner
 kewo cho cage
@@ -907,6 +909,7 @@ ard knife | anti beard knife
 arignak | garignak
 aroosan | Paroosan Caroost of Noop juice
 aseine | caseine
+ashingle | hingle
 atic | aic
 atle | arle
 ault yearm | sault years
@@ -987,6 +990,7 @@ ectic | New York Texas Mississippi North Carolina Connecticut Tennessee New Mexi
 edIndecorous | Indecorous
 eese | feese
 ega-golf | mega-golf
+eggchecroissancer | eggchecrois
 Elpharice | alpharice
 emportchântea | portchânteau
 en fries
@@ -1000,6 +1004,7 @@ erior | serior
 es ce | eice
 essis | any press is bad press
 essuous | distressuous
+ewa Lipa | Spewa Lipa
 ewnce | askewnce
 exicon | xicon
 f tens of nones | tens of ones
@@ -1094,6 +1099,7 @@ ntasesquess | sesque
 nteur | neur
 ntial | supressential
 ntuer | racontuer
+nuend | innuend
 oach | coach
 obiography | biographe
 ocessor | word processor
@@ -1105,6 +1111,7 @@ ologist | aeologist
 on a twinkie
 onkrolling in the DuS' | the DuS'
 onsign | monsign
+oople | Goople
 oozles | anywhoozles
 opoly | zeldopoly
 or lives
@@ -1123,6 +1130,7 @@ pardy | triple jeopardy
 patic | patiche
 peace | wreak peace
 Perpoundem fordle
+phoria | disphoria
 pistandary alcolade | alcolade
 ponymous | pershlaponymous
 poochingo | counterpoint: spoochingo
@@ -1185,10 +1193,12 @@ sproinks | croinks
 Spweem SheckleSandwich | Spweem Sheckles
 squares | Cristian Bordabesquares
 stic | stice
+stinator | crastinator
 stradamus | Postradamus
 string | string chee
 stumous | perschlostumous
 stund | stchewstund
+sure | sue
 tabon | mastabon
 ter at Fredder
 the bridge | water over the bridge
@@ -1198,6 +1208,7 @@ the room | the dead horse in the room
 thiever cake | thiever
 Threego Threego and bal | Threego
 thrishting | inchrishting
+throwdee | Schrowdee
 Thup | thop
 ti bear | anti beard knife
 tion
@@ -1219,6 +1230,7 @@ ullingmart | Celingmart
 umannealism | uncannealism
 umbis | shlumbis
 umpkincorns-on-the-cord | ecord
+umpst | dumpst
 uncharcaner | charcane
 unchartmonger | chartmonger
 unforcine | forcine
@@ -1238,6 +1250,7 @@ wagianto | wagiant
 wirdplay | bwirdplay
 with one | to kill two birds with one dead horse
 worg | forg
+x wachinoup | chinoup
 xical Joe
 xicon | Cyclexicon
 Y.O.S. | C.Y.O.S.
@@ -1246,4 +1259,4 @@ yorick | poor yorick
 yrizzito | drizzito
 zeldopolyplug | zeldopoly
 
---- Seed: ["1510|yourses", "pear", "spillisc", []] ---
+--- Seed: ["1511|Youns", "out of a kaboosific", "inglinsm", ["x wachinoup", "umpst", "oople", "ewa Lipa", "ashingle", "eggchecroissancer", "throwdee", "nuend", "phoria", "stinator", "sure"]] ---

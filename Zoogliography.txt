@@ -220,6 +220,7 @@ dys trainer
 e bag
 e bed
 e never criminal boss
+e pot callify
 ears
 earsomethington
 East Skistatiche
@@ -852,6 +853,7 @@ ubialb
 uipp
 ukwuadezoob
 ul C.Y.O.S. Pensagnubcy
+ultheefrig
 uncer
 und horgillimet
 und Mong cing
@@ -1007,6 +1009,7 @@ essuous | distressuous
 ewa Lipa | Spewa Lipa
 ewnce | askewnce
 exicon | xicon
+f laughte | daughte
 f tens of nones | tens of ones
 fang | bang
 ffective | effective annelism
@@ -1035,6 +1038,7 @@ hern Illinoying | illinoying
 hesauseggchebisc | sauseggchebisc
 hingle | chchingles
 horse never | a watched dead horse never lives
+hris | tris
 hsque | Bethsque
 icha | iche
 ie juice | movie juice
@@ -1111,6 +1115,7 @@ ologist | aeologist
 on a twinkie
 onkrolling in the DuS' | the DuS'
 onsign | monsign
+ontraductor | contraductor
 oople | Goople
 oozles | anywhoozles
 opoly | zeldopoly
@@ -1198,6 +1203,7 @@ stradamus | Postradamus
 string | string chee
 stumous | perschlostumous
 stund | stchewstund
+stunt double | publicity stunt double
 sure | sue
 tabon | mastabon
 ter at Fredder
@@ -1258,5 +1264,7 @@ ylvania | New York Texas Mississippi North Carolina Connecticut Tennessee New Me
 yorick | poor yorick
 yrizzito | drizzito
 zeldopolyplug | zeldopoly
+zono | bono
+zzbert caféte | Gilbert caféte
 
---- Seed: ["1511|Youns", "out of a kaboosific", "inglinsm", ["x wachinoup", "umpst", "oople", "ewa Lipa", "ashingle", "eggchecroissancer", "throwdee", "nuend", "phoria", "stinator", "sure"]] ---
+--- Seed: ["1512|Dell & Quincy", "e pot callify", "ultheefrig", ["ontraductor", "f laughte", "stunt double", "zzbert caféte", "zono", "hris"]] ---

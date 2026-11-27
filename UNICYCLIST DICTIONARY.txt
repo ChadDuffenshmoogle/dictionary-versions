@@ -1,4 +1,4 @@
-UNICYCLIST DICTIONARY v1524 - November 27, 2026 03:49 PM CDT
+UNICYCLIST DICTIONARY v1525 - November 27, 2026 03:52 PM CDT
 
 -----DICTIONARY PROPER-----
 
@@ -1948,6 +1948,8 @@ losenge (v.) - to sweetly flatter.
 lotter (v.) - to gamble
 
 Louis Banorg (p.n.) - A robo Louis
+
+Louisian (adj.) - of Louis
 
 loup (n.) - someone who is in the server but never posts messages or engages in unicyclist business, only lurks.
 

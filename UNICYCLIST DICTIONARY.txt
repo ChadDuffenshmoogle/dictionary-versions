@@ -1,4 +1,4 @@
-UNICYCLIST DICTIONARY v1514 - November 26, 2026 10:28 PM CDT
+UNICYCLIST DICTIONARY v1515 - November 26, 2026 10:32 PM CDT
 
 -----DICTIONARY PROPER-----
 
@@ -3362,6 +3362,8 @@ vigid (adj.) - full of energy
 vigific (adj.) - (of a cause or ideal) stirring people to action
 "the issue of artificial intelligence's place in society is quite vigific nowadays"
 ---------------------------------------------
+
+Vigille & Tee (p.n.) - law firm taking courtroom justice into their own hands
 
 vigit (v.) - to vigilantly visit (somewhere, something, or someone)
 

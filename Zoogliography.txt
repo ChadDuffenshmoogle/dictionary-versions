@@ -468,6 +468,7 @@ to kill two bird in the
 trenultimissippi
 triconta is cake
 tricontana Ohio Georgia
+ts Marylander-in-chee
 tuna of my decapitates
 two robs dozen
 u candypumpkincorn
@@ -676,6 +677,7 @@ heshilinaze
 Hihites
 hion
 hird hoom for
+hoobirdn'dog
 hoobort's
 hoott
 hunce
@@ -941,6 +943,7 @@ copious | copiously hoosted
 cranger | crangent
 croiseggchecrois | croiseggchesaus
 ctarmoon | nectarmoon
+culture | auraculture
 culvstardnyunbun | culvstard
 cunicycle | cunicule
 Cyborg | cyberg
@@ -1241,4 +1244,4 @@ yorick | poor yorick
 yrizzito | drizzito
 zeldopolyplug | zeldopoly
 
---- Seed: ["1508|Joe and Joe", "aduo", "upmefuzza", []] ---
+--- Seed: ["1509|Comp & Seishun", "ts Marylander-in-chee", "hoobirdn'dog", ["culture"]] ---

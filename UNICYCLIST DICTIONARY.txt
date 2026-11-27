@@ -1,4 +1,4 @@
-UNICYCLIST DICTIONARY v1519 - November 27, 2026 08:14 AM CDT
+UNICYCLIST DICTIONARY v1520 - November 27, 2026 01:08 PM CDT
 
 -----DICTIONARY PROPER-----
 
@@ -1761,6 +1761,8 @@ inkspill (n.) - an deprecatory term for writing that's terrible
 in off mode (adj.) - asleep
 
 innuend (v.) - to use innuendo; (transitive) to suggest by means of innuendo
+
+Inshur & Cefrod (p.n.) - law firm that helps people with unjustly denied insurance claims
 
 insubbable (adj.) - incapable of being worse than
 

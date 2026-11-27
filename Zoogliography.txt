@@ -504,6 +504,7 @@ wateraterloose
 wghijaklimnaption Joe
 who doesn't know way
 whoozler
+wire
 word proper noun
 wreaking
 y bird gets the weating
@@ -850,6 +851,7 @@ swer stitual rovs
 swixt
 t befy
 TAMAKEAMAGA
+tarpluzzle
 tato of torserig
 th Dakirdn't Agacent
 theer
@@ -1038,6 +1040,7 @@ ewa Lipa | Spewa Lipa
 ewnce | askewnce
 exicon | xicon
 f laughte | daughte
+f on | fo
 f tens of nones | tens of ones
 fang | bang
 ffective | effective annelism
@@ -1319,4 +1322,4 @@ zeldopolyplug | zeldopoly
 zono | bono
 zzbert caféte | Gilbert caféte
 
---- Seed: ["1519|Inshur & Cefrod", "Montaverbonkrolling", "hroklor cate", ["etriment", "ill die on it drink, or", "cilk", "cadian rythm"]] ---
+--- Seed: ["1520|Inshur & Cefrod", "wire", "tarpluzzle", ["f on"]] ---

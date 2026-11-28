@@ -151,6 +151,7 @@ beerkegchebag
 beevenacity stund
 beignet
 Believer
+Beve
 bilitic
 bilitudinal boss
 bles
@@ -608,6 +609,7 @@ choo-Spwirdep!
 Chrignesquin
 clack-bon
 Clics
+cloce
 Clonvie
 Clor anneef
 Coliter
@@ -919,6 +921,7 @@ zoostrainio
 't look a dead horse | Don't look a dead horse in the mouth
 -chine | wachine
 -coupon | anti-coupon
+-crowave-distreakeeper | streakeeper
 -rot | B.O.T
 . Pough | C. D. Pough
 A.M.F | B.A.M.F
@@ -965,6 +968,7 @@ brogger | brogler
 C. D'Poba'Denucks | H. S. C. D'Poba'Denucks
 cadian rythm | rorcadian rythm
 cal Joe | Radical Joe
+calism | cyclexicalism
 carpe | carper
 case cake | pillowcase cake
 ceggchebag | eggchebag
@@ -1071,6 +1075,7 @@ geese" | feese
 gglegum | bugglegum
 ght from the chase | the chase
 goosh kaspoocy | spoocy
+goriously hoosted | copiously hoosted
 grorkirkenuine | grork
 guation | ambiguation page
 h on | xon
@@ -1092,6 +1097,7 @@ hris | tris
 hsque | Bethsque
 icha | iche
 ie juice | movie juice
+ific | itic
 ightenment | brainlightenment
 ilicover civcopcivcop | over civcop
 ill die on it drink, or | drink
@@ -1132,6 +1138,7 @@ loose | waterloose
 lopedianchor | medianchor
 ltimate | heptultimate
 luncharade | rancharade
+ly with a gooberism | gooberism
 ma Massalted | assalted
 make Great America Mass | Make Great America Again
 Make Great Amerito bake
@@ -1154,6 +1161,7 @@ ngulario | Mozartriangulario
 nillain | dillain
 ning of tens of tens | tens of tens of tens
 nivened | enknivened
+nkspilk | inkspill
 Not Chee! | I Can't Believe It's Not Chee!
 ntasesquess | sesque
 nteur | neur
@@ -1189,6 +1197,7 @@ ordieding theetricegg | trice
 ordle! | Clordle
 orgbera | orgberg
 oring | ering
+ormula yawn | formula yawn
 orthdoors | forthdoors
 osomatosomatiche | somatosomatic
 ostwards | utwards
@@ -1348,4 +1357,4 @@ zono | bono
 zooger | autozooger
 zzbert caféte | Gilbert caféte
 
---- Seed: ["1527|trivialist / trivalist", "ggeggchebun", "rsety", []] ---
+--- Seed: ["1528|every crook and nanny", "Beve", "cloce", ["calism", "ific", "ly with a gooberism", "goriously hoosted", "ormula yawn", "-crowave-distreakeeper", "nkspilk"]] ---

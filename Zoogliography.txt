@@ -125,6 +125,7 @@ a fly with detriment
 a gun
 a watchen
 abus
+aceggchee
 ad horsitis
 aduo
 agno
@@ -700,6 +701,7 @@ heshilinaze
 Hihites
 hion
 hird hoom for
+homy
 hoobirdn'dog
 hoobort's
 hoott
@@ -939,6 +941,7 @@ alcolant | alcolade
 amatchee
 ameggchebag | baceggchebag
 amiacablesquip | amiacable
+anes | ones
 angles | eyeangles
 anolineus | anoline
 aquavacheggle | aquavache
@@ -974,6 +977,7 @@ case cake | pillowcase cake
 ceggchebag | eggchebag
 cette | et cetter
 ch of sand
+checrois | eggchecrois
 ched | chee
 cheeburger | cheeburber
 chemuff | dubchemuff
@@ -1027,6 +1031,7 @@ dwich | McKnuckleSandwich
 e Alaskewnce | askewnce
 e certangle Conner
 e horse never civcop | horse never
+e Qually penappapppen | penappapppen
 e Spweemster | Spweemster
 e-pers
 eace | eice
@@ -1069,6 +1074,7 @@ ffective | effective annelism
 fiction | fictionalism
 final | the final boss
 foobrepploozonioccior | brepp
+fort | dort
 frame-advances | frame-advancer
 garignatured servitude
 geese" | feese
@@ -1125,6 +1131,7 @@ Katter | Kit Katter
 king
 labama Northy
 land Rhode Islands | Island
+layer | sixty-seven-layer dip
 leering | spleering
 leeringle Conner
 legster | legsterity
@@ -1232,6 +1239,7 @@ r the La Borbrhombus | J. C. La Borbrhombus
 ra's shippi | shippi
 raint | subsequent restraint
 rating | choperating
+rby angry bush | ry bush
 rcovergize | overgize
 rdastinator | crastinator
 reache | treache
@@ -1289,6 +1297,7 @@ stumous | perschlostumous
 stund | stchewstund
 stunt double | publicity stunt double
 sure | sue
+t grillswitch | krillswitch
 tabon | mastabon
 tblatt | echatblatt
 teef | seef
@@ -1357,4 +1366,4 @@ zono | bono
 zooger | autozooger
 zzbert caféte | Gilbert caféte
 
---- Seed: ["1528|every crook and nanny", "Beve", "cloce", ["calism", "ific", "ly with a gooberism", "goriously hoosted", "ormula yawn", "-crowave-distreakeeper", "nkspilk"]] ---
+--- Seed: ["1529|signifia", "aceggchee", "homy", ["layer", "rby angry bush", "t grillswitch", "checrois", "anes", "e Qually penappapppen", "fort"]] ---

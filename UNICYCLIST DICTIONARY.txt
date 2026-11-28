@@ -1,4 +1,4 @@
-UNICYCLIST DICTIONARY v1527 - November 27, 2026 10:03 PM CDT
+UNICYCLIST DICTIONARY v1528 - November 27, 2026 10:12 PM CDT
 
 -----DICTIONARY PROPER-----
 
@@ -3247,6 +3247,11 @@ tricontapontasesquipedontaverbontic (adj.) - (of a word) thirty-five letters lon
 triple jeopardy (n.) - being tried for the same crime a third time, which is obviously allowed by the U. S. Constitution
 
 triquivalence (n.) - an equivalence to two other things, making an equivalence of three things total. cf. tetraquivalent, quinquivalent, ext.
+
+---------------------------------------------
+trivialist / trivalist (n.) - 1. one who subscribes to the philosophy of trivialism, believing that niche, insignificant knowledge can be so unimportant it wraps back around to being important. And that's why they memorize every Digimon in reverse chronological order.
+2. one whose profession (which they officially mark on their tax forms) it is to know trivia, typically only able to profit at local trivia competitions or national game shows.
+---------------------------------------------
 
 trounge (n.) - the third floor north lounge at Gilbert Hall
 

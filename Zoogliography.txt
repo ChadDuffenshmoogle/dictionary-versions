@@ -263,6 +263,7 @@ French billiteral
 Frencheecrois
 frobblersationary
 from the Three-ender
+fugerate
 garignature
 Gilbert care Washington
 gilburgmate
@@ -800,6 +801,7 @@ quinnet
 quity
 quorck
 Rad upic
+radia gus
 Raing temunitupingunx
 raver th th kah
 rbreak thsmanda hord
@@ -1146,6 +1148,7 @@ nauschecroismore | croismore
 neball | Rorctangle Coneball
 New Mexicontuer
 nforch | forch
+ngulario | Mozartriangulario
 nillain | dillain
 ning of tens of tens | tens of tens of tens
 nivened | enknivened
@@ -1244,6 +1247,7 @@ sault year | sault years
 sBorgborg | orgborg
 scfila | tsscfila
 scravenge | scravenger
+se bush | dead horse bush
 seggchebisc | baceggchebisc
 shippi | Pandora's shipping container
 shock | auraculture shock
@@ -1342,4 +1346,4 @@ zono | bono
 zooger | autozooger
 zzbert caféte | Gilbert caféte
 
---- Seed: ["1525|armchair pansophist", "oirchee", "esourge", ["esn't brealism", "nti-coupon", "zooger", "baceggchesoul but your", "land Rhode Islands", "unt of a kaboombafy", "d chee", "onaire", "clexicon the land"]] ---
+--- Seed: ["1526|armchair appraiser", "fugerate", "radia gus", ["se bush", "ngulario"]] ---

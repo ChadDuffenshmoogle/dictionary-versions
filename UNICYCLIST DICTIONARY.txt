@@ -1,4 +1,4 @@
-UNICYCLIST DICTIONARY v1529 - November 27, 2026 10:41 PM CDT
+UNICYCLIST DICTIONARY v1530 - November 27, 2026 11:13 PM CDT
 
 -----DICTIONARY PROPER-----
 
@@ -2813,6 +2813,8 @@ shrarm (n.) - shredded parmasean
 shrim (n.) - a shrimp, often minuscule and goofy
 
 Siborg (p.n.) - Robo Sisi
+
+signifia (n.) - facts that are important; non-trivia
 
 ---------------------------------------------
 single entendre (n.) - a pun where the two concepts being combined have NOTHING in common except for the wordplay.

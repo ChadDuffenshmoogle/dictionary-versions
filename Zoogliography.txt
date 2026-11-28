@@ -358,6 +358,7 @@ nlight Spending
 Norahmbus Quarto
 nostumous
 of tennis elbow
+oirchee
 ol recursive in one way
 ones
 ones of the light
@@ -650,6 +651,7 @@ er's thre
 erpall
 erperscresquoter
 es chloper
+esourge
 estichievertaling
 eximedis
 exoocobee
@@ -945,6 +947,7 @@ atle | arle
 ault yearm | sault years
 axxing | willmaxxing
 baceggchefrent | sauseggchefrent
+baceggchesoul but your | baceggchesoul
 bacontuer | racontuer
 bbler | gibbler
 befungerswärme | hungerswärme
@@ -972,6 +975,7 @@ Chrishting | inchrishting
 chusettaphilosophe | philosophe
 cifer | polief occifer
 cilk | calk
+clexicon the land | exicon
 cluzzle | clossword cluzzle
 co by
 cobble | cobblerstone
@@ -987,6 +991,7 @@ cunicycle | cunicule
 Cyborg | cyberg
 Cycle | subcycle
 Cyril | Cybril
+d chee | chee
 d Cyclexicalism | cyclexicalism
 d horse dead horse
 d knife | anti beard knife
@@ -1041,6 +1046,7 @@ er sound the land
 ering | duffering
 erior | serior
 es ce | eice
+esn't brealism | breal
 essis | any press is bad press
 essuous | distressuous
 etriment | detrimental
@@ -1108,6 +1114,7 @@ kaboompault year | kaboompa
 Katter | Kit Katter
 king
 labama Northy
+land Rhode Islands | Island
 leering | spleering
 leeringle Conner
 legster | legsterity
@@ -1145,6 +1152,7 @@ nivened | enknivened
 Not Chee! | I Can't Believe It's Not Chee!
 ntasesquess | sesque
 nteur | neur
+nti-coupon | anti-coupon
 ntial | supressential
 ntuer | racontuer
 nuend | innuend
@@ -1161,6 +1169,7 @@ oking | food-looking
 ologist | aeologist
 ombus | dian Borbrhombus
 on a twinkie
+onaire | Portillionaire
 oncrastinator | concrastinator
 onkrolling in the DuS' | the DuS'
 onsign | monsign
@@ -1305,6 +1314,7 @@ unchartmonger | chartmonger
 unforcine | forcine
 unge
 Unlunchine | lunchin'
+unt of a kaboombafy | Boomba
 uorrel | quorrel
 uotin' time | It's Quotin' time
 upiary | taupiary
@@ -1329,6 +1339,7 @@ yorick | poor yorick
 yrizzito | drizzito
 zeldopolyplug | zeldopoly
 zono | bono
+zooger | autozooger
 zzbert caféte | Gilbert caféte
 
---- Seed: ["1524|Louisian", "griculous", "es chloper", ["enness", "Cycle"]] ---
+--- Seed: ["1525|armchair pansophist", "oirchee", "esourge", ["esn't brealism", "nti-coupon", "zooger", "baceggchesoul but your", "land Rhode Islands", "unt of a kaboombafy", "d chee", "onaire", "clexicon the land"]] ---

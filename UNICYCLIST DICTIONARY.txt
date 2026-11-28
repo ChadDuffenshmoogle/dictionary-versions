@@ -1,4 +1,4 @@
-UNICYCLIST DICTIONARY v1528 - November 27, 2026 10:12 PM CDT
+UNICYCLIST DICTIONARY v1529 - November 27, 2026 10:41 PM CDT
 
 -----DICTIONARY PROPER-----
 
@@ -1246,6 +1246,11 @@ et cetter (n.) - one who lists things excessively
 eucry (adj.) - tiring
 
 EUui / eui (v.) - to drink water
+
+---------------------------------------------
+every crook and nanny (expr.) - every person
+- Example: "We asked every crook and nanny and no one knew about our missing stuff."
+---------------------------------------------
 
 exaxely (adv.) - (Wisconsinism, Zinnianism) alt. of 'exactly' 
 

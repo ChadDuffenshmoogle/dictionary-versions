@@ -1,4 +1,4 @@
-UNICYCLIST DICTIONARY v1526 - November 27, 2026 09:58 PM CDT
+UNICYCLIST DICTIONARY v1527 - November 27, 2026 10:03 PM CDT
 
 -----DICTIONARY PROPER-----
 
@@ -186,6 +186,8 @@ arm-to-bed-microwave-distance ratio (n.) - the ratio of the usable length of one
 ---------------------------------------------
 
 a sound for sore ears (expr.) - a person or thing you are pleased or relieved to hear
+
+armchair appraiser (expr.) - one who shouts answers at the screen while watching The Price is Right
 
 armchair pansophist (expr.) - one who shouts answers at the screen while watching Jeopardy
 
